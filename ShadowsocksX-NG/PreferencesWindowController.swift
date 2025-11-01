@@ -103,6 +103,9 @@ class PreferencesWindowController: NSWindowController
             profilesTableView.beginUpdates()
             for (_, toDeleteIndex) in profilesTableView.selectedRowIndexes.enumerated() {
                 print(profileMgr.profiles.count)
+                let profile = profileMgr.profiles[toDeleteIndex - deleteCount]
+                // Remove password from Keychain before deleting profile
+                profile.removePasswordFromKeychain()
                 profileMgr.profiles.remove(at: toDeleteIndex - deleteCount)
                 profilesTableView.removeRows(at: IndexSet(integer: toDeleteIndex - deleteCount), withAnimation: NSTableView.AnimationOptions.effectFade)
                 deleteCount += 1

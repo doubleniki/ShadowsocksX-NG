@@ -10,15 +10,42 @@ import Cocoa
 
 
 class ServerProfile: NSObject, NSCopying {
-    
+
     @objc var uuid: String
 
     @objc var serverHost: String = ""
     @objc var serverPort: uint16 = 8379
     @objc var method:String = "aes-128-gcm"
-    @objc var password:String = ""
+
+    // Password is now stored securely in Keychain
+    // This property acts as a bridge to the Keychain
+    private var _cachedPassword: String = ""
+    @objc dynamic var password: String {
+        get {
+            // Try cache first for performance
+            if !_cachedPassword.isEmpty {
+                return _cachedPassword
+            }
+            // Load from Keychain
+            if let keychainPassword = KeychainManager.shared.getPassword(forAccount: uuid) {
+                _cachedPassword = keychainPassword
+                return keychainPassword
+            }
+            return ""
+        }
+        set {
+            _cachedPassword = newValue
+            // Save to Keychain
+            if !newValue.isEmpty {
+                KeychainManager.shared.savePassword(newValue, forAccount: uuid)
+            } else {
+                KeychainManager.shared.deletePassword(forAccount: uuid)
+            }
+        }
+    }
+
     @objc var remark:String = ""
-    
+
     // SIP003 Plugin
     @objc var plugin: String = ""  // empty string disables plugin
     @objc var pluginOptions: String = ""
@@ -162,7 +189,19 @@ class ServerProfile: NSObject, NSCopying {
             profile.serverHost = data["ServerHost"] as! String
             profile.serverPort = (data["ServerPort"] as! NSNumber).uint16Value
             profile.method = data["Method"] as! String
-            profile.password = data["Password"] as! String
+
+            // Migrate password from UserDefaults to Keychain if it exists
+            if let oldPassword = data["Password"] as? String {
+                if !oldPassword.isEmpty {
+                    // Check if password already exists in Keychain
+                    if KeychainManager.shared.getPassword(forAccount: profile.uuid) == nil {
+                        // Migrate from UserDefaults to Keychain
+                        NSLog("Migrating password to Keychain for server: \(profile.uuid)")
+                        profile.password = oldPassword
+                    }
+                }
+            }
+
             if let remark = data["Remark"] {
                 profile.remark = remark as! String
             }
@@ -191,7 +230,9 @@ class ServerProfile: NSObject, NSCopying {
         d["ServerHost"] = serverHost as AnyObject?
         d["ServerPort"] = NSNumber(value: serverPort as UInt16)
         d["Method"] = method as AnyObject?
-        d["Password"] = password as AnyObject?
+        // Password is no longer stored in UserDefaults - it's in Keychain
+        // Keep empty string for backward compatibility with structure
+        d["Password"] = "" as AnyObject?
         d["Remark"] = remark as AnyObject?
         d["Plugin"] = plugin as AnyObject
         d["PluginOptions"] = pluginOptions as AnyObject
@@ -331,5 +372,18 @@ class ServerProfile: NSObject, NSCopying {
             return "\(String(remark.prefix(24))) (\(serverHost):\(serverPort))"
         }
     }
-    
+
+    // MARK: - Keychain Management
+
+    /// Removes password from Keychain when profile is deleted
+    func removePasswordFromKeychain() {
+        KeychainManager.shared.deletePassword(forAccount: uuid)
+        _cachedPassword = ""
+    }
+
+    /// Forces reload of password from Keychain (clears cache)
+    func reloadPassword() {
+        _cachedPassword = ""
+    }
+
 }
