@@ -20,6 +20,23 @@ class PreferencesWinController: NSWindowController {
 
         // Implement this method to handle any initialization after your window controller's window has been loaded from its nib file.
         toolbar.selectedItemIdentifier = NSToolbarItem.Identifier(rawValue: "general")
+
+        // Make window resizable
+        if let window = window {
+            var styleMask = window.styleMask
+            styleMask.insert(.resizable)
+            window.styleMask = styleMask
+
+            // Set minimum window size to ensure usability
+            window.minSize = NSSize(width: 500, height: 400)
+
+            // Increase default window width to display all toolbar items
+            var frame = window.frame
+            if frame.size.width < 600 {
+                frame.size.width = 600
+                window.setFrame(frame, display: true)
+            }
+        }
     }
     
     @objc func windowWillClose(_ notification: Notification) {
