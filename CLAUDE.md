@@ -154,6 +154,18 @@ Test target: `ShadowsocksX-NGTests`
 - Follow GitFlow branching model
 - Create pull requests against `develop` branch
 
+**IMPORTANT for Claude Code:**
+- ALWAYS create a new feature branch before implementing any changes
+- NEVER commit directly to `develop` or `main`
+- Branch naming convention: `feature/<description>`, `fix/<description>`, or `docs/<description>`
+- Workflow:
+  1. Ensure you're on `develop`: `git checkout develop`
+  2. Pull latest changes: `git pull origin develop`
+  3. Create new branch: `git checkout -b feature/your-feature-name`
+  4. Make changes and commit
+  5. Push branch: `git push origin feature/your-feature-name`
+  6. Create pull request to merge into `develop`
+
 ### CocoaPods Dependencies
 - Alamofire (networking)
 - GCDWebServer (embedded PAC file server)
