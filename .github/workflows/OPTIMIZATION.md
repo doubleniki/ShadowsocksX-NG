@@ -54,8 +54,10 @@
 - uses: actions/cache@v4
   with:
     path: ~/Library/Caches/Homebrew
-    key: brew-${{ runner.os }}-build-tools
+    key: brew-${{ runner.os }}-build-tools-v2
 ```
+Пакеты: automake, autoconf, libtool, pcre
+
 ⏱️ Экономия: ~2-3 минуты
 
 **Нативные зависимости (deps/):**

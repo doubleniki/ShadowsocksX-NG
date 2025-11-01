@@ -7,6 +7,7 @@
 
 Создаёт production релиз с оптимизациями:
 - ✅ Кеширование зависимостей (deps/, CocoaPods, Homebrew)
+- ✅ Установка build tools (automake, autoconf, libtool, pcre)
 - ✅ Release конфигурация
 - ✅ Создание DMG с контрольной суммой
 - ✅ Автоматическая публикация на GitHub Releases
@@ -76,7 +77,8 @@ Fix typo in documentation
 ### Уровни кеша
 
 1. **Homebrew** (`~/Library/Caches/Homebrew`)
-   - Ключ: `brew-${{ runner.os }}-build-tools`
+   - Пакеты: automake, autoconf, libtool, pcre
+   - Ключ: `brew-${{ runner.os }}-build-tools-v2`
    - Экономия: ~2-3 минуты
 
 2. **Native Dependencies** (`deps/dist/`)

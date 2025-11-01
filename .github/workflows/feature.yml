@@ -87,13 +87,15 @@ jobs:
             /usr/local/Cellar/automake
             /usr/local/Cellar/autoconf
             /usr/local/Cellar/libtool
-          key: brew-${{ runner.os }}-build-tools
+            /usr/local/Cellar/pcre
+          key: brew-${{ runner.os }}-build-tools-v2
           restore-keys: |
+            brew-${{ runner.os }}-build-tools-
             brew-${{ runner.os }}-
 
       - name: Install build dependencies
         run: |
-          brew install automake autoconf libtool
+          brew install automake autoconf libtool pcre
 
       # Кеширование собранных нативных зависимостей
       - name: Cache native dependencies

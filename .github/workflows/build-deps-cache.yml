@@ -29,7 +29,7 @@ jobs:
 
       - name: Install build tools
         run: |
-          brew install automake autoconf libtool
+          brew install automake autoconf libtool pcre
 
       # Проверить существующий кеш
       - name: Check existing cache
