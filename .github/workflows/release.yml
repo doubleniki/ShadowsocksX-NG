@@ -1,4 +1,4 @@
-name: Release Building
+name: Release Building (Optimized)
 
 on:
   push:
@@ -7,38 +7,107 @@ on:
 
 jobs:
   build:
-
     runs-on: macos-latest
 
     steps:
-
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: recursive
           fetch-depth: 0
 
-      - name: Build
+      # Кеширование Homebrew пакетов
+      - name: Cache Homebrew
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/Library/Caches/Homebrew
+            /usr/local/Cellar/automake
+            /usr/local/Cellar/autoconf
+            /usr/local/Cellar/libtool
+            /usr/local/Cellar/pcre
+          key: brew-${{ runner.os }}-${{ hashFiles('.github/workflows/release.yml') }}-v2
+          restore-keys: |
+            brew-${{ runner.os }}-${{ hashFiles('.github/workflows/release.yml') }}-
+            brew-${{ runner.os }}-
+
+      - name: Install build dependencies
         run: |
-          brew install automake
-          brew install autoconf
-          brew install libtool
-          make VERSION="${GITHUB_REF_NAME}" release
-          make release-dmg 
+          brew install automake autoconf libtool pcre
+
+      # Кеширование собранных нативных зависимостей
+      - name: Cache native dependencies
+        id: cache-deps
+        uses: actions/cache@v4
+        with:
+          path: |
+            deps/dist
+            ShadowsocksX-NG/ss-local
+            ShadowsocksX-NG/privoxy
+            ShadowsocksX-NG/simple-obfs
+            ShadowsocksX-NG/v2ray-plugin
+            ShadowsocksX-NG/kcptun
+          key: deps-${{ runner.os }}-${{ hashFiles('deps/**', '!deps/dist') }}
+          restore-keys: |
+            deps-${{ runner.os }}-
+
+      # Собрать зависимости только если кеш промахнулся
+      - name: Build native dependencies
+        if: steps.cache-deps.outputs.cache-hit != 'true'
+        run: |
+          echo "Cache miss - building dependencies from scratch"
+          make -C deps
+        env:
+          # Использовать все доступные CPU ядра
+          MAKEFLAGS: "-j$(sysctl -n hw.ncpu)"
+
+      - name: Verify dependencies
+        run: |
+          ls -lh ShadowsocksX-NG/ss-local/ss-local
+          ls -lh ShadowsocksX-NG/privoxy/privoxy
+          file ShadowsocksX-NG/ss-local/ss-local
+
+      - name: Set version
+        run: |
+          agvtool new-marketing-version ${GITHUB_REF_NAME}
+
+      # Кеширование CocoaPods
+      - name: Cache CocoaPods
+        uses: actions/cache@v4
+        with:
+          path: Pods
+          key: pods-${{ hashFiles('Podfile.lock') }}
+          restore-keys: |
+            pods-
+
+      - name: Build application
+        run: |
+          xcodebuild -workspace ShadowsocksX-NG.xcworkspace \
+            -scheme ShadowsocksX-NG \
+            -configuration Release \
+            SYMROOT=${PWD}/build \
+            -quiet
+
+      - name: Create DMG
+        run: |
+          make release-dmg
           shasum -a 256 build/Release/ShadowsocksX-NG.dmg > build/Release/ShadowsocksX-NG.dmg.checksum
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: ShadowsocksX-NG
+          name: ShadowsocksX-NG-${{ github.ref_name }}
           path: |
             build/Release/ShadowsocksX-NG.dmg
             build/Release/ShadowsocksX-NG.dmg.checksum
+          retention-days: 90
 
-      - name: Release
+      - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
           generate_release_notes: true
           files: |
             build/Release/ShadowsocksX-NG.dmg
             build/Release/ShadowsocksX-NG.dmg.checksum
+          draft: false
+          prerelease: false

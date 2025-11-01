@@ -1,39 +1,209 @@
-name: Feature Building
+name: Feature Building (Optimized)
 
 on:
   push:
     branches:
       - '*'
+    # Пропускаем сборку для документации и косметических изменений
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '.github/ISSUE_TEMPLATE/**'
+      - '.github/PULL_REQUEST_TEMPLATE/**'
+      - '.gitignore'
+      - '.gitattributes'
+      - 'LICENSE'
+      - '**.txt'
+      - 'CLAUDE.md'
   pull_request:
     branches:
       - '*'
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '.github/ISSUE_TEMPLATE/**'
+      - '.github/PULL_REQUEST_TEMPLATE/**'
+      - '.gitignore'
+      - '.gitattributes'
+      - 'LICENSE'
+      - '**.txt'
+      - 'CLAUDE.md'
 
 jobs:
-  build:
+  # Проверка типа коммита
+  check-commit:
+    runs-on: ubuntu-latest
+    outputs:
+      should_build: ${{ steps.check.outputs.should_build }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
 
+      - name: Check commit message
+        id: check
+        run: |
+          # Получаем сообщение последнего коммита
+          COMMIT_MSG=$(git log -1 --pretty=%B)
+          echo "Commit message: $COMMIT_MSG"
+
+          # Проверяем типы коммитов, требующие сборки
+          if echo "$COMMIT_MSG" | grep -qiE '^(feat|fix|feature|bugfix|perf|refactor|build):'; then
+            echo "should_build=true" >> $GITHUB_OUTPUT
+            echo "✓ Build required (code change detected)"
+          elif echo "$COMMIT_MSG" | grep -qiE '^(docs|style|chore|ci|test):'; then
+            echo "should_build=false" >> $GITHUB_OUTPUT
+            echo "✗ Build skipped (documentation/style change)"
+          else
+            # Если не следует conventional commits, проверяем ключевые слова
+            if echo "$COMMIT_MSG" | grep -qiE '(feature|fix|add|implement|update.*code|refactor)'; then
+              echo "should_build=true" >> $GITHUB_OUTPUT
+              echo "✓ Build required (keyword match)"
+            else
+              echo "should_build=false" >> $GITHUB_OUTPUT
+              echo "✗ Build skipped (no build keywords)"
+            fi
+          fi
+
+  build:
+    needs: check-commit
+    if: needs.check-commit.outputs.should_build == 'true'
     runs-on: macos-latest
 
     steps:
-
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: recursive
           fetch-depth: 0
 
-      - name: Build
+      # Кеширование Homebrew пакетов
+      - name: Cache Homebrew
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/Library/Caches/Homebrew
+            /usr/local/Cellar/automake
+            /usr/local/Cellar/autoconf
+            /usr/local/Cellar/libtool
+            /usr/local/Cellar/pcre
+          key: brew-${{ runner.os }}-build-tools-v2
+          restore-keys: |
+            brew-${{ runner.os }}-build-tools-
+            brew-${{ runner.os }}-
+
+      - name: Install build dependencies
         run: |
-          brew install automake
-          brew install autoconf
-          brew install libtool
-          make VERSION="${GITHUB_SHA::7}" debug
+          brew install automake autoconf libtool pcre
+
+      # Кеширование собранных нативных зависимостей
+      - name: Cache native dependencies
+        id: cache-deps
+        uses: actions/cache@v4
+        with:
+          path: |
+            deps/dist
+            ShadowsocksX-NG/ss-local
+            ShadowsocksX-NG/privoxy
+            ShadowsocksX-NG/simple-obfs
+            ShadowsocksX-NG/v2ray-plugin
+            ShadowsocksX-NG/kcptun
+          key: deps-${{ runner.os }}-${{ hashFiles('deps/**', '!deps/dist') }}
+          restore-keys: |
+            deps-${{ runner.os }}-
+
+      # Проверить, изменились ли зависимости
+      - name: Check if deps changed
+        id: deps-changed
+        run: |
+          if [ -n "${{ github.event.before }}" ]; then
+            if git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -q '^deps/'; then
+              echo "changed=true" >> $GITHUB_OUTPUT
+              echo "Dependencies changed, will rebuild"
+            else
+              echo "changed=false" >> $GITHUB_OUTPUT
+              echo "Dependencies unchanged"
+            fi
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "First build, will build deps"
+          fi
+
+      # Собрать зависимости только если изменились ИЛИ кеш промахнулся
+      - name: Build native dependencies
+        if: steps.cache-deps.outputs.cache-hit != 'true' || steps.deps-changed.outputs.changed == 'true'
+        run: |
+          echo "Building dependencies..."
+          make -C deps
+        env:
+          MAKEFLAGS: "-j$(sysctl -n hw.ncpu)"
+
+      # Для feature builds - используем pre-built binaries если кеш промахнулся и deps не менялись
+      - name: Download pre-built dependencies (fallback)
+        if: steps.cache-deps.outputs.cache-hit != 'true' && steps.deps-changed.outputs.changed == 'false'
+        run: |
+          echo "Attempting to download pre-built dependencies..."
+          # Попытаться скачать из последнего успешного релиза
+          # Это опционально - если не найдётся, просто соберём
+          curl -L -f "https://github.com/${{ github.repository }}/releases/download/deps-cache/deps-dist.tar.gz" \
+            -o deps-dist.tar.gz && tar -xzf deps-dist.tar.gz || echo "No pre-built deps available, will build"
+
+      - name: Verify dependencies
+        run: |
+          if [ -f "ShadowsocksX-NG/ss-local/ss-local" ]; then
+            echo "✓ ss-local found"
+            ls -lh ShadowsocksX-NG/ss-local/ss-local
+          else
+            echo "✗ ss-local missing!"
+            exit 1
+          fi
+
+      - name: Set version
+        run: |
+          agvtool new-marketing-version ${GITHUB_SHA::7}
+
+      # Кеширование CocoaPods
+      - name: Cache CocoaPods
+        uses: actions/cache@v4
+        with:
+          path: Pods
+          key: pods-${{ hashFiles('Podfile.lock') }}
+          restore-keys: |
+            pods-
+
+      # Debug build для feature branches (быстрее)
+      - name: Build application (Debug)
+        run: |
+          xcodebuild -workspace ShadowsocksX-NG.xcworkspace \
+            -scheme ShadowsocksX-NG \
+            -configuration Debug \
+            SYMROOT=${PWD}/build \
+            -quiet
+
+      # Для pull requests - только .app без DMG (экономия времени)
+      - name: Create DMG (only for main branch pushes)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+        run: |
           make debug-dmg
           shasum -a 256 build/Debug/ShadowsocksX-NG.dmg > build/Debug/ShadowsocksX-NG.dmg.checksum
 
+      # Upload только для develop branch или если DMG создан
       - name: Upload artifacts
-        uses: actions/upload-artifact@v3
+        if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+        uses: actions/upload-artifact@v4
         with:
-          name: ShadowsocksX-NG
+          name: ShadowsocksX-NG-${{ github.sha }}
           path: |
             build/Debug/ShadowsocksX-NG.dmg
             build/Debug/ShadowsocksX-NG.dmg.checksum
+          retention-days: 7
+
+      # Для всех остальных - просто загрузить .app для быстрого тестирования
+      - name: Upload .app for testing
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ShadowsocksX-NG-PR-${{ github.event.pull_request.number }}
+          path: build/Debug/ShadowsocksX-NG.app
+          retention-days: 7
