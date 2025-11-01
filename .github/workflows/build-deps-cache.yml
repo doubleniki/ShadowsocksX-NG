@@ -1,0 +1,98 @@
+name: Build Dependencies Cache
+
+# Этот workflow создаёт кеш нативных зависимостей
+# Запускается вручную или при изменении deps/
+on:
+  workflow_dispatch:
+    inputs:
+      force_rebuild:
+        description: 'Force rebuild even if cache exists'
+        required: false
+        type: boolean
+        default: false
+  push:
+    paths:
+      - 'deps/**'
+      - '.github/workflows/build-deps-cache.yml'
+    branches:
+      - develop
+
+jobs:
+  build-cache:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install build tools
+        run: |
+          brew install automake autoconf libtool
+
+      # Проверить существующий кеш
+      - name: Check existing cache
+        if: ${{ !inputs.force_rebuild }}
+        id: cache-check
+        uses: actions/cache@v4
+        with:
+          path: deps/dist
+          key: deps-${{ runner.os }}-${{ hashFiles('deps/**', '!deps/dist') }}
+          lookup-only: true
+
+      - name: Build all dependencies
+        if: steps.cache-check.outputs.cache-hit != 'true' || inputs.force_rebuild
+        run: |
+          echo "Building native dependencies for both architectures..."
+          make -C deps all
+        env:
+          MAKEFLAGS: "-j$(sysctl -n hw.ncpu)"
+
+      # Сохранить в кеш
+      - name: Save to cache
+        uses: actions/cache/save@v4
+        if: steps.cache-check.outputs.cache-hit != 'true' || inputs.force_rebuild
+        with:
+          path: |
+            deps/dist
+            ShadowsocksX-NG/ss-local
+            ShadowsocksX-NG/privoxy
+            ShadowsocksX-NG/simple-obfs
+            ShadowsocksX-NG/v2ray-plugin
+            ShadowsocksX-NG/kcptun
+          key: deps-${{ runner.os }}-${{ hashFiles('deps/**', '!deps/dist') }}
+
+      # Опционально: создать архив и загрузить как release asset
+      - name: Create deps archive
+        if: github.ref == 'refs/heads/develop'
+        run: |
+          cd deps
+          tar -czf ../deps-dist.tar.gz dist/
+          cd ..
+          shasum -a 256 deps-dist.tar.gz > deps-dist.tar.gz.checksum
+          ls -lh deps-dist.tar.gz
+
+      - name: Upload deps archive
+        if: github.ref == 'refs/heads/develop'
+        uses: actions/upload-artifact@v4
+        with:
+          name: deps-cache-${{ github.sha }}
+          path: |
+            deps-dist.tar.gz
+            deps-dist.tar.gz.checksum
+          retention-days: 90
+
+      # Информация о собранных бинарниках
+      - name: Verify built binaries
+        run: |
+          echo "=== Built binaries ==="
+          file ShadowsocksX-NG/ss-local/ss-local
+          file ShadowsocksX-NG/privoxy/privoxy
+          file ShadowsocksX-NG/simple-obfs/obfs-local
+          file ShadowsocksX-NG/v2ray-plugin/v2ray-plugin
+          file ShadowsocksX-NG/kcptun/client
+          echo "=== Sizes ==="
+          ls -lh ShadowsocksX-NG/*/
+          echo "=== Total deps size ==="
+          du -sh deps/dist
