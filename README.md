@@ -1,8 +1,10 @@
 # ShadowsocksX-NG
 
-[Download](https://github.com/shadowsocks/ShadowsocksX-NG/releases/latest)
+> **Note**: This is a fork of the [original ShadowsocksX-NG](https://github.com/shadowsocks/ShadowsocksX-NG) with additional UI improvements and optimized build pipeline.
 
-[![Actions Status](https://github.com/shadowsocks/ShadowsocksX-NG/workflows/CI/badge.svg)](https://github.com/shadowsocks/ShadowsocksX-NG/actions)
+[Download](https://github.com/doubleniki/ShadowsocksX-NG/releases/latest)
+
+[![Actions Status](https://github.com/doubleniki/ShadowsocksX-NG/workflows/Feature%20Building%20(Optimized)/badge.svg)](https://github.com/doubleniki/ShadowsocksX-NG/actions)
 
 Next Generation of [ShadowsocksX](https://github.com/shadowsocks/shadowsocks-iOS)
 
@@ -29,7 +31,7 @@ macOS 10.12+
 
 ## Download
 
-From [here](https://github.com/shadowsocks/ShadowsocksX-NG/releases/)
+From [here](https://github.com/doubleniki/ShadowsocksX-NG/releases/)
 
 ## Features
 
@@ -42,6 +44,27 @@ From [here](https://github.com/shadowsocks/ShadowsocksX-NG/releases/)
 - Custom rules for PAC.
 - Support for [AEAD Ciphers](https://shadowsocks.org/en/spec/AEAD-Ciphers.html)
 - HTTP Proxy by [privoxy](http://www.privoxy.org/)
+
+## Enhancements in This Fork
+
+### UI Improvements
+- **Persistent User Rules Window**: The User Rules editor now remembers its last configured size and position
+- **Quick Add Domain**: Enhanced User Rules editor with convenient domain adding features:
+  - Text field for quick domain entry
+  - "Add" button to add domains instantly
+  - "Add from Clipboard" button to extract domains from clipboard URLs
+  - Smart domain extraction from full URLs (automatically strips protocol and www prefix)
+  - Duplicate detection to prevent adding the same domain twice
+  - Input validation to ensure proper domain format
+
+### Build Pipeline Optimizations
+- **Optimized GitHub Actions workflows** with multi-level caching:
+  - Homebrew packages caching
+  - Native dependencies (shadowsocks-libev, privoxy, plugins) caching
+  - CocoaPods dependencies caching
+  - Build time reduced by 71-86% (from ~35 minutes to 5-10 minutes)
+- **Smart commit filtering**: Builds only trigger for code changes (feat, fix, refactor), not for documentation or style updates
+- **Efficient artifact management**: Different retention policies for releases vs. feature builds
 
 ## Difference from original ShadowsocksX
 
