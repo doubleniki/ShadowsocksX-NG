@@ -70,7 +70,13 @@ universal:
 
 .PHONY: pcre
 pcre:
-	[ -f pcre.tar.gz ] || curl -L -o pcre.tar.gz 'https://downloads.sourceforge.net/project/pcre/pcre/8.45/pcre-8.45.tar.gz'
+	[ -f pcre.tar.gz ] || { \
+		curl -L -o pcre.tar.gz 'https://downloads.sourceforge.net/project/pcre/pcre/8.45/pcre-8.45.tar.gz' && \
+		file pcre.tar.gz | grep -q 'gzip compressed data' || { \
+			rm -f pcre.tar.gz; \
+			curl -L -o pcre.tar.gz 'https://ftp.exim.org/pub/pcre/pcre-8.45.tar.gz'; \
+		}; \
+	}
 	tar -xf pcre.tar.gz
 	cd pcre-8.45 \
 		&& CXXFLAGS="-target $(TARGET)" CFLAGS="-target $(TARGET)" ./configure --prefix $${PWD}/../dist/$(ARCH)/pcre \
