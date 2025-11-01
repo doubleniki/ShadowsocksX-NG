@@ -104,7 +104,7 @@ libev:
 		&& make clean
 
 .PHONY: privoxy
-privoxy:
+privoxy: pcre
 	[ -f privoxy.tar.gz ] || curl -L -o privoxy.tar.gz 'https://www.privoxy.org/sf-download-mirror/Sources/3.0.33%20%28stable%29/privoxy-3.0.33-stable-src.tar.gz'
 	tar -xf privoxy.tar.gz
 	cd privoxy-3.0.33-stable \
@@ -172,7 +172,7 @@ shadowsocks-libev: pcre libev c-ares libsodium mbedtls
 		&& make clean
 
 .PHONY: simple-obfs
-simple-obfs:
+simple-obfs: libev
 	cd simple-obfs \
 		&& ./autogen.sh \
 		&& CFLAGS="-target $(TARGET)" ./configure --prefix=$${PWD}/../dist/$(ARCH)/simple-obfs \
