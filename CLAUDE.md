@@ -157,6 +157,7 @@ Test target: `ShadowsocksX-NGTests`
 **IMPORTANT for Claude Code:**
 - ALWAYS create a new feature branch before implementing any changes
 - NEVER commit directly to `develop` or `main`
+- NEVER mention yourself in commit messages
 - Branch naming convention: `feature/<description>`, `fix/<description>`, or `docs/<description>`
 - Workflow:
   1. Ensure you're on `develop`: `git checkout develop`
