@@ -13,7 +13,7 @@ jobs:
     steps:
 
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: recursive
           fetch-depth: 0
@@ -24,11 +24,11 @@ jobs:
           brew install autoconf
           brew install libtool
           make VERSION="${GITHUB_REF_NAME}" release
-          make release-dmg 
+          make release-dmg
           shasum -a 256 build/Release/ShadowsocksX-NG.dmg > build/Release/ShadowsocksX-NG.dmg.checksum
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ShadowsocksX-NG
           path: |
