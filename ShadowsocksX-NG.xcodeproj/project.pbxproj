@@ -329,7 +329,6 @@
 		9B0BFFDC1D0460A70040E62B = {
 			isa = PBXGroup;
 			children = (
-				A2210AF52EB65F920069F23B /* KeychainManager.swift */,
 				9B5831FA1E73098F009D5B7D /* README.md */,
 				9B172A601D0ADA5B00B87B9A /* genstrings.py */,
 				9B9F13A11E8A282C00DE4794 /* LaunchHelper.xcodeproj */,
@@ -367,6 +366,7 @@
 				9B0BFFEC1D0460A70040E62B /* MainMenu.xib */,
 				9B0BFFEF1D0460A70040E62B /* Info.plist */,
 				9BEEF06D1D04DCE400FC52B3 /* ServerProfile.swift */,
+				A2210AF52EB65F920069F23B /* KeychainManager.swift */,
 				9B7725E5232E30C50062299F /* PACURLFormatter.swift */,
 				9BEEF06F1D04DDB100FC52B3 /* ServerProfileManager.swift */,
 				9BEEF0771D04FE8A00FC52B3 /* LaunchAgentUtils.swift */,
