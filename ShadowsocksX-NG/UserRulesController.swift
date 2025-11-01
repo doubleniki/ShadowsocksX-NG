@@ -15,6 +15,9 @@ class UserRulesController: NSWindowController {
     override func windowDidLoad() {
         super.windowDidLoad()
 
+        // Enable automatic saving of window frame (position and size)
+        window?.setFrameAutosaveName("UserRulesWindow")
+
         let fileMgr = FileManager.default
         if !fileMgr.fileExists(atPath: PACUserRuleFilePath) {
             let src = Bundle.main.path(forResource: "user-rule", ofType: "txt")
