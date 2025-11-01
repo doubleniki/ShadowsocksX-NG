@@ -4,7 +4,7 @@
 
 [Download](https://github.com/doubleniki/ShadowsocksX-NG/releases/latest)
 
-[![Actions Status](https://github.com/doubleniki/ShadowsocksX-NG/workflows/Feature%20Building%20(Optimized)/badge.svg)](https://github.com/doubleniki/ShadowsocksX-NG/actions)
+[![Actions Status](<https://github.com/doubleniki/ShadowsocksX-NG/workflows/Feature%20Building%20(Optimized)/badge.svg>)](https://github.com/doubleniki/ShadowsocksX-NG/actions)
 
 Next Generation of [ShadowsocksX](https://github.com/shadowsocks/shadowsocks-iOS)
 
@@ -36,7 +36,7 @@ From [here](https://github.com/doubleniki/ShadowsocksX-NG/releases/)
 ## Features
 
 - `ss-local` from shadowsocks-libev 3.2.5.
-- Support SIP003 plugins. Embed `kcptun`,  `simple-obfs` and `v2ray-plugin`.
+- Support SIP003 plugins. Embed `kcptun`, `simple-obfs` and `v2ray-plugin`.
 - Could update PAC by download GFW List from GitHub.
 - Share your server profiles by qrcode or url.
 - Import server profile urls from pasteboard.
@@ -48,6 +48,7 @@ From [here](https://github.com/doubleniki/ShadowsocksX-NG/releases/)
 ## Enhancements in This Fork
 
 ### UI Improvements
+
 - **Persistent User Rules Window**: The User Rules editor now remembers its last configured size and position
 - **Quick Add Domain**: Enhanced User Rules editor with convenient domain adding features:
   - Text field for quick domain entry
@@ -58,6 +59,7 @@ From [here](https://github.com/doubleniki/ShadowsocksX-NG/releases/)
   - Input validation to ensure proper domain format
 
 ### Build Pipeline Optimizations
+
 - **Optimized GitHub Actions workflows** with multi-level caching:
   - Homebrew packages caching
   - Native dependencies (shadowsocks-libev, privoxy, plugins) caching
@@ -74,6 +76,27 @@ So after you quit the app, the `ss-local` might be still running.
 Added a manual mode which won't configure the system proxy settings,
 so that you could configure your apps to use the SOCKS5 proxy manually.
 
+## Development Documentation
+
+### UI Modernization Roadmap
+
+We're actively modernizing the UI to align with macOS Sequoia design principles while maintaining backward compatibility:
+
+- **[📋 UI Modernization Roadmap](docs/ui-modernization/MODERNIZATION_ROADMAP.md)** - Complete phased roadmap for adopting SF Symbols, SwiftUI, semantic colors, and modern macOS features (5 phases, 5-7 months)
+
+- **[🔄 Backward Compatibility Guide](docs/ui-modernization/BACKWARD_COMPATIBILITY.md)** - Quick reference for developers on maintaining compatibility across macOS 10.12+ through gradual migration
+
+**Key Highlights:**
+
+- **Phase 1-2** (10.12+): SF Symbols with PNG fallbacks, semantic colors, vibrancy
+- **Phase 3** (10.14+): SwiftUI integration, dark mode required
+- **Phase 4** (10.15+): Enhanced UX, Combine migration
+- **Phase 5** (11.0+): Full modernization, App Intents, Widgets
+
+### Project Overview
+
+- **[📖 CLAUDE.md](CLAUDE.md)** - Comprehensive project documentation including architecture, build system, launch agents, and development workflows
+
 ## Contributing
 
 Contributions must be available on a separately named branch based on the latest version of the main branch `develop`.
@@ -83,4 +106,3 @@ ref: [GitFlow](http://nvie.com/posts/a-successful-git-branching-model/)
 ## License
 
 The project is released under the terms of the GPLv3.
-
