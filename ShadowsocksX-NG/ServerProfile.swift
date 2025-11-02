@@ -93,16 +93,23 @@ class ServerProfile: NSObject, NSCopying {
                 pattern: "(.+):(.+)@(.+)", options: .init())
             if let match = parser?.firstMatch(in:s, options: [], range: NSRange(location: 0, length: s.utf16.count)) {
                 // Convert legacy format to SIP002 format
-                let r1 = Range(match.range(at: 1), in: s)!
-                let r2 = Range(match.range(at: 2), in: s)!
-                let r3 = Range(match.range(at: 3), in: s)!
+                guard let r1 = Range(match.range(at: 1), in: s),
+                      let r2 = Range(match.range(at: 2), in: s),
+                      let r3 = Range(match.range(at: 3), in: s) else {
+                    ErrorHandler.shared.warning("Failed to parse legacy SS URL ranges")
+                    return nil
+                }
+
                 let user = String(s[r1])
                 let password = String(s[r2])
                 let hostAndPort = String(s[r3])
-                
-                let rawUserInfo = "\(user):\(password)".data(using: .utf8)!
+
+                guard let rawUserInfo = "\(user):\(password)".data(using: .utf8) else {
+                    ErrorHandler.shared.warning("Failed to encode user info to UTF-8")
+                    return nil
+                }
                 let userInfo = rawUserInfo.base64EncodedString()
-                
+
                 s = "ss://\(userInfo)@\(hostAndPort)"
             }
             
@@ -183,12 +190,20 @@ class ServerProfile: NSObject, NSCopying {
         return copy;
     }
     
-    static func fromDictionary(_ data:[String:Any?]) -> ServerProfile {
+    static func fromDictionary(_ data:[String:Any?]) -> ServerProfile? {
         let cp = {
-            (profile: ServerProfile) in
-            profile.serverHost = data["ServerHost"] as! String
-            profile.serverPort = (data["ServerPort"] as! NSNumber).uint16Value
-            profile.method = data["Method"] as! String
+            (profile: ServerProfile) -> Bool in
+            // Safe unwrap of required fields
+            guard let serverHost = data["ServerHost"] as? String,
+                  let serverPortNum = data["ServerPort"] as? NSNumber,
+                  let method = data["Method"] as? String else {
+                ErrorHandler.shared.warning("Missing required fields in server profile dictionary")
+                return false
+            }
+
+            profile.serverHost = serverHost
+            profile.serverPort = serverPortNum.uint16Value
+            profile.method = method
 
             // Migrate password from UserDefaults to Keychain if it exists
             if let oldPassword = data["Password"] as? String {
@@ -202,8 +217,9 @@ class ServerProfile: NSObject, NSCopying {
                 }
             }
 
-            if let remark = data["Remark"] {
-                profile.remark = remark as! String
+            // Safe unwrap of optional fields
+            if let remark = data["Remark"] as? String {
+                profile.remark = remark
             }
             if let plugin = data["Plugin"] as? String {
                 profile.plugin = plugin
@@ -211,15 +227,21 @@ class ServerProfile: NSObject, NSCopying {
             if let pluginOptions = data["PluginOptions"] as? String {
                 profile.pluginOptions = pluginOptions
             }
+
+            return true
         }
 
         if let id = data["Id"] as? String {
             let profile = ServerProfile(uuid: id)
-            cp(profile)
+            guard cp(profile) else {
+                return nil
+            }
             return profile
         } else {
             let profile = ServerProfile()
-            cp(profile)
+            guard cp(profile) else {
+                return nil
+            }
             return profile
         }
     }

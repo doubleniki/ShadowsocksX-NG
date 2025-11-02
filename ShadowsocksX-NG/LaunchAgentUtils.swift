@@ -84,25 +84,51 @@ func generateSSLocalLauchAgentPlist() -> Bool {
 
 func StartSSLocal() {
     let bundle = Bundle.main
-    let installerPath = bundle.path(forResource: "start_ss_local.sh", ofType: nil)
-    let task = Process.launchedProcess(launchPath: installerPath!, arguments: [""])
+    guard let installerPath = bundle.path(forResource: "start_ss_local.sh", ofType: nil) else {
+        ErrorHandler.shared.handle(
+            ResourceError.resourceNotFound(name: "start_ss_local.sh", type: "script"),
+            context: "Start SS Local",
+            showAlert: true,
+            critical: true
+        )
+        return
+    }
+
+    let task = Process.launchedProcess(launchPath: installerPath, arguments: [""])
     task.waitUntilExit()
     if task.terminationStatus == 0 {
         NSLog("Start ss-local succeeded.")
     } else {
-        NSLog("Start ss-local failed.")
+        ErrorHandler.shared.handle(
+            LaunchAgentError.serviceStartFailed(service: "ss-local", exitCode: task.terminationStatus),
+            context: "Start SS Local",
+            showAlert: true
+        )
     }
 }
 
 func StopSSLocal() {
     let bundle = Bundle.main
-    let installerPath = bundle.path(forResource: "stop_ss_local.sh", ofType: nil)
-    let task = Process.launchedProcess(launchPath: installerPath!, arguments: [""])
+    guard let installerPath = bundle.path(forResource: "stop_ss_local.sh", ofType: nil) else {
+        ErrorHandler.shared.handle(
+            ResourceError.resourceNotFound(name: "stop_ss_local.sh", type: "script"),
+            context: "Stop SS Local",
+            showAlert: true,
+            critical: true
+        )
+        return
+    }
+
+    let task = Process.launchedProcess(launchPath: installerPath, arguments: [""])
     task.waitUntilExit()
     if task.terminationStatus == 0 {
         NSLog("Stop ss-local succeeded.")
     } else {
-        NSLog("Stop ss-local failed.")
+        ErrorHandler.shared.handle(
+            LaunchAgentError.serviceStopFailed(service: "ss-local", error: NSError(domain: "LaunchAgent", code: Int(task.terminationStatus))),
+            context: "Stop SS Local",
+            showAlert: true
+        )
     }
 }
 
@@ -119,13 +145,22 @@ func InstallSSLocal() {
     }
     
     let bundle = Bundle.main
-    let installerPath = bundle.path(forResource: "install_ss_local.sh", ofType: nil)
-    let task = Process.launchedProcess(launchPath: installerPath!, arguments: [""])
+    guard let installerPath = bundle.path(forResource: "install_ss_local.sh", ofType: nil) else {
+        ErrorHandler.shared.handle(
+            ResourceError.resourceNotFound(name: "install_ss_local.sh", type: "script"),
+            context: "Install SS Local",
+            showAlert: true,
+            critical: true
+        )
+        return
+    }
+
+    let task = Process.launchedProcess(launchPath: installerPath, arguments: [""])
     task.waitUntilExit()
     if task.terminationStatus == 0 {
         NSLog("Install ss-local succeeded.")
     } else {
-        NSLog("Install ss-local failed.")
+        ErrorHandler.shared.warning("Install ss-local failed with exit code: \(task.terminationStatus)")
     }
     
 }
@@ -217,13 +252,17 @@ func InstallSimpleObfs() {
     }
     
     let bundle = Bundle.main
-    let installerPath = bundle.path(forResource: "install_simple_obfs.sh", ofType: nil)
-    let task = Process.launchedProcess(launchPath: "/bin/sh", arguments: [installerPath!])
+    guard let installerPath = bundle.path(forResource: "install_simple_obfs.sh", ofType: nil) else {
+        ErrorHandler.shared.warning("install_simple_obfs.sh script not found")
+        return
+    }
+
+    let task = Process.launchedProcess(launchPath: "/bin/sh", arguments: [installerPath])
     task.waitUntilExit()
     if task.terminationStatus == 0 {
         NSLog("Install simple-obfs succeeded.")
     } else {
-        NSLog("Install simple-obfs failed.")
+        ErrorHandler.shared.warning("Install simple-obfs failed with exit code: \(task.terminationStatus)")
     }
     
 }

@@ -19,7 +19,12 @@ class ServerProfileManager: NSObject {
         let defaults = UserDefaults.standard
         if let _profiles = defaults.array(forKey: "ServerProfiles") {
             for _profile in _profiles {
-                let profile = ServerProfile.fromDictionary(_profile as! [String: Any])
+                // Safe cast and unwrap
+                guard let profileDict = _profile as? [String: Any],
+                      let profile = ServerProfile.fromDictionary(profileDict) else {
+                    ErrorHandler.shared.warning("Failed to load server profile from dictionary")
+                    continue
+                }
                 profiles.append(profile)
             }
         }
@@ -54,7 +59,12 @@ class ServerProfileManager: NSObject {
         let defaults = UserDefaults.standard
         if let _profiles = defaults.array(forKey: "ServerProfiles") {
             for _profile in _profiles {
-                let profile = ServerProfile.fromDictionary(_profile as! [String: Any])
+                // Safe cast and unwrap
+                guard let profileDict = _profile as? [String: Any],
+                      let profile = ServerProfile.fromDictionary(profileDict) else {
+                    ErrorHandler.shared.warning("Failed to load server profile from dictionary")
+                    continue
+                }
                 profiles.append(profile)
             }
         }
