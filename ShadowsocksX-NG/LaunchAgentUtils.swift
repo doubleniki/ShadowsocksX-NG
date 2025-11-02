@@ -282,13 +282,17 @@ func InstallKcptun() {
         }
     }
     let bundle = Bundle.main
-    let installerPath = bundle.path(forResource: "install_kcptun", ofType: "sh")
-    let task = Process.launchedProcess(launchPath: "/bin/sh", arguments: [installerPath!])
+    guard let installerPath = bundle.path(forResource: "install_kcptun", ofType: "sh") else {
+        ErrorHandler.shared.warning("install_kcptun.sh script not found")
+        return
+    }
+
+    let task = Process.launchedProcess(launchPath: "/bin/sh", arguments: [installerPath])
     task.waitUntilExit()
     if task.terminationStatus == 0 {
         NSLog("Install kcptun succeeded.")
     } else {
-        NSLog("Install kcptun failed.")
+        ErrorHandler.shared.warning("Install kcptun failed with exit code: \(task.terminationStatus)")
     }
 }
 
@@ -307,13 +311,17 @@ func InstallV2rayPlugin() {
         }
     }
     let bundle = Bundle.main
-    let installerPath = bundle.path(forResource: "install_v2ray_plugin", ofType: "sh")
-    let task = Process.launchedProcess(launchPath: "/bin/sh", arguments: [installerPath!])
+    guard let installerPath = bundle.path(forResource: "install_v2ray_plugin", ofType: "sh") else {
+        ErrorHandler.shared.warning("install_v2ray_plugin.sh script not found")
+        return
+    }
+
+    let task = Process.launchedProcess(launchPath: "/bin/sh", arguments: [installerPath])
     task.waitUntilExit()
     if task.terminationStatus == 0 {
         NSLog("Install v2ray-plugin succeeded.")
     } else {
-        NSLog("Install v2ray-plugin failed.")
+        ErrorHandler.shared.warning("Install v2ray-plugin failed with exit code: \(task.terminationStatus)")
     }
 }
 
@@ -357,25 +365,43 @@ func generatePrivoxyLauchAgentPlist() -> Bool {
 
 func StartPrivoxy() {
     let bundle = Bundle.main
-    let installerPath = bundle.path(forResource: "start_privoxy.sh", ofType: nil)
-    let task = Process.launchedProcess(launchPath: installerPath!, arguments: [""])
+    guard let installerPath = bundle.path(forResource: "start_privoxy.sh", ofType: nil) else {
+        ErrorHandler.shared.handle(
+            ResourceError.resourceNotFound(name: "start_privoxy.sh", type: "script"),
+            context: "Start Privoxy",
+            showAlert: true,
+            critical: true
+        )
+        return
+    }
+
+    let task = Process.launchedProcess(launchPath: installerPath, arguments: [""])
     task.waitUntilExit()
     if task.terminationStatus == 0 {
         NSLog("Start privoxy succeeded.")
     } else {
-        NSLog("Start privoxy failed.")
+        ErrorHandler.shared.warning("Start privoxy failed with exit code: \(task.terminationStatus)")
     }
 }
 
 func StopPrivoxy() {
     let bundle = Bundle.main
-    let installerPath = bundle.path(forResource: "stop_privoxy.sh", ofType: nil)
-    let task = Process.launchedProcess(launchPath: installerPath!, arguments: [""])
+    guard let installerPath = bundle.path(forResource: "stop_privoxy.sh", ofType: nil) else {
+        ErrorHandler.shared.handle(
+            ResourceError.resourceNotFound(name: "stop_privoxy.sh", type: "script"),
+            context: "Stop Privoxy",
+            showAlert: true,
+            critical: true
+        )
+        return
+    }
+
+    let task = Process.launchedProcess(launchPath: installerPath, arguments: [""])
     task.waitUntilExit()
     if task.terminationStatus == 0 {
         NSLog("Stop privoxy succeeded.")
     } else {
-        NSLog("Stop privoxy failed.")
+        ErrorHandler.shared.warning("Stop privoxy failed with exit code: \(task.terminationStatus)")
     }
 }
 
@@ -392,27 +418,56 @@ func InstallPrivoxy() {
     }
     
     let bundle = Bundle.main
-    let installerPath = bundle.path(forResource: "install_privoxy.sh", ofType: nil)
-    let task = Process.launchedProcess(launchPath: installerPath!, arguments: [""])
+    guard let installerPath = bundle.path(forResource: "install_privoxy.sh", ofType: nil) else {
+        ErrorHandler.shared.handle(
+            ResourceError.resourceNotFound(name: "install_privoxy.sh", type: "script"),
+            context: "Install Privoxy",
+            showAlert: true,
+            critical: true
+        )
+        return
+    }
+
+    let task = Process.launchedProcess(launchPath: installerPath, arguments: [""])
     task.waitUntilExit()
     if task.terminationStatus == 0 {
         NSLog("Install privoxy succeeded.")
     } else {
-        NSLog("Install privoxy failed.")
+        ErrorHandler.shared.warning("Install privoxy failed with exit code: \(task.terminationStatus)")
     }
     
     let userConfigDir = homeDir + USER_CONFIG_DIR
     // Make dir: '~/.ShadowsocksX-NG'
     if !fileMgr.fileExists(atPath: userConfigDir) {
-        try! fileMgr.createDirectory(atPath: userConfigDir
-                                     , withIntermediateDirectories: true, attributes: nil)
+        do {
+            try fileMgr.createDirectory(atPath: userConfigDir, withIntermediateDirectories: true, attributes: nil)
+        } catch {
+            ErrorHandler.shared.handle(
+                FileSystemError.writeFailed(path: userConfigDir, error: error),
+                context: "Install Privoxy",
+                showAlert: true
+            )
+            return
+        }
     }
-    
+
     // Install empty `user-privoxy.config` file.
     let userConfigPath = userConfigDir + "user-privoxy.config"
     if !fileMgr.fileExists(atPath: userConfigPath) {
-        let srcPath = Bundle.main.path(forResource: "user-privoxy", ofType: "config")!
-        try! fileMgr.copyItem(atPath: srcPath, toPath: userConfigPath)
+        guard let srcPath = Bundle.main.path(forResource: "user-privoxy", ofType: "config") else {
+            ErrorHandler.shared.warning("user-privoxy.config resource not found")
+            return
+        }
+
+        do {
+            try fileMgr.copyItem(atPath: srcPath, toPath: userConfigPath)
+        } catch {
+            ErrorHandler.shared.handle(
+                FileSystemError.writeFailed(path: userConfigPath, error: error),
+                context: "Install Privoxy",
+                showAlert: true
+            )
+        }
     }
 }
 
