@@ -57,18 +57,36 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
         if fileMgr.fileExists(atPath: dirPath) {
             do {
                 let attrs = try fileMgr.attributesOfItem(atPath: dirPath)
-                if attrs[FileAttributeKey.ownerAccountName] as! String != NSUserName() {
-                    //try fileMgr.setAttributes([FileAttributeKey.ownerAccountName: NSUserName()], ofItemAtPath: dirPath)
-                    let bashFilePath = Bundle.main.path(forResource: "fix_dir_owner.sh", ofType: nil)!
+                
+                // Safe unwrap of owner name
+                guard let owner = attrs[FileAttributeKey.ownerAccountName] as? String else {
+                    ErrorHandler.shared.warning("Could not determine directory owner for \(dirPath)")
+                    return
+                }
+                
+                if owner != NSUserName() {
+                    // Safe unwrap of script path
+                    guard let bashFilePath = Bundle.main.path(forResource: "fix_dir_owner.sh", ofType: nil) else {
+                        ErrorHandler.shared.warning("fix_dir_owner.sh script not found in bundle")
+                        return
+                    }
+                    
                     let script = "do shell script \"bash \\\"\(bashFilePath)\\\" \(NSUserName()) \" with administrator privileges"
                     if let appleScript = NSAppleScript(source: script) {
                         var err: NSDictionary? = nil
                         appleScript.executeAndReturnError(&err)
+                        if let error = err {
+                            ErrorHandler.shared.warning("AppleScript error: \(error)")
+                        }
                     }
                 }
             }
             catch {
-                NSLog("Error when ensure the owner of $HOME/Library/LaunchAgents, \(error.localizedDescription)")
+                ErrorHandler.shared.handle(
+                    error,
+                    context: "Ensure LaunchAgents Directory Owner",
+                    showAlert: false
+                )
             }
         }
     }
@@ -331,9 +349,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
         if let text = pb.string(forType: NSPasteboard.PasteboardType.string) {
             var urls = text.split(separator: "\n")
                 .map { String($0).trimmingCharacters(in: CharacterSet.whitespacesAndNewlines) }
-                .map { URL(string: $0) }
-                .filter { $0 != nil }
-                .map { $0! }
+                .compactMap { URL(string: $0) }  // compactMap automatically unwraps non-nil values
             urls = urls.filter { $0.scheme == "ss" }
             
             NotificationCenter.default.post(
@@ -411,7 +427,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
     @IBAction func copyExportCommand(_ sender: NSMenuItem) {
         // Get the Http proxy config.
         let defaults = UserDefaults.standard
-        let address = defaults.string(forKey: "LocalHTTP.ListenAddress")!
+        guard let address = defaults.string(forKey: "LocalHTTP.ListenAddress") else {
+            ErrorHandler.shared.warning("HTTP proxy address not configured")
+            return
+        }
         let port = defaults.integer(forKey: "LocalHTTP.ListenPort")
         
         // Format an export string.
@@ -428,18 +447,34 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
     @IBAction func showLogs(_ sender: NSMenuItem) {
         let ws = NSWorkspace.shared
         if let appUrl = ws.urlForApplication(withBundleIdentifier: "com.apple.Console") {
-            try! ws.launchApplication(at: appUrl
-                ,options: NSWorkspace.LaunchOptions.default
-                ,configuration: [NSWorkspace.LaunchConfigurationKey.arguments: "~/Library/Logs/ss-local.log"])
+            do {
+                try ws.launchApplication(at: appUrl
+                    ,options: NSWorkspace.LaunchOptions.default
+                    ,configuration: [NSWorkspace.LaunchConfigurationKey.arguments: "~/Library/Logs/ss-local.log"])
+            } catch {
+                ErrorHandler.shared.handle(
+                    error,
+                    context: "Open Console.app",
+                    showAlert: true
+                )
+            }
         }
     }
     
     @IBAction func feedback(_ sender: NSMenuItem) {
-        NSWorkspace.shared.open(URL(string: "https://github.com/qiuyuzhou/ShadowsocksX-NG/issues")!)
+        guard let url = URL(string: "https://github.com/qiuyuzhou/ShadowsocksX-NG/issues") else {
+            ErrorHandler.shared.warning("Invalid feedback URL")
+            return
+        }
+        NSWorkspace.shared.open(url)
     }
     
     @IBAction func checkForUpdates(_ sender: NSMenuItem) {
-        NSWorkspace.shared.open(URL(string: "https://github.com/shadowsocks/ShadowsocksX-NG/releases")!)
+        guard let url = URL(string: "https://github.com/shadowsocks/ShadowsocksX-NG/releases") else {
+            ErrorHandler.shared.warning("Invalid update URL")
+            return
+        }
+        NSWorkspace.shared.open(url)
     }
     
     @IBAction func exportDiagnosis(_ sender: NSMenuItem) {
@@ -460,13 +495,26 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
         if (result.rawValue == NSFileHandlingPanelOKButton) {
             if let url = savePanel.url {
                 let diagnosisText = diagnose()
-                try! diagnosisText.write(to: url, atomically: false, encoding: String.Encoding.utf8)
+                do {
+                    try diagnosisText.write(to: url, atomically: false, encoding: String.Encoding.utf8)
+                } catch {
+                    ErrorHandler.shared.handle(
+                        error,
+                        context: "Save Diagnosis File",
+                        showAlert: true,
+                        critical: true
+                    )
+                }
             }
         }
     }
     
     @IBAction func showHelp(_ sender: NSMenuItem) {
-        NSWorkspace.shared.open(URL(string: "https://github.com/shadowsocks/ShadowsocksX-NG/wiki")!)
+        guard let url = URL(string: "https://github.com/shadowsocks/ShadowsocksX-NG/wiki") else {
+            ErrorHandler.shared.warning("Invalid help URL")
+            return
+        }
+        NSWorkspace.shared.open(url)
     }
     
     @IBAction func showAbout(_ sender: NSMenuItem) {
@@ -649,7 +697,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
             let subtitle = (userInfo["subtitle"] as? String) ?? ""
             let body = (userInfo["body"] as? String) ?? ""
             
-            let urls: [URL] = userInfo["urls"] as! [URL]
+            // Safe cast of URLs array
+            guard let urls = userInfo["urls"] as? [URL], !urls.isEmpty else {
+                ErrorHandler.shared.warning("Invalid or empty URLs in notification")
+                return
+            }
+            
             let addCount = ServerProfileManager.instance.addServerProfileByURL(urls: urls)
             
             if addCount > 0 {
