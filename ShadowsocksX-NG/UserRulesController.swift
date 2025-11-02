@@ -27,12 +27,28 @@ class UserRulesController: NSWindowController {
 
         let fileMgr = FileManager.default
         if !fileMgr.fileExists(atPath: PACUserRuleFilePath) {
-            let src = Bundle.main.path(forResource: "user-rule", ofType: "txt")
-            try! fileMgr.copyItem(atPath: src!, toPath: PACUserRuleFilePath)
+            guard let src = Bundle.main.path(forResource: "user-rule", ofType: "txt") else {
+                ErrorHandler.shared.handle(
+                    ResourceError.resourceNotFound(name: "user-rule", type: "txt"),
+                    context: "Initialize User Rules",
+                    showAlert: true,
+                    critical: true
+                )
+                return
+            }
+            do {
+                try fileMgr.copyItem(atPath: src, toPath: PACUserRuleFilePath)
+            } catch {
+                ErrorHandler.shared.handle(
+                    FileSystemError.writeFailed(path: PACUserRuleFilePath, error: error),
+                    context: "Initialize User Rules",
+                    showAlert: true
+                )
+            }
         }
 
-        let str = try? String(contentsOfFile: PACUserRuleFilePath, encoding: String.Encoding.utf8)
-        userRulesView.string = str!
+        let str = (try? String(contentsOfFile: PACUserRuleFilePath, encoding: String.Encoding.utf8)) ?? ""
+        userRulesView.string = str
 
         setupQuickAddUI()
     }

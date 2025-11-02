@@ -53,33 +53,99 @@ func GeneratePACFile() -> Bool {
     // Maker the dir if rulesDirPath is not exesited.
     if !fileMgr.fileExists(atPath: PACRulesDirPath) {
         if fileMgr.fileExists(atPath: OldErrorPACRulesDirPath) {
-            try! fileMgr.moveItem(atPath: OldErrorPACRulesDirPath, toPath: PACRulesDirPath)
+            do {
+                try fileMgr.moveItem(atPath: OldErrorPACRulesDirPath, toPath: PACRulesDirPath)
+            } catch {
+                ErrorHandler.shared.handle(
+                    FileSystemError.writeFailed(path: PACRulesDirPath, error: error),
+                    context: "Generate PAC File",
+                    showAlert: true
+                )
+                return false
+            }
         } else {
-            try! fileMgr.createDirectory(atPath: PACRulesDirPath
-                , withIntermediateDirectories: true, attributes: nil)
+            do {
+                try fileMgr.createDirectory(atPath: PACRulesDirPath, withIntermediateDirectories: true, attributes: nil)
+            } catch {
+                ErrorHandler.shared.handle(
+                    FileSystemError.writeFailed(path: PACRulesDirPath, error: error),
+                    context: "Generate PAC File",
+                    showAlert: true
+                )
+                return false
+            }
         }
     }
     
     // If gfwlist.txt is not exsited, copy from bundle
     if !fileMgr.fileExists(atPath: GFWListFilePath) {
-        let src = Bundle.main.path(forResource: "gfwlist", ofType: "txt")
-        try! fileMgr.copyItem(atPath: src!, toPath: GFWListFilePath)
+        guard let src = Bundle.main.path(forResource: "gfwlist", ofType: "txt") else {
+            ErrorHandler.shared.handle(
+                ResourceError.resourceNotFound(name: "gfwlist", type: "txt"),
+                context: "Generate PAC File",
+                showAlert: true,
+                critical: true
+            )
+            return false
+        }
+        do {
+            try fileMgr.copyItem(atPath: src, toPath: GFWListFilePath)
+        } catch {
+            ErrorHandler.shared.handle(
+                FileSystemError.writeFailed(path: GFWListFilePath, error: error),
+                context: "Generate PAC File",
+                showAlert: true
+            )
+            return false
+        }
     }
     
     // If user-rule.txt is not exsited, copy from bundle
     if !fileMgr.fileExists(atPath: PACUserRuleFilePath) {
-        let src = Bundle.main.path(forResource: "user-rule", ofType: "txt")
-        try! fileMgr.copyItem(atPath: src!, toPath: PACUserRuleFilePath)
+        guard let src = Bundle.main.path(forResource: "user-rule", ofType: "txt") else {
+            ErrorHandler.shared.handle(
+                ResourceError.resourceNotFound(name: "user-rule", type: "txt"),
+                context: "Generate PAC File",
+                showAlert: true,
+                critical: true
+            )
+            return false
+        }
+        do {
+            try fileMgr.copyItem(atPath: src, toPath: PACUserRuleFilePath)
+        } catch {
+            ErrorHandler.shared.handle(
+                FileSystemError.writeFailed(path: PACUserRuleFilePath, error: error),
+                context: "Generate PAC File",
+                showAlert: true
+            )
+            return false
+        }
     }
-    
-    let socks5Address = UserDefaults.standard.string(forKey: "LocalSocks5.ListenAddress")!
+
+    guard let socks5Address = UserDefaults.standard.string(forKey: "LocalSocks5.ListenAddress") else {
+        ErrorHandler.shared.handle(
+            PACError.invalidFormat(reason: "LocalSocks5.ListenAddress not configured"),
+            context: "Generate PAC File",
+            showAlert: true,
+            critical: true
+        )
+        return false
+    }
     let socks5Port = UserDefaults.standard.integer(forKey: "LocalSocks5.ListenPort")
-    
+
     do {
         let gfwlist = try String(contentsOfFile: GFWListFilePath, encoding: String.Encoding.utf8)
         if let data = Data(base64Encoded: gfwlist, options: .ignoreUnknownCharacters) {
-            let str = String(data: data, encoding: String.Encoding.utf8)
-            var lines = str!.components(separatedBy: CharacterSet.newlines)
+            guard let str = String(data: data, encoding: String.Encoding.utf8) else {
+                ErrorHandler.shared.handle(
+                    PACError.invalidFormat(reason: "Failed to decode GFW list data as UTF-8"),
+                    context: "Generate PAC File",
+                    showAlert: true
+                )
+                return false
+            }
+            var lines = str.components(separatedBy: CharacterSet.newlines)
             
             do {
                 let userRuleStr = try String(contentsOfFile: PACUserRuleFilePath, encoding: String.Encoding.utf8)

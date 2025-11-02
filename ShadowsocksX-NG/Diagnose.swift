@@ -29,10 +29,25 @@ func diagnose() -> String {
     var strs = [String]()
     
     strs.append("\n-----------------------------------\n")
-    let infoDict = Bundle.main.infoDictionary!
-    let infoDictJsonData = try! JSONSerialization.data(withJSONObject: infoDict, options: JSONSerialization.WritingOptions.prettyPrinted)
-    
-    strs.append(String(data: infoDictJsonData, encoding: String.Encoding.utf8)!)
+
+    // Safe access to bundle info dictionary
+    guard let infoDict = Bundle.main.infoDictionary else {
+        strs.append("ERROR: Could not access bundle info dictionary\n")
+        strs.append("\n-----------------------------------\n")
+        return strs.joined()
+    }
+
+    do {
+        let infoDictJsonData = try JSONSerialization.data(withJSONObject: infoDict, options: JSONSerialization.WritingOptions.prettyPrinted)
+        if let jsonString = String(data: infoDictJsonData, encoding: String.Encoding.utf8) {
+            strs.append(jsonString)
+        } else {
+            strs.append("ERROR: Could not encode info dictionary as UTF-8\n")
+        }
+    } catch {
+        strs.append("ERROR: Failed to serialize info dictionary: \(error.localizedDescription)\n")
+    }
+
     strs.append("\n-----------------------------------\n")
     
     let defaults = UserDefaults.standard

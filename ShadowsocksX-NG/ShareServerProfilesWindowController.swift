@@ -87,9 +87,22 @@ class ShareServerProfilesWindowController: NSWindowController
             savePanel.becomeKey()
             let result = savePanel.runModal()
             if (result.rawValue == NSFileHandlingPanelOKButton && (savePanel.url) != nil) {
-                let imgRep = NSBitmapImageRep(data: img.tiffRepresentation!)
-                let data = imgRep?.representation(using: NSBitmapImageRep.FileType.gif, properties: [:])
-                try! data?.write(to: savePanel.url!)
+                guard let tiffData = img.tiffRepresentation,
+                      let imgRep = NSBitmapImageRep(data: tiffData),
+                      let data = imgRep.representation(using: NSBitmapImageRep.FileType.gif, properties: [:]),
+                      let url = savePanel.url else {
+                    ErrorHandler.shared.warning("Failed to prepare QR code image for saving")
+                    return
+                }
+                do {
+                    try data.write(to: url)
+                } catch {
+                    ErrorHandler.shared.handle(
+                        FileSystemError.writeFailed(path: url.path, error: error),
+                        context: "Save QR Code",
+                        showAlert: true
+                    )
+                }
             }
         }
     }
@@ -117,9 +130,21 @@ class ShareServerProfilesWindowController: NSWindowController
         savePanel.nameFieldStringValue = "shadowsocks_profiles_\(date_string).txt"
         savePanel.becomeKey()
         let result = savePanel.runModal()
-        if (result.rawValue == NSFileHandlingPanelOKButton && (savePanel.url) != nil) {
+        if (result.rawValue == NSFileHandlingPanelOKButton) {
+            guard let url = savePanel.url else {
+                ErrorHandler.shared.warning("No URL selected for saving")
+                return
+            }
             let urls = getAllServerURLs()
-            try! urls.write(to: (savePanel.url)!, atomically: true, encoding: String.Encoding.utf8)
+            do {
+                try urls.write(to: url, atomically: true, encoding: String.Encoding.utf8)
+            } catch {
+                ErrorHandler.shared.handle(
+                    FileSystemError.writeFailed(path: url.path, error: error),
+                    context: "Export Server URLs",
+                    showAlert: true
+                )
+            }
         }
     }
     
