@@ -348,7 +348,17 @@ func generatePrivoxyLauchAgentPlist() -> Bool {
     // Ensure launch agent directory is existed.
     let fileMgr = FileManager.default
     if !fileMgr.fileExists(atPath: launchAgentDirPath) {
-        try! fileMgr.createDirectory(atPath: launchAgentDirPath, withIntermediateDirectories: true, attributes: nil)
+        do {
+            try fileMgr.createDirectory(atPath: launchAgentDirPath, withIntermediateDirectories: true, attributes: nil)
+        } catch {
+            ErrorHandler.shared.handle(
+                LaunchAgentError.directoryCreationFailed(path: launchAgentDirPath, error: error),
+                context: "Generate Privoxy Launch Agent",
+                showAlert: true,
+                critical: true
+            )
+            return false
+        }
     }
     
     let oldSha1Sum = getFileSHA1Sum(plistFilepath)

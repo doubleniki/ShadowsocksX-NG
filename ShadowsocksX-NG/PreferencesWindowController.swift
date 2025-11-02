@@ -142,7 +142,10 @@ class PreferencesWindowController: NSWindowController
         for (_, toDuplicateIndex) in profilesTableView.selectedRowIndexes.enumerated() {
             print(profileMgr.profiles.count)
             let profile = profileMgr.profiles[toDuplicateIndex + copyCount]
-            let duplicateProfile = profile.copy() as! ServerProfile
+            guard let duplicateProfile = profile.copy() as? ServerProfile else {
+                ErrorHandler.shared.warning("Failed to copy server profile")
+                continue
+            }
             duplicateProfile.uuid = UUID().uuidString
             profileMgr.profiles.insert(duplicateProfile, at:toDuplicateIndex + copyCount)
             
@@ -159,7 +162,12 @@ class PreferencesWindowController: NSWindowController
     }
     
     @IBAction func togglePasswordVisible(_ sender: Any) {
-        if passwordTabView.selectedTabViewItem?.identifier as! String == "secure" {
+        guard let identifier = passwordTabView.selectedTabViewItem?.identifier as? String else {
+            ErrorHandler.shared.warning("Could not determine password tab identifier")
+            return
+        }
+
+        if identifier == "secure" {
             passwordTabView.selectTabViewItem(withIdentifier: "insecure")
             togglePasswordVisibleButton.image = NSImage(named: "icons8-Eye Filled-50")
         } else {
@@ -310,9 +318,12 @@ class PreferencesWindowController: NSWindowController
             var oldIndexes = [Int]()
             info.enumerateDraggingItems(options: [], for: tableView, classes: [NSPasteboardItem.self], searchOptions: [:], using: {
                 (draggingItem: NSDraggingItem, idx: Int, stop: UnsafeMutablePointer<ObjCBool>) in
-                if let str = (draggingItem.item as! NSPasteboardItem).string(forType: NSPasteboard.PasteboardType(rawValue: self.tableViewDragType)), let index = Int(str) {
-                    oldIndexes.append(index)
+                guard let pasteboardItem = draggingItem.item as? NSPasteboardItem,
+                      let str = pasteboardItem.string(forType: NSPasteboard.PasteboardType(rawValue: self.tableViewDragType)),
+                      let index = Int(str) else {
+                    return
                 }
+                oldIndexes.append(index)
             })
             
             var oldIndexOffset = 0

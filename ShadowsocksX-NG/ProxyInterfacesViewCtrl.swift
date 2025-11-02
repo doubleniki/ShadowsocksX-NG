@@ -43,27 +43,29 @@ class ProxyInterfacesViewCtrl: NSViewController, NSTableViewDataSource, NSTableV
     
     func tableView(_ tableView: NSTableView, objectValueFor tableColumn: NSTableColumn?
         , row: Int) -> Any? {
-        let cell = tableColumn!.dataCell as! NSButtonCell
-        
-        let networkService = networkServices[row] as! [String: Any]
-        let key = networkService["key"] as! String
-        if selectedNetworkServices.contains(key) {
-            cell.state = .on
-        } else {
-            cell.state = .off
+        guard let tableColumn = tableColumn,
+              let cell = tableColumn.dataCell as? NSButtonCell,
+              let networkService = networkServices[row] as? [String: Any],
+              let key = networkService["key"] as? String,
+              let userDefinedName = networkService["userDefinedName"] as? String else {
+            return nil
         }
-        let userDefinedName = networkService["userDefinedName"] as! String
+
+        cell.state = selectedNetworkServices.contains(key) ? .on : .off
         cell.title = userDefinedName
         return cell
     }
     
     func tableView(_ tableView: NSTableView, setObjectValue object: Any?
         , for tableColumn: NSTableColumn?, row: Int) {
-        let networkService = networkServices[row] as! [String: Any]
-        let key = networkService["key"] as! String
-        
-//        NSLog("%d", object!.integerValue)
-        if (object! as AnyObject).intValue == 1 {
+        guard let networkService = networkServices[row] as? [String: Any],
+              let key = networkService["key"] as? String,
+              let objectValue = object,
+              (objectValue as AnyObject).intValue == 1 else {
+            return
+        }
+
+        if true {
             selectedNetworkServices.add(key)
         } else {
             selectedNetworkServices.remove(key)
