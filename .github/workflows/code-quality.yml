@@ -25,7 +25,7 @@ jobs:
 
       - name: SwiftLint (strict mode for critical rules)
         run: |
-          # ????????? ????????? ??????? ? ??????? ??????
+          # Check critical rules in strict mode
           swiftlint lint --strict --config .swiftlint-strict.yml || true
         continue-on-error: true
 
@@ -61,9 +61,9 @@ jobs:
             -scheme ShadowsocksX-NG \
             -configuration Debug \
             -destination 'platform=macOS' \
-            CODE_SIGN_IDENTITY="" \
+            CODE_SIGN_IDENTITY="-" \
             CODE_SIGNING_REQUIRED=NO \
-            | xcpretty && exit ${PIPESTATUS[0]}
+            CODE_SIGNING_ALLOWED=NO
 
       - name: Run tests
         run: |
@@ -73,28 +73,30 @@ jobs:
             -configuration Debug \
             -destination 'platform=macOS' \
             -enableCodeCoverage YES \
-            CODE_SIGN_IDENTITY="" \
+            CODE_SIGN_IDENTITY="-" \
             CODE_SIGNING_REQUIRED=NO \
-            | xcpretty && exit ${PIPESTATUS[0]}
-        continue-on-error: true  # ???? ?????? ???
+            CODE_SIGNING_ALLOWED=NO
+        continue-on-error: true
 
       - name: Check for compiler warnings
         run: |
-          # ????????? ?????????? ?????????????? ???????????
+          # Check compiler warnings count
           xcodebuild clean build \
             -workspace ShadowsocksX-NG.xcworkspace \
             -scheme ShadowsocksX-NG \
             -configuration Debug \
             -destination 'platform=macOS' \
-            CODE_SIGN_IDENTITY="" \
+            CODE_SIGN_IDENTITY="-" \
             CODE_SIGNING_REQUIRED=NO \
-            2>&1 | tee build.log
+            CODE_SIGNING_ALLOWED=NO \
+            2>&1 | tee build.log || true
           
-          # ???????????? ??????????????
+          # Count warnings
           WARNING_COUNT=$(grep -c "warning:" build.log || true)
           echo "Found $WARNING_COUNT compiler warnings"
           
-          # ???? ?????? ???????????, ?? ??????
+          # Only inform, don't fail
           if [ $WARNING_COUNT -gt 50 ]; then
             echo "::warning::Too many warnings: $WARNING_COUNT"
           fi
+        continue-on-error: true

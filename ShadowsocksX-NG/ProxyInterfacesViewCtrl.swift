@@ -12,8 +12,8 @@ import RxSwift
 
 class ProxyInterfacesViewCtrl: NSViewController, NSTableViewDataSource, NSTableViewDelegate {
     
-    var networkServices: NSArray!
-    var selectedNetworkServices: NSMutableSet!
+    var networkServices: NSArray?
+    var selectedNetworkServices: NSMutableSet = NSMutableSet()
     
     @IBOutlet weak var tableView: NSTableView!
     @IBOutlet weak var autoConfigCheckBox: NSButton!
@@ -35,17 +35,16 @@ class ProxyInterfacesViewCtrl: NSViewController, NSTableViewDataSource, NSTableV
     //--------------------------------------------------
     // For NSTableViewDataSource
     func numberOfRows(in tableView: NSTableView) -> Int {
-        if networkServices != nil {
-            return networkServices.count
-        }
-        return 0;
+        return networkServices?.count ?? 0
     }
     
     func tableView(_ tableView: NSTableView, objectValueFor tableColumn: NSTableColumn?
         , row: Int) -> Any? {
         guard let tableColumn = tableColumn,
               let cell = tableColumn.dataCell as? NSButtonCell,
-              let networkService = networkServices[row] as? [String: Any],
+              let services = networkServices,
+              row < services.count,
+              let networkService = services[row] as? [String: Any],
               let key = networkService["key"] as? String,
               let userDefinedName = networkService["userDefinedName"] as? String else {
             return nil
@@ -58,14 +57,16 @@ class ProxyInterfacesViewCtrl: NSViewController, NSTableViewDataSource, NSTableV
     
     func tableView(_ tableView: NSTableView, setObjectValue object: Any?
         , for tableColumn: NSTableColumn?, row: Int) {
-        guard let networkService = networkServices[row] as? [String: Any],
+        guard let services = networkServices,
+              row < services.count,
+              let networkService = services[row] as? [String: Any],
               let key = networkService["key"] as? String,
-              let objectValue = object,
-              (objectValue as AnyObject).intValue == 1 else {
+              let objectValue = object else {
             return
         }
 
-        if true {
+        // Check if checkbox is checked
+        if (objectValue as AnyObject).intValue == 1 {
             selectedNetworkServices.add(key)
         } else {
             selectedNetworkServices.remove(key)
