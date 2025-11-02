@@ -127,7 +127,7 @@ enum ProxyMode: String, Codable, CaseIterable {
     case auto
     case global
     case manual
-    case externalPAC = "external_pac"
+    case externalPAC = "externalPAC"
 
     var displayName: String {
         switch self {
