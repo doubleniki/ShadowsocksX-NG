@@ -52,9 +52,9 @@ enum Constants {
     // MARK: - File Paths
 
     enum Path {
-        static let appSupportDirectory = "/Library/Application Support/ShadowsocksX-NG/"
-        static let userConfigDirectory = "/.ShadowsocksX-NG/"
-        static let launchAgentsDirectory = "/Library/LaunchAgents/"
+        static let appSupportDirectory = "Library/Application Support/ShadowsocksX-NG/"
+        static let userConfigDirectory = ".ShadowsocksX-NG/"
+        static let launchAgentsDirectory = "Library/LaunchAgents/"
 
         static let ssLocalBinary = "ss-local/ss-local"
         static let privoxyBinary = "privoxy/privoxy"

@@ -66,12 +66,12 @@ class ProxyInterfacesViewCtrl: NSViewController, NSTableViewDataSource, NSTableV
     func tableView(_ tableView: NSTableView, setObjectValue object: Any?
         , for tableColumn: NSTableColumn?, row: Int) {
         guard let services = networkServices else {
-            ErrorHandler.shared.logError(.unexpectedNilValue(context: "ProxyInterfacesViewCtrl.tableView: services is nil"))
+            ErrorHandler.shared.warning("services is nil", context: "ProxyInterfacesViewCtrl.tableView")
             return
         }
 
         guard row >= 0 && row < services.count else {
-            ErrorHandler.shared.logError(.unexpectedNilValue(context: "ProxyInterfacesViewCtrl.tableView: row is out of bounds"))
+            ErrorHandler.shared.warning("row is out of bounds", context: "ProxyInterfacesViewCtrl.tableView")
             return
         }
 

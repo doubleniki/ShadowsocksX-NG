@@ -115,8 +115,13 @@ class PreferencesWindowController: NSWindowController
             deleteCount += 1
         }
         profilesTableView.endUpdates()
-        self.profilesTableView.scrollRowToVisible(index-1)
-        self.profilesTableView.selectRowIndexes(IndexSet(integer: index-1), byExtendingSelection: false)
+
+        // Select the row before the first deleted row, or 0 if we deleted from the start
+        let newSelectedIndex = max(0, firstIndex - 1)
+        if profileMgr.profiles.count > 0 {
+            self.profilesTableView.scrollRowToVisible(newSelectedIndex)
+            self.profilesTableView.selectRowIndexes(IndexSet(integer: newSelectedIndex), byExtendingSelection: false)
+        }
         updateProfileBoxVisible()
     }
 
