@@ -104,7 +104,9 @@ class PreferencesWindowController: NSWindowController, NSTableViewDataSource, NS
         var deleteCount = 0
         profilesTableView.beginUpdates()
         for (_, toDeleteIndex) in profilesTableView.selectedRowIndexes.enumerated() {
-            print(profileMgr.profiles.count)
+            ErrorHandler.shared.debug(
+                "Profile count before deletion: \(profileMgr.profiles.count)",
+                context: "PreferencesWindowController.removeProfile")
             let profile = profileMgr.profiles[toDeleteIndex - deleteCount]
             // Remove password from Keychain before deleting profile
             profile.removePasswordFromKeychain()
