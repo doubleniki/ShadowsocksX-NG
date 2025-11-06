@@ -31,7 +31,11 @@ class ServerProfileTests: XCTestCase {
     }
 
     func testInitWithSelfGeneratedURL() {
-        let newProfile = ServerProfile.init(url: profile.URL()!)
+        guard let profileURL = profile.URL() else {
+            XCTFail("Failed to generate URL from profile")
+            return
+        }
+        let newProfile = ServerProfile.init(url: profileURL)
 
         XCTAssertEqual(newProfile?.serverHost, profile.serverHost)
         XCTAssertEqual(newProfile?.serverPort, profile.serverPort)
@@ -42,7 +46,10 @@ class ServerProfileTests: XCTestCase {
 
     func testInitWithBase64EncodedURL() {
         // "ss://aes-256-cfb:password@example.com:8388"
-        let url = URL(string: "ss://YWVzLTI1Ni1jZmI6cGFzc3dvcmRAZXhhbXBsZS5jb206ODM4OA")!
+        guard let url = URL(string: "ss://YWVzLTI1Ni1jZmI6cGFzc3dvcmRAZXhhbXBsZS5jb206ODM4OA") else {
+            XCTFail("Failed to create URL")
+            return
+        }
 
         let profile = ServerProfile(url: url)
 
@@ -57,7 +64,10 @@ class ServerProfileTests: XCTestCase {
 
     func testInitWithBase64EncodedURLandQuery() {
         // "ss://aes-256-cfb:password@example.com:8388?Remark=Prism&OTA=true"
-        let url = URL(string: "ss://YWVzLTI1Ni1jZmI6cGFzc3dvcmRAZXhhbXBsZS5jb206ODM4OD9SZW1hcms9UHJpc20mT1RBPXRydWU")!
+        guard let url = URL(string: "ss://YWVzLTI1Ni1jZmI6cGFzc3dvcmRAZXhhbXBsZS5jb206ODM4OD9SZW1hcms9UHJpc20mT1RBPXRydWU") else {
+            XCTFail("Failed to create URL")
+            return
+        }
 
         let profile = ServerProfile(url: url)
 
@@ -71,8 +81,11 @@ class ServerProfileTests: XCTestCase {
     }
     
     func testInitWithLegacyBase64EncodedURLWithTag() {
-        let url = URL(string: "ss://YmYtY2ZiOnRlc3RAMTkyLjE2OC4xMDAuMTo4ODg4Cg#example-server")!
-        
+        guard let url = URL(string: "ss://YmYtY2ZiOnRlc3RAMTkyLjE2OC4xMDAuMTo4ODg4Cg#example-server") else {
+            XCTFail("Failed to create URL")
+            return
+        }
+
         let profile = ServerProfile(url: url)
         
         XCTAssertNotNil(profile)
@@ -84,8 +97,11 @@ class ServerProfileTests: XCTestCase {
         // should be plain text, not percent-encoded.
         // Ref: https://shadowsocks.org/en/config/quick-guide.html
         // `ss://bf-cfb:test/!@#:@192.168.100.1:8888`
-        let url = URL(string: "ss://YmYtY2ZiOnRlc3QvIUAjOkAxOTIuMTY4LjEwMC4xOjg4ODg#example")!
-        
+        guard let url = URL(string: "ss://YmYtY2ZiOnRlc3QvIUAjOkAxOTIuMTY4LjEwMC4xOjg4ODg#example") else {
+            XCTFail("Failed to create URL")
+            return
+        }
+
         let profile = ServerProfile(url: url)
         
         XCTAssertNotNil(profile)
@@ -93,14 +109,20 @@ class ServerProfileTests: XCTestCase {
     }
     
     func testInitWithLegacyURLWithEscapedChineseRemark() {
-        let url = URL(string: "ss://YmYtY2ZiOnRlc3RAMTkyLjE2OC4xMDAuMTo4ODg4#%e4%bd%a0%e5%a5%bd")!
+        guard let url = URL(string: "ss://YmYtY2ZiOnRlc3RAMTkyLjE2OC4xMDAuMTo4ODg4#%e4%bd%a0%e5%a5%bd") else {
+            XCTFail("Failed to create URL")
+            return
+        }
         let profile = ServerProfile(url: url)
         XCTAssertNotNil(profile)
         XCTAssertEqual(profile?.remark, "你好")
     }
 
     func testInitWithEmptyURL() {
-        let url = URL(string: "ss://")!
+        guard let url = URL(string: "ss://") else {
+            XCTFail("Failed to create URL")
+            return
+        }
 
         let profile = ServerProfile(url: url)
 
@@ -109,7 +131,10 @@ class ServerProfileTests: XCTestCase {
 
     func testInitWithBase64EncodedInvalidURL() {
         // "ss://invalid url"
-        let url = URL(string: "ss://aW52YWxpZCB1cmw")!
+        guard let url = URL(string: "ss://aW52YWxpZCB1cmw") else {
+            XCTFail("Failed to create URL")
+            return
+        }
 
         let profile = ServerProfile(url: url)
 
@@ -118,7 +143,10 @@ class ServerProfileTests: XCTestCase {
 
     func testInitWithSIP002URL() {
         // "ss://aes-256-cfb:password@example.com:8388?Remark=Prism&OTA=true"
-        let url = URL(string: "ss://YWVzLTI1Ni1jZmI6cGFzc3dvcmQ=@example.com:8388/?Remark=Prism&OTA=true")!
+        guard let url = URL(string: "ss://YWVzLTI1Ni1jZmI6cGFzc3dvcmQ=@example.com:8388/?Remark=Prism&OTA=true") else {
+            XCTFail("Failed to create URL")
+            return
+        }
 
         let profile = ServerProfile(url: url)
 
@@ -132,7 +160,10 @@ class ServerProfileTests: XCTestCase {
     }
 
     func testInitWithSIP002URLProfileName() {
-        let url = URL(string: "ss://YWVzLTI1Ni1jZmI6cGFzc3dvcmQ=@example.com:8388/#Name")!
+        guard let url = URL(string: "ss://YWVzLTI1Ni1jZmI6cGFzc3dvcmQ=@example.com:8388/#Name") else {
+            XCTFail("Failed to create URL")
+            return
+        }
 
         let profile = ServerProfile(url: url)
 
@@ -141,7 +172,10 @@ class ServerProfileTests: XCTestCase {
     }
 
     func testInitWithSIP002URLProfileNameOverride() {
-        let url = URL(string: "ss://YWVzLTI1Ni1jZmI6cGFzc3dvcmQ=@example.com:8388/?Remark=Name#Overriden")!
+        guard let url = URL(string: "ss://YWVzLTI1Ni1jZmI6cGFzc3dvcmQ=@example.com:8388/?Remark=Name#Overriden") else {
+            XCTFail("Failed to create URL")
+            return
+        }
 
         let profile = ServerProfile(url: url)
 
@@ -150,8 +184,11 @@ class ServerProfileTests: XCTestCase {
     }
     
     func testInitWithSIP002URLProfileWithSIP003PluginNoPluginOpts() {
-        let url = URL(string: "ss://YWVzLTI1Ni1jZmI6cGFzc3dvcmQ=@134.209.56.100:8088/?plugin=v2ray-plugin;#moon-v2ray")!
-        
+        guard let url = URL(string: "ss://YWVzLTI1Ni1jZmI6cGFzc3dvcmQ=@134.209.56.100:8088/?plugin=v2ray-plugin;#moon-v2ray") else {
+            XCTFail("Failed to create URL")
+            return
+        }
+
         let profile = ServerProfile(url: url)
         
         XCTAssertNotNil(profile)
@@ -159,8 +196,11 @@ class ServerProfileTests: XCTestCase {
     }
     
     func testInitWithSIP002URLProfileWithSIP003Plugin() {
-        let url = URL(string: "ss://YWVzLTI1Ni1jZmI6cGFzc3dvcmQ=@134.209.56.100:8088/?plugin=v2ray-plugin;tls#moon-v2ray")!
-        
+        guard let url = URL(string: "ss://YWVzLTI1Ni1jZmI6cGFzc3dvcmQ=@134.209.56.100:8088/?plugin=v2ray-plugin;tls#moon-v2ray") else {
+            XCTFail("Failed to create URL")
+            return
+        }
+
         let profile = ServerProfile(url: url)
         
         XCTAssertNotNil(profile)
