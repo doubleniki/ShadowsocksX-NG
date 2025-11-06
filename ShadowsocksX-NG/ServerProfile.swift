@@ -187,7 +187,7 @@ class ServerProfile: NSObject, NSCopying {
 
         copy.plugin = self.plugin
         copy.pluginOptions = self.pluginOptions
-        return copy;
+        return copy
     }
 
     static func fromDictionary(_ data:[String:Any?]) -> ServerProfile? {
@@ -308,7 +308,7 @@ class ServerProfile: NSObject, NSCopying {
                 return true
             }
 
-            return false;
+            return false
         }
 
         func validateDomainName(_ value: String) -> Bool {

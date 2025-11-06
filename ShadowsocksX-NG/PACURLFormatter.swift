@@ -22,23 +22,23 @@ class PACURLFormatter: Formatter {
         }
         return ""
     }
-    
+
     override func getObjectValue(_ obj: AutoreleasingUnsafeMutablePointer<AnyObject?>?, for string: String, errorDescription error: AutoreleasingUnsafeMutablePointer<NSString?>?) -> Bool {
 
         let input = string.trimmingCharacters(in: .whitespaces)
-        if input == "" {
+        if input.isEmpty {
             return true
         }
 
         let errorMessage = "Must be a valid URL with scheme 'file', 'http' or 'https'".localized
-        
+
         if let url = URL.init(string: input) {
             if let scheme = url.scheme {
                 if !(["http", "https", "file"].contains(scheme) ) {
                     error?.pointee = errorMessage as NSString
                     return false
                 }
-                
+
                 obj?.pointee = url.absoluteString as AnyObject
                 return true
             } else {

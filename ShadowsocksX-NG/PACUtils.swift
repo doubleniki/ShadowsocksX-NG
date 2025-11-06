@@ -20,26 +20,26 @@ let GFWListFilePath = PACRulesDirPath + "gfwlist.txt"
 // Because of LocalSocks5.ListenPort may be changed
 func SyncPac() {
     var needGenerate = false
-    
+
     let nowSocks5Address = UserDefaults.standard.string(forKey: "LocalSocks5.ListenAddress")
     let oldSocks5Address = UserDefaults.standard.string(forKey: "LocalSocks5.ListenAddress.Old")
     if nowSocks5Address != oldSocks5Address {
         needGenerate = true
         UserDefaults.standard.set(nowSocks5Address, forKey: "LocalSocks5.ListenAddress.Old")
     }
-    
+
     let nowSocks5Port = UserDefaults.standard.integer(forKey: "LocalSocks5.ListenPort")
     let oldSocks5Port = UserDefaults.standard.integer(forKey: "LocalSocks5.ListenPort.Old")
     if nowSocks5Port != oldSocks5Port {
         needGenerate = true
         UserDefaults.standard.set(nowSocks5Port, forKey: "LocalSocks5.ListenPort.Old")
     }
-    
+
     let fileMgr = FileManager.default
     if !fileMgr.fileExists(atPath: PACFilePath) {
         needGenerate = true
     }
-    
+
     if needGenerate {
         if !GeneratePACFile() {
             NSLog("GeneratePACFile failed!")
@@ -76,7 +76,7 @@ func GeneratePACFile() -> Bool {
             }
         }
     }
-    
+
     // If gfwlist.txt is not exsited, copy from bundle
     if !fileMgr.fileExists(atPath: GFWListFilePath) {
         guard let src = Bundle.main.path(forResource: "gfwlist", ofType: "txt") else {
@@ -99,7 +99,7 @@ func GeneratePACFile() -> Bool {
             return false
         }
     }
-    
+
     // If user-rule.txt is not exsited, copy from bundle
     if !fileMgr.fileExists(atPath: PACUserRuleFilePath) {
         guard let src = Bundle.main.path(forResource: "user-rule", ofType: "txt") else {
@@ -146,11 +146,11 @@ func GeneratePACFile() -> Bool {
                 return false
             }
             var lines = str.components(separatedBy: CharacterSet.newlines)
-            
+
             do {
                 let userRuleStr = try String(contentsOfFile: PACUserRuleFilePath, encoding: String.Encoding.utf8)
                 let userRuleLines = userRuleStr.components(separatedBy: CharacterSet.newlines)
-                
+
                 lines = userRuleLines + lines.filter { (line) in
                     // ignore the rule from gwf if user provide same rule for the same url
                     var i = line.startIndex
@@ -169,7 +169,7 @@ func GeneratePACFile() -> Bool {
             } catch {
                 NSLog("Not found user-rule.txt")
             }
-            
+
             // Filter empty and comment lines
             lines = lines.filter({ (s: String) -> Bool in
                 if s.isEmpty {
@@ -181,44 +181,47 @@ func GeneratePACFile() -> Bool {
                 }
                 return true
             })
-            
+
             do {
                 // rule lines to json array
                 let rulesJsonData: Data
                     = try JSONSerialization.data(withJSONObject: lines, options: .prettyPrinted)
                 let rulesJsonStr = String(data: rulesJsonData, encoding: String.Encoding.utf8)
-                
+
                 // Get raw pac js
-                let jsPath = Bundle.main.url(forResource: "abp", withExtension: "js")
-                let jsData = try? Data(contentsOf: jsPath!)
-                var jsStr = String(data: jsData!, encoding: String.Encoding.utf8)
-                
+                guard let jsPath = Bundle.main.url(forResource: "abp", withExtension: "js"),
+                      let jsData = try? Data(contentsOf: jsPath),
+                      var jsStr = String(data: jsData, encoding: String.Encoding.utf8),
+                      let rulesJsonStr = rulesJsonStr else {
+                    ErrorHandler.shared.warning("Failed to load or process PAC resources")
+                    return false
+                }
+
                 // Replace rules placeholder in pac js
-                jsStr = jsStr!.replacingOccurrences(of: "__RULES__"
-                    , with: rulesJsonStr!)
+                jsStr = jsStr.replacingOccurrences(of: "__RULES__", with: rulesJsonStr)
                 // Replace __SOCKS5PORT__ palcholder in pac js
-                jsStr = jsStr!.replacingOccurrences(of: "__SOCKS5PORT__"
-                    , with: "\(socks5Port)")
+                jsStr = jsStr.replacingOccurrences(of: "__SOCKS5PORT__", with: "\(socks5Port)")
                 // Replace __SOCKS5ADDR__ palcholder in pac js
                 var sin6 = sockaddr_in6()
                 if socks5Address.withCString({ cstring in inet_pton(AF_INET6, cstring, &sin6.sin6_addr) }) == 1 {
-                    jsStr = jsStr!.replacingOccurrences(of: "__SOCKS5ADDR__"
-                        , with: "[\(socks5Address)]")
+                    jsStr = jsStr.replacingOccurrences(of: "__SOCKS5ADDR__", with: "[\(socks5Address)]")
                 } else {
-                    jsStr = jsStr!.replacingOccurrences(of: "__SOCKS5ADDR__"
-                        , with: socks5Address)
+                    jsStr = jsStr.replacingOccurrences(of: "__SOCKS5ADDR__", with: socks5Address)
                 }
-                
+
                 // Write the pac js to file.
-                try jsStr!.data(using: String.Encoding.utf8)?
-                    .write(to: URL(fileURLWithPath: PACFilePath), options: .atomic)
-                
+                guard let jsData = jsStr.data(using: String.Encoding.utf8) else {
+                    ErrorHandler.shared.warning("Failed to encode PAC JS string")
+                    return false
+                }
+                try jsData.write(to: URL(fileURLWithPath: PACFilePath), options: .atomic)
+
                 return true
             } catch {
-                
+
             }
         }
-        
+
     } catch {
         NSLog("Not found gfwlist.txt")
     }
@@ -234,9 +237,12 @@ func UpdatePACFromGFWList() {
         } catch {
         }
     }
-    
-    let url = UserDefaults.standard.string(forKey: "GFWListURL")
-    AF.request(url!)
+
+    guard let url = UserDefaults.standard.string(forKey: "GFWListURL") else {
+        ErrorHandler.shared.warning("GFWListURL not found in UserDefaults")
+        return
+    }
+    AF.request(url)
         .validate()
         .responseString {
             response in
@@ -252,7 +258,7 @@ func UpdatePACFromGFWList() {
                             .deliver(notification)
                     }
                 } catch {
-                    
+
                 }
             case .failure:
                 // Popup a user notification

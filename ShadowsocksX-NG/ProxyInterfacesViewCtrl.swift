@@ -11,25 +11,25 @@ import RxCocoa
 import RxSwift
 
 class ProxyInterfacesViewCtrl: NSViewController, NSTableViewDataSource, NSTableViewDelegate {
-    
+
     var networkServices: NSArray?
     var selectedNetworkServices: NSMutableSet = NSMutableSet()
-    
-    @IBOutlet weak var tableView: NSTableView!
-    @IBOutlet weak var autoConfigCheckBox: NSButton!
-    
+
+    @IBOutlet weak var tableView: NSTableView?
+    @IBOutlet weak var autoConfigCheckBox: NSButton?
+
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+
         let defaults = UserDefaults.standard
         if let services = defaults.array(forKey: "Proxy4NetworkServices") {
             selectedNetworkServices = NSMutableSet(array: services)
         } else {
             selectedNetworkServices = NSMutableSet()
         }
-        
+
         networkServices = ProxyConfTool.networkServicesList() as NSArray?
-        tableView.reloadData()
+        tableView?.reloadData()
     }
 
     //--------------------------------------------------
@@ -37,7 +37,7 @@ class ProxyInterfacesViewCtrl: NSViewController, NSTableViewDataSource, NSTableV
     func numberOfRows(in tableView: NSTableView) -> Int {
         return networkServices?.count ?? 0
     }
-    
+
     func tableView(_ tableView: NSTableView, objectValueFor tableColumn: NSTableColumn?
         , row: Int) -> Any? {
         guard let tableColumn = tableColumn,
@@ -54,7 +54,7 @@ class ProxyInterfacesViewCtrl: NSViewController, NSTableViewDataSource, NSTableV
         cell.title = userDefinedName
         return cell
     }
-    
+
     func tableView(_ tableView: NSTableView, setObjectValue object: Any?
         , for tableColumn: NSTableColumn?, row: Int) {
         guard let services = networkServices,

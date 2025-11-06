@@ -250,7 +250,9 @@ class UserRulesController: NSWindowController {
         alert.informativeText = message
         alert.alertStyle = .warning
         alert.addButton(withTitle: "OK")
-        alert.beginSheetModal(for: window!, completionHandler: nil)
+        if let window = window {
+            alert.beginSheetModal(for: window, completionHandler: nil)
+        }
     }
 
     private func showTemporarySuccess(message: String) {

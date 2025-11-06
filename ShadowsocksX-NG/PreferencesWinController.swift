@@ -11,10 +11,10 @@ import RxCocoa
 import RxSwift
 
 class PreferencesWinController: NSWindowController {
-    
+
     @IBOutlet weak var toolbar: NSToolbar!
     @IBOutlet weak var tabView: NSTabView!
-    
+
     override func windowDidLoad() {
         super.windowDidLoad()
 
@@ -38,12 +38,12 @@ class PreferencesWinController: NSWindowController {
             }
         }
     }
-    
+
     @objc func windowWillClose(_ notification: Notification) {
         NotificationCenter.default
             .post(name: NOTIFY_CONF_CHANGED, object: nil)
     }
-    
+
     @IBAction func toolbarAction(sender: NSToolbarItem) {
         tabView.selectTabViewItem(withIdentifier: sender.itemIdentifier)
     }
@@ -52,7 +52,7 @@ class PreferencesWinController: NSWindowController {
         let defaults = UserDefaults.standard
         defaults.removeObject(forKey: "ProxyExceptions")
     }
-    
+
     @IBAction func resetAllPreferences(sender: NSButton) {
         let alert = NSAlert.init()
         alert.alertStyle = .warning;
@@ -64,18 +64,21 @@ class PreferencesWinController: NSWindowController {
             self.resetUserDefaults()
         }
     }
-    
+
     func resetUserDefaults() {
-        let domain = Bundle.main.bundleIdentifier!
+        guard let domain = Bundle.main.bundleIdentifier else {
+            ErrorHandler.shared.warning("Failed to get bundle identifier")
+            return
+        }
         let defaults = UserDefaults.standard
-        
+
         // Don't reset server profiles, restore them later.
         let profiles = defaults.array(forKey: "ServerProfiles")
         let activeProfileId = defaults.string(forKey: "ActiveServerProfileId")
-        
+
         defaults.removePersistentDomain(forName: domain)
         defaults.synchronize()
-        
+
         // Restore server profiles.
         defaults.set(profiles, forKey: "ServerProfiles")
         defaults.set(activeProfileId, forKey: "ActiveServerProfileId")

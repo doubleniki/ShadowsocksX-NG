@@ -34,7 +34,7 @@ func generateSSLocalLauchAgentPlist() -> Bool {
     let launchAgentDirPath = NSHomeDirectory() + LAUNCH_AGENT_DIR
     let plistTempFilepath = NSHomeDirectory() + APP_SUPPORT_DIR + LAUNCH_AGENT_CONF_SSLOCAL_NAME
     let plistFilepath = launchAgentDirPath + LAUNCH_AGENT_CONF_SSLOCAL_NAME
-    
+
     // Ensure launch agent directory is existed.
     let fileMgr = FileManager.default
     if !fileMgr.fileExists(atPath: launchAgentDirPath) {
@@ -50,13 +50,13 @@ func generateSSLocalLauchAgentPlist() -> Bool {
             return false
         }
     }
-    
+
     let oldSha1Sum = getFileSHA1Sum(plistFilepath)
-    
+
     let defaults = UserDefaults.standard
     let enableUdpRelay = defaults.bool(forKey: "LocalSocks5.EnableUDPRelay")
     let enableVerboseMode = defaults.bool(forKey: "LocalSocks5.EnableVerboseMode")
-    
+
     var arguments = [sslocalPath, "-c", "ss-local-config.json"]
     if enableUdpRelay {
         arguments.append("-u")
@@ -65,13 +65,13 @@ func generateSSLocalLauchAgentPlist() -> Bool {
         arguments.append("-v")
     }
     arguments.append("--reuse-port")
-    
+
     // For a complete listing of the keys, see the launchd.plist manual page.
     let dyld_library_paths = [
         NSHomeDirectory() + APP_SUPPORT_DIR + "ss-local/",
         NSHomeDirectory() + APP_SUPPORT_DIR + "plugins/",
     ]
-    
+
     let dict: NSMutableDictionary = [
         "Label": "com.qiuyuzhou.shadowsocksX-NG.local",
         "WorkingDirectory": NSHomeDirectory() + APP_SUPPORT_DIR,
@@ -92,7 +92,7 @@ func generateSSLocalLauchAgentPlist() -> Bool {
     }
 }
 
-func StartSSLocal() {
+func startSSLocal() {
     let bundle = Bundle.main
     guard let installerPath = bundle.path(forResource: "start_ss_local.sh", ofType: nil) else {
         ErrorHandler.shared.handle(
@@ -117,7 +117,7 @@ func StartSSLocal() {
     }
 }
 
-func StopSSLocal() {
+func stopSSLocal() {
     let bundle = Bundle.main
     guard let installerPath = bundle.path(forResource: "stop_ss_local.sh", ofType: nil) else {
         ErrorHandler.shared.handle(
@@ -142,7 +142,7 @@ func StopSSLocal() {
     }
 }
 
-func InstallSSLocal() {
+func installSSLocal() {
     let fileMgr = FileManager.default
     let homeDir = NSHomeDirectory()
     let appSupportDir = homeDir+APP_SUPPORT_DIR
@@ -153,7 +153,7 @@ func InstallSSLocal() {
             NSLog("Remove old ss-local error")
         }
     }
-    
+
     let bundle = Bundle.main
     guard let installerPath = bundle.path(forResource: "install_ss_local.sh", ofType: nil) else {
         ErrorHandler.shared.handle(
@@ -172,30 +172,34 @@ func InstallSSLocal() {
     } else {
         ErrorHandler.shared.warning("Install ss-local failed with exit code: \(task.terminationStatus)")
     }
-    
+
 }
 
 func writeSSLocalConfFile(_ conf:[String:AnyObject]) -> Bool {
     do {
         let filepath = NSHomeDirectory() + APP_SUPPORT_DIR + "ss-local-config.json"
         var data: Data = try JSONSerialization.data(withJSONObject: conf, options: .prettyPrinted)
-        
+
         // https://github.com/shadowsocks/ShadowsocksX-NG/issues/1104
         // This is NSJSONSerialization.dataWithJSONObject that likes to insert additional backslashes.
         // Escaped forward slashes is also valid json.
         // Workaround:
-        let s = String(data:data, encoding: .utf8)!
-        data = s.replacingOccurrences(of: "\\/", with: "/").data(using: .utf8)!
-        
+        guard let s = String(data: data, encoding: .utf8),
+              let processedData = s.replacingOccurrences(of: "\\/", with: "/").data(using: .utf8) else {
+            NSLog("Failed to process JSON data encoding")
+            return false
+        }
+        data = processedData
+
         let oldSum = getFileSHA1Sum(filepath)
         try data.write(to: URL(fileURLWithPath: filepath), options: .atomic)
         let newSum = data.sha1()
-        
+
         if oldSum == newSum {
             NSLog("writeSSLocalConfFile - File has not been changed.")
             return false
         }
-        
+
         NSLog("writeSSLocalConfFile - File has been changed.")
         return true
     } catch {
@@ -209,11 +213,11 @@ func removeSSLocalConfFile() {
         let filepath = NSHomeDirectory() + APP_SUPPORT_DIR + "ss-local-config.json"
         try FileManager.default.removeItem(atPath: filepath)
     } catch {
-        
+
     }
 }
 
-func SyncSSLocal() {
+func syncSSLocal() {
     var changed: Bool = false
     changed = changed || generateSSLocalLauchAgentPlist()
     let mgr = ServerProfileManager.instance
@@ -221,35 +225,35 @@ func SyncSSLocal() {
         if let profile = mgr.getActiveProfile() {
             changed = changed || writeSSLocalConfFile((profile.toJsonConfig()))
         }
-        
+
         let on = UserDefaults.standard.bool(forKey: "ShadowsocksOn")
         if on {
             if changed {
-                StopSSLocal()
+                stopSSLocal()
                 DispatchQueue.main.asyncAfter(
                     deadline: DispatchTime.now() + DispatchTimeInterval.seconds(1),
                     execute: {
                         () in
-                        StartSSLocal()
+                        startSSLocal()
                     })
             } else {
-                StartSSLocal()
+                startSSLocal()
             }
         } else {
-            StopSSLocal()
+            stopSSLocal()
         }
     } else {
         removeSSLocalConfFile()
-        StopSSLocal()
+        stopSSLocal()
     }
     SyncPac()
-    SyncPrivoxy()
+    syncPrivoxy()
 }
 
 // --------------------------------------------------------------------------------
 //  MARK: simple-obfs
 
-func InstallSimpleObfs() {
+func installSimpleObfs() {
     let fileMgr = FileManager.default
     let homeDir = NSHomeDirectory()
     let appSupportDir = homeDir + APP_SUPPORT_DIR
@@ -260,7 +264,7 @@ func InstallSimpleObfs() {
             NSLog("Remove old simple-obfs error")
         }
     }
-    
+
     let bundle = Bundle.main
     guard let installerPath = bundle.path(forResource: "install_simple_obfs.sh", ofType: nil) else {
         ErrorHandler.shared.warning("install_simple_obfs.sh script not found")
@@ -274,13 +278,13 @@ func InstallSimpleObfs() {
     } else {
         ErrorHandler.shared.warning("Install simple-obfs failed with exit code: \(task.terminationStatus)")
     }
-    
+
 }
 
 // --------------------------------------------------------------------------------
 //  MARK: kcptun
 
-func InstallKcptun() {
+func installKcptun() {
     let fileMgr = FileManager.default
     let homeDir = NSHomeDirectory()
     let appSupportDir = homeDir+APP_SUPPORT_DIR
@@ -309,7 +313,7 @@ func InstallKcptun() {
 // --------------------------------------------------------------------------------
 //  MARK: v2ray-plugin
 
-func InstallV2rayPlugin() {
+func installV2rayPlugin() {
     let fileMgr = FileManager.default
     let homeDir = NSHomeDirectory()
     let appSupportDir = homeDir+APP_SUPPORT_DIR
@@ -344,7 +348,7 @@ func generatePrivoxyLauchAgentPlist() -> Bool {
     let launchAgentDirPath = NSHomeDirectory() + LAUNCH_AGENT_DIR
     let plistTempFilePath = NSHomeDirectory() + APP_SUPPORT_DIR + LAUNCH_AGENT_CONF_PRIVOXY_NAME
     let plistFilepath = launchAgentDirPath + LAUNCH_AGENT_CONF_PRIVOXY_NAME
-    
+
     // Ensure launch agent directory is existed.
     let fileMgr = FileManager.default
     if !fileMgr.fileExists(atPath: launchAgentDirPath) {
@@ -360,11 +364,11 @@ func generatePrivoxyLauchAgentPlist() -> Bool {
             return false
         }
     }
-    
+
     let oldSha1Sum = getFileSHA1Sum(plistFilepath)
-    
+
     let arguments = [privoxyPath, "--no-daemon", "privoxy.config"]
-    
+
     // For a complete listing of the keys, see the launchd.plist manual page.
     let dict: NSMutableDictionary = [
         "Label": "com.qiuyuzhou.shadowsocksX-NG.http",
@@ -383,7 +387,7 @@ func generatePrivoxyLauchAgentPlist() -> Bool {
     }
 }
 
-func StartPrivoxy() {
+func startPrivoxy() {
     let bundle = Bundle.main
     guard let installerPath = bundle.path(forResource: "start_privoxy.sh", ofType: nil) else {
         ErrorHandler.shared.handle(
@@ -404,7 +408,7 @@ func StartPrivoxy() {
     }
 }
 
-func StopPrivoxy() {
+func stopPrivoxy() {
     let bundle = Bundle.main
     guard let installerPath = bundle.path(forResource: "stop_privoxy.sh", ofType: nil) else {
         ErrorHandler.shared.handle(
@@ -425,7 +429,7 @@ func StopPrivoxy() {
     }
 }
 
-func InstallPrivoxy() {
+func installPrivoxy() {
     let fileMgr = FileManager.default
     let homeDir = NSHomeDirectory()
     let appSupportDir = homeDir+APP_SUPPORT_DIR
@@ -436,7 +440,7 @@ func InstallPrivoxy() {
             NSLog("Remove old privoxy error")
         }
     }
-    
+
     let bundle = Bundle.main
     guard let installerPath = bundle.path(forResource: "install_privoxy.sh", ofType: nil) else {
         ErrorHandler.shared.handle(
@@ -455,7 +459,7 @@ func InstallPrivoxy() {
     } else {
         ErrorHandler.shared.warning("Install privoxy failed with exit code: \(task.terminationStatus)")
     }
-    
+
     let userConfigDir = homeDir + USER_CONFIG_DIR
     // Make dir: '~/.ShadowsocksX-NG'
     if !fileMgr.fileExists(atPath: userConfigDir) {
@@ -495,31 +499,43 @@ func writePrivoxyConfFile() -> Bool {
     do {
         let defaults = UserDefaults.standard
         let bundle = Bundle.main
-        let templatePath = bundle.path(forResource: "privoxy.template.config", ofType: nil)
-        
+        guard let templatePath = bundle.path(forResource: "privoxy.template.config", ofType: nil) else {
+            ErrorHandler.shared.warning("privoxy.template.config not found")
+            return false
+        }
+
         // Read template file
-        var template = try String(contentsOfFile: templatePath!, encoding: .utf8)
-        
-        template = template.replacingOccurrences(of: "{http}", with: defaults.string(forKey: "LocalHTTP.ListenAddress")! + ":" + String(defaults.integer(forKey: "LocalHTTP.ListenPort")))
-        template = template.replacingOccurrences(of: "{socks5}", with: defaults.string(forKey: "LocalSocks5.ListenAddress")! + ":" + String(defaults.integer(forKey: "LocalSocks5.ListenPort")))
-        
+        var template = try String(contentsOfFile: templatePath, encoding: .utf8)
+
+        guard let httpAddress = defaults.string(forKey: "LocalHTTP.ListenAddress"),
+              let socks5Address = defaults.string(forKey: "LocalSocks5.ListenAddress") else {
+            ErrorHandler.shared.warning("Failed to get proxy addresses from defaults")
+            return false
+        }
+
+        let httpPort = defaults.integer(forKey: "LocalHTTP.ListenPort")
+        let socks5Port = defaults.integer(forKey: "LocalSocks5.ListenPort")
+
+        template = template.replacingOccurrences(of: "{http}", with: "\(httpAddress):\(httpPort)")
+        template = template.replacingOccurrences(of: "{socks5}", with: "\(socks5Address):\(socks5Port)")
+
         // Append the user config file to the end
         let userConfigPath = NSHomeDirectory() + USER_CONFIG_DIR + "user-privoxy.config"
         let userConfig = try String(contentsOfFile: userConfigPath, encoding: .utf8)
         template.append(contentsOf: userConfig)
-        
+
         // Write to file
         let data = template.data(using: .utf8)
         let filepath = NSHomeDirectory() + APP_SUPPORT_DIR + "privoxy.config"
-        
+
         let oldSum = getFileSHA1Sum(filepath)
         try data?.write(to: URL(fileURLWithPath: filepath), options: .atomic)
         let newSum = getFileSHA1Sum(filepath)
-        
+
         if oldSum == newSum {
             return false
         }
-        
+
         return true
     } catch {
         NSLog("Write privoxy file failed.")
@@ -532,35 +548,35 @@ func removePrivoxyConfFile() {
         let filepath = NSHomeDirectory() + APP_SUPPORT_DIR + "privoxy.config"
         try FileManager.default.removeItem(atPath: filepath)
     } catch {
-        
+
     }
 }
 
-func SyncPrivoxy() {
+func syncPrivoxy() {
     var changed: Bool = false
     changed = changed || generatePrivoxyLauchAgentPlist()
     let mgr = ServerProfileManager.instance
     if mgr.activeProfileId != nil {
         changed = changed || writePrivoxyConfFile()
-        
+
         let on = UserDefaults.standard.bool(forKey: "LocalHTTPOn")
         if on {
             if changed {
-                StopPrivoxy()
+                stopPrivoxy()
                 DispatchQueue.main.asyncAfter(
                     deadline: DispatchTime.now() + DispatchTimeInterval.seconds(1),
                     execute: {
                         () in
-                        StartPrivoxy()
+                        startPrivoxy()
                     })
             } else {
-                StartPrivoxy()
+                startPrivoxy()
             }
         } else {
-            StopPrivoxy()
+            stopPrivoxy()
         }
     } else {
         removePrivoxyConfFile()
-        StopPrivoxy()
+        stopPrivoxy()
     }
 }
