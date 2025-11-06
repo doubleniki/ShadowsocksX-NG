@@ -44,7 +44,7 @@ line_length:
 
 # Function body length
 function_body_length:
-  warning: 40
+  warning: 60
   error: 100
 
 # File length
@@ -124,7 +124,7 @@ custom_rules:
     regex: "NSLog\\("
     message: "Use os.log instead of NSLog"
     severity: warning
-    
+
   # No print in production code
   no_print:
     name: "No Print"

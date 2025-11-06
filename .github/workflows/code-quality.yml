@@ -26,7 +26,7 @@ jobs:
       - name: SwiftLint (strict mode for critical rules)
         run: |
           # Check critical rules in strict mode
-          swiftlint lint --strict --config .swiftlint-strict.yml || true
+          swiftlint lint --strict --config .swiftlint-strict.yml
         continue-on-error: true
 
   build-and-test:

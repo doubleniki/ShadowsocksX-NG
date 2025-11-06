@@ -211,7 +211,7 @@ class ServerProfile: NSObject, NSCopying {
                     // Check if password already exists in Keychain
                     if KeychainManager.shared.getPassword(forAccount: profile.uuid) == nil {
                         // Migrate from UserDefaults to Keychain
-                        NSLog("Migrating password to Keychain for server: \(profile.uuid)")
+                        ErrorHandler.shared.info("Migrating password to Keychain for server: \(profile.uuid)", context: "ServerProfile")
                         profile.password = oldPassword
                     }
                 }

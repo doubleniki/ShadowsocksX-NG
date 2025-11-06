@@ -9,6 +9,19 @@
 import Cocoa
 import os.log
 
+// MARK: - AppError Protocol
+
+/// Base protocol for all application errors
+protocol AppError: LocalizedError {
+    /// Context in which the error occurred
+    var context: String { get }
+
+    /// Underlying system error if any
+    var underlyingError: Error? { get }
+}
+
+// MARK: - Error Handler
+
 /// Centralized error handler for the application
 class ErrorHandler {
 
@@ -59,7 +72,7 @@ class ErrorHandler {
 
         // Show alert if requested
         if showAlert {
-            showAlert(for: error, context: errorContext, critical: critical)
+            self.showAlert(for: error, context: errorContext, critical: critical)
         }
     }
 
@@ -85,16 +98,31 @@ class ErrorHandler {
     private func logError(_ error: Error, context: String, critical: Bool) {
         let message = formatErrorMessage(error, context: context)
 
-        if critical {
-            os_log(.error, log: logger, "CRITICAL [%{public}@]: %{public}@", context, message)
-        } else {
-            os_log(.default, log: logger, "[%{public}@]: %{public}@", context, message)
-        }
+        if #available(macOS 10.14, *) {
+            if critical {
+                os_log(.error, log: logger, "CRITICAL [%{public}@]: %{public}@", context, message)
+            } else {
+                os_log(.default, log: logger, "[%{public}@]: %{public}@", context, message)
+            }
 
-        // Log underlying error if present
-        if let appError = error as? AppError,
-           let underlyingError = appError.underlyingError {
-            os_log(.default, log: logger, "  Underlying: %{public}@", underlyingError.localizedDescription)
+            // Log underlying error if present
+            if let appError = error as? AppError,
+                let underlyingError = appError.underlyingError
+            {
+                os_log(
+                    .default, log: logger, "  Underlying: %{public}@",
+                    underlyingError.localizedDescription)
+            }
+        } else {
+            // Fallback for older macOS versions
+            let prefix = critical ? "CRITICAL" : "ERROR"
+            NSLog("[\(prefix)][\(context)]: \(message)")
+
+            if let appError = error as? AppError,
+                let underlyingError = appError.underlyingError
+            {
+                NSLog("  Underlying: \(underlyingError.localizedDescription)")
+            }
         }
     }
 
@@ -117,7 +145,8 @@ class ErrorHandler {
 
             // Add underlying error details if available
             if let appError = error as? AppError,
-               let underlying = appError.underlyingError {
+                let underlying = appError.underlyingError
+            {
                 alert.informativeText += "\n\nDetails: \(underlying.localizedDescription)"
             }
 
@@ -147,16 +176,28 @@ extension ErrorHandler {
 
     /// Log a warning message
     func warning(_ message: String, context: String = "General") {
-        os_log(.default, log: logger, "WARNING [%{public}@]: %{public}@", context, message)
+        if #available(macOS 10.14, *) {
+            os_log(.default, log: logger, "WARNING [%{public}@]: %{public}@", context, message)
+        } else {
+            NSLog("[WARNING][\(context)]: \(message)")
+        }
     }
 
     /// Log an info message
     func info(_ message: String, context: String = "General") {
-        os_log(.info, log: logger, "[%{public}@]: %{public}@", context, message)
+        if #available(macOS 10.14, *) {
+            os_log(.info, log: logger, "[%{public}@]: %{public}@", context, message)
+        } else {
+            NSLog("[INFO][\(context)]: \(message)")
+        }
     }
 
     /// Log a debug message
     func debug(_ message: String, context: String = "General") {
-        os_log(.debug, log: logger, "[%{public}@]: %{public}@", context, message)
+        if #available(macOS 10.14, *) {
+            os_log(.debug, log: logger, "[%{public}@]: %{public}@", context, message)
+        } else {
+            NSLog("[DEBUG][\(context)]: \(message)")
+        }
     }
 }

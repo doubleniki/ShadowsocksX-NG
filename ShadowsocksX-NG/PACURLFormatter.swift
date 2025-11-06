@@ -23,7 +23,23 @@ class PACURLFormatter: Formatter {
         return ""
     }
 
-    override func getObjectValue(_ obj: AutoreleasingUnsafeMutablePointer<AnyObject?>?, for string: String, errorDescription error: AutoreleasingUnsafeMutablePointer<NSString?>?) -> Bool {
+    override func getObjectValue(
+        _ obj: AutoreleasingUnsafeMutablePointer<AnyObject?>?,
+        for string: String,
+        errorDescription error: AutoreleasingUnsafeMutablePointer<NSString?>?
+    ) -> Bool {
+        guard let error = error else {
+            // Log the unexpected nil error parameter, but continue processing
+            ErrorHandler.shared.handle(
+                NSError(domain: "PACURLFormatter", code: -1, userInfo: [
+                    NSLocalizedDescriptionKey: "Error parameter is nil"
+                ]),
+                context: "PACURLFormatter.getObjectValue",
+                showAlert: false,
+                critical: false
+            )
+            return false
+        }
 
         let input = string.trimmingCharacters(in: .whitespaces)
         if input.isEmpty {
@@ -35,18 +51,18 @@ class PACURLFormatter: Formatter {
         if let url = URL.init(string: input) {
             if let scheme = url.scheme {
                 if !(["http", "https", "file"].contains(scheme) ) {
-                    error?.pointee = errorMessage as NSString
+                    error.pointee = errorMessage as NSString
                     return false
                 }
 
                 obj?.pointee = url.absoluteString as AnyObject
                 return true
             } else {
-                error?.pointee = errorMessage as NSString
+                error.pointee = errorMessage as NSString
                 return false
             }
         } else {
-            error?.pointee = errorMessage as NSString
+            error.pointee = errorMessage as NSString
             return false
         }
     }

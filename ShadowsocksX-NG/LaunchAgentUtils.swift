@@ -84,10 +84,10 @@ func generateSSLocalLauchAgentPlist() -> Bool {
     let Sha1Sum = getFileSHA1Sum(plistTempFilepath)
     if oldSha1Sum != Sha1Sum {
         dict.write(toFile: plistFilepath, atomically: true)
-        NSLog("generateSSLocalLauchAgentPlist - File has been changed.")
+        ErrorHandler.shared.debug("generateSSLocalLauchAgentPlist - File has been changed.", context: "LaunchAgent")
         return true
     } else {
-        NSLog("generateSSLocalLauchAgentPlist - File has not been changed.")
+        ErrorHandler.shared.debug("generateSSLocalLauchAgentPlist - File has not been changed.", context: "LaunchAgent")
         return false
     }
 }
@@ -107,7 +107,7 @@ func startSSLocal() {
     let task = Process.launchedProcess(launchPath: installerPath, arguments: [""])
     task.waitUntilExit()
     if task.terminationStatus == 0 {
-        NSLog("Start ss-local succeeded.")
+        ErrorHandler.shared.info("Start ss-local succeeded.", context: "LaunchAgent")
     } else {
         ErrorHandler.shared.handle(
             LaunchAgentError.serviceStartFailed(service: "ss-local", exitCode: task.terminationStatus),
@@ -132,7 +132,7 @@ func stopSSLocal() {
     let task = Process.launchedProcess(launchPath: installerPath, arguments: [""])
     task.waitUntilExit()
     if task.terminationStatus == 0 {
-        NSLog("Stop ss-local succeeded.")
+        ErrorHandler.shared.info("Stop ss-local succeeded.", context: "LaunchAgent")
     } else {
         ErrorHandler.shared.handle(
             LaunchAgentError.serviceStopFailed(service: "ss-local", error: NSError(domain: "LaunchAgent", code: Int(task.terminationStatus))),
@@ -150,7 +150,7 @@ func installSSLocal() {
         do {
             try fileMgr.removeItem(atPath: appSupportDir + "ss-local/ss-local")
         } catch {
-            NSLog("Remove old ss-local error")
+            ErrorHandler.shared.warning("Remove old ss-local error", context: "LaunchAgent")
         }
     }
 
@@ -168,9 +168,9 @@ func installSSLocal() {
     let task = Process.launchedProcess(launchPath: installerPath, arguments: [""])
     task.waitUntilExit()
     if task.terminationStatus == 0 {
-        NSLog("Install ss-local succeeded.")
+        ErrorHandler.shared.info("Install ss-local succeeded.", context: "LaunchAgent")
     } else {
-        ErrorHandler.shared.warning("Install ss-local failed with exit code: \(task.terminationStatus)")
+        ErrorHandler.shared.warning("Install ss-local failed with exit code: \(task.terminationStatus)", context: "LaunchAgent")
     }
 
 }
@@ -186,7 +186,7 @@ func writeSSLocalConfFile(_ conf:[String:AnyObject]) -> Bool {
         // Workaround:
         guard let s = String(data: data, encoding: .utf8),
               let processedData = s.replacingOccurrences(of: "\\/", with: "/").data(using: .utf8) else {
-            NSLog("Failed to process JSON data encoding")
+            ErrorHandler.shared.warning("Failed to process JSON data encoding", context: "LaunchAgent")
             return false
         }
         data = processedData
@@ -196,14 +196,14 @@ func writeSSLocalConfFile(_ conf:[String:AnyObject]) -> Bool {
         let newSum = data.sha1()
 
         if oldSum == newSum {
-            NSLog("writeSSLocalConfFile - File has not been changed.")
+            ErrorHandler.shared.debug("writeSSLocalConfFile - File has not been changed.", context: "LaunchAgent")
             return false
         }
 
-        NSLog("writeSSLocalConfFile - File has been changed.")
+        ErrorHandler.shared.debug("writeSSLocalConfFile - File has been changed.", context: "LaunchAgent")
         return true
     } catch {
-        NSLog("Write ss-local file failed.")
+        ErrorHandler.shared.warning("Write ss-local file failed.", context: "LaunchAgent")
     }
     return false
 }
@@ -261,7 +261,7 @@ func installSimpleObfs() {
         do {
             try fileMgr.removeItem(atPath: appSupportDir + "simple-obfs/obfs-local")
         } catch {
-            NSLog("Remove old simple-obfs error")
+            ErrorHandler.shared.warning("Remove old simple-obfs error", context: "LaunchAgent")
         }
     }
 
@@ -274,9 +274,9 @@ func installSimpleObfs() {
     let task = Process.launchedProcess(launchPath: "/bin/sh", arguments: [installerPath])
     task.waitUntilExit()
     if task.terminationStatus == 0 {
-        NSLog("Install simple-obfs succeeded.")
+        ErrorHandler.shared.info("Install simple-obfs succeeded.", context: "LaunchAgent")
     } else {
-        ErrorHandler.shared.warning("Install simple-obfs failed with exit code: \(task.terminationStatus)")
+        ErrorHandler.shared.warning("Install simple-obfs failed with exit code: \(task.terminationStatus)", context: "LaunchAgent")
     }
 
 }
@@ -292,7 +292,7 @@ func installKcptun() {
         do {
             try fileMgr.removeItem(atPath: appSupportDir + "kcptun/client")
         } catch {
-            NSLog("Remove old kcptun client error")
+            ErrorHandler.shared.warning("Remove old kcptun client error", context: "LaunchAgent")
         }
     }
     let bundle = Bundle.main
@@ -304,9 +304,9 @@ func installKcptun() {
     let task = Process.launchedProcess(launchPath: "/bin/sh", arguments: [installerPath])
     task.waitUntilExit()
     if task.terminationStatus == 0 {
-        NSLog("Install kcptun succeeded.")
+        ErrorHandler.shared.info("Install kcptun succeeded.", context: "LaunchAgent")
     } else {
-        ErrorHandler.shared.warning("Install kcptun failed with exit code: \(task.terminationStatus)")
+        ErrorHandler.shared.warning("Install kcptun failed with exit code: \(task.terminationStatus)", context: "LaunchAgent")
     }
 }
 
@@ -321,7 +321,7 @@ func installV2rayPlugin() {
         do {
             try fileMgr.removeItem(atPath: appSupportDir + "v2ray-plugin/v2ray-plugin")
         } catch {
-            NSLog("Remove old v2ray-plugin error")
+            ErrorHandler.shared.warning("Remove old v2ray-plugin error", context: "LaunchAgent")
         }
     }
     let bundle = Bundle.main
@@ -333,9 +333,9 @@ func installV2rayPlugin() {
     let task = Process.launchedProcess(launchPath: "/bin/sh", arguments: [installerPath])
     task.waitUntilExit()
     if task.terminationStatus == 0 {
-        NSLog("Install v2ray-plugin succeeded.")
+        ErrorHandler.shared.info("Install v2ray-plugin succeeded.", context: "LaunchAgent")
     } else {
-        ErrorHandler.shared.warning("Install v2ray-plugin failed with exit code: \(task.terminationStatus)")
+        ErrorHandler.shared.warning("Install v2ray-plugin failed with exit code: \(task.terminationStatus)", context: "LaunchAgent")
     }
 }
 
@@ -402,9 +402,9 @@ func startPrivoxy() {
     let task = Process.launchedProcess(launchPath: installerPath, arguments: [""])
     task.waitUntilExit()
     if task.terminationStatus == 0 {
-        NSLog("Start privoxy succeeded.")
+        ErrorHandler.shared.info("Start privoxy succeeded.", context: "LaunchAgent")
     } else {
-        ErrorHandler.shared.warning("Start privoxy failed with exit code: \(task.terminationStatus)")
+        ErrorHandler.shared.warning("Start privoxy failed with exit code: \(task.terminationStatus)", context: "LaunchAgent")
     }
 }
 
@@ -423,9 +423,9 @@ func stopPrivoxy() {
     let task = Process.launchedProcess(launchPath: installerPath, arguments: [""])
     task.waitUntilExit()
     if task.terminationStatus == 0 {
-        NSLog("Stop privoxy succeeded.")
+        ErrorHandler.shared.info("Stop privoxy succeeded.", context: "LaunchAgent")
     } else {
-        ErrorHandler.shared.warning("Stop privoxy failed with exit code: \(task.terminationStatus)")
+        ErrorHandler.shared.warning("Stop privoxy failed with exit code: \(task.terminationStatus)", context: "LaunchAgent")
     }
 }
 
@@ -437,7 +437,7 @@ func installPrivoxy() {
         do {
             try fileMgr.removeItem(atPath: appSupportDir + "privoxy/privoxy")
         } catch {
-            NSLog("Remove old privoxy error")
+            ErrorHandler.shared.warning("Remove old privoxy error", context: "LaunchAgent")
         }
     }
 
@@ -455,9 +455,9 @@ func installPrivoxy() {
     let task = Process.launchedProcess(launchPath: installerPath, arguments: [""])
     task.waitUntilExit()
     if task.terminationStatus == 0 {
-        NSLog("Install privoxy succeeded.")
+        ErrorHandler.shared.info("Install privoxy succeeded.", context: "LaunchAgent")
     } else {
-        ErrorHandler.shared.warning("Install privoxy failed with exit code: \(task.terminationStatus)")
+        ErrorHandler.shared.warning("Install privoxy failed with exit code: \(task.terminationStatus)", context: "LaunchAgent")
     }
 
     let userConfigDir = homeDir + USER_CONFIG_DIR
@@ -538,7 +538,7 @@ func writePrivoxyConfFile() -> Bool {
 
         return true
     } catch {
-        NSLog("Write privoxy file failed.")
+        ErrorHandler.shared.warning("Write privoxy file failed.", context: "LaunchAgent")
     }
     return false
 }

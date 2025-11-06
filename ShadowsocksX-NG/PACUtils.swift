@@ -42,7 +42,7 @@ func SyncPac() {
 
     if needGenerate {
         if !GeneratePACFile() {
-            NSLog("GeneratePACFile failed!")
+            ErrorHandler.shared.warning("GeneratePACFile failed!", context: "PAC")
         }
     }
 }
@@ -167,7 +167,7 @@ func GeneratePACFile() -> Bool {
                     return !userRuleLines.contains(String(line[i...]))
                 }
             } catch {
-                NSLog("Not found user-rule.txt")
+                ErrorHandler.shared.debug("Not found user-rule.txt", context: "PAC")
             }
 
             // Filter empty and comment lines
@@ -223,7 +223,7 @@ func GeneratePACFile() -> Bool {
         }
 
     } catch {
-        NSLog("Not found gfwlist.txt")
+        ErrorHandler.shared.warning("Not found gfwlist.txt", context: "PAC")
     }
     return false
 }

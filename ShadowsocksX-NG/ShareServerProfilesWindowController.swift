@@ -50,9 +50,9 @@ class ShareServerProfilesWindowController: NSWindowController
             let pb = NSPasteboard.general
             pb.clearContents()
             if pb.writeObjects([url.absoluteString as NSPasteboardWriting]) {
-                NSLog("Copy URL to clipboard")
+                ErrorHandler.shared.debug("Copy URL to clipboard", context: "ShareProfiles")
             } else {
-                NSLog("Failed to copy URL to clipboard")
+                ErrorHandler.shared.warning("Failed to copy URL to clipboard", context: "ShareProfiles")
             }
         }
     }
@@ -62,9 +62,9 @@ class ShareServerProfilesWindowController: NSWindowController
             let pb = NSPasteboard.general
             pb.clearContents()
             if pb.writeObjects([img as NSPasteboardWriting]) {
-                NSLog("Copy QRCode to clipboard")
+                ErrorHandler.shared.debug("Copy QRCode to clipboard", context: "ShareProfiles")
             } else {
-                NSLog("Failed to copy QRCode to clipboard")
+                ErrorHandler.shared.warning("Failed to copy QRCode to clipboard", context: "ShareProfiles")
             }
         }
     }
@@ -111,9 +111,9 @@ class ShareServerProfilesWindowController: NSWindowController
         let pb = NSPasteboard.general
         pb.clearContents()
         if pb.writeObjects([getAllServerURLs() as NSPasteboardWriting]) {
-            NSLog("Copy all server URLs to clipboard")
+            ErrorHandler.shared.debug("Copy all server URLs to clipboard", context: "ShareProfiles")
         } else {
-            NSLog("Failed to all server URLs to clipboard")
+            ErrorHandler.shared.warning("Failed to all server URLs to clipboard", context: "ShareProfiles")
         }
     }
 

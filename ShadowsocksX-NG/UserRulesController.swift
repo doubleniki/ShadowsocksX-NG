@@ -44,8 +44,8 @@ class UserRulesController: NSWindowController {
                     context: "Initialize User Rules",
                     showAlert: true
                 )
+                return
             }
-            return
         }
 
         let str = (try? String(contentsOfFile: PACUserRuleFilePath, encoding: String.Encoding.utf8)) ?? ""

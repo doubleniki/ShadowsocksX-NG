@@ -4,7 +4,7 @@
 //
 //  Secure password storage using macOS Keychain
 //
-
+import Cocoa
 import Foundation
 import Security
 
@@ -26,7 +26,8 @@ class KeychainManager {
     @discardableResult
     func savePassword(_ password: String, forAccount account: String) -> Bool {
         guard let passwordData = password.data(using: .utf8) else {
-            NSLog("KeychainManager: Failed to convert password to data")
+            ErrorHandler.shared.warning(
+                "Failed to convert password to data", context: "KeychainManager")
             return false
         }
 
@@ -39,16 +40,18 @@ class KeychainManager {
             kSecAttrService as String: service,
             kSecAttrAccount as String: account,
             kSecValueData as String: passwordData,
-            kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlock
+            kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlock,
         ]
 
         let status = SecItemAdd(query as CFDictionary, nil)
 
         if status == errSecSuccess {
-            NSLog("KeychainManager: Successfully saved password for account: \(account)")
+            ErrorHandler.shared.debug(
+                "Successfully saved password for account: \(account)", context: "KeychainManager")
             return true
         } else {
-            NSLog("KeychainManager: Failed to save password. Status: \(status)")
+            ErrorHandler.shared.warning(
+                "Failed to save password. Status: \(status)", context: "KeychainManager")
             return false
         }
     }
@@ -64,7 +67,7 @@ class KeychainManager {
             kSecAttrService as String: service,
             kSecAttrAccount as String: account,
             kSecReturnData as String: true,
-            kSecMatchLimit as String: kSecMatchLimitOne
+            kSecMatchLimit as String: kSecMatchLimitOne,
         ]
 
         var result: AnyObject?
@@ -72,13 +75,16 @@ class KeychainManager {
 
         if status == errSecSuccess {
             if let passwordData = result as? Data,
-               let password = String(data: passwordData, encoding: .utf8) {
+                let password = String(data: passwordData, encoding: .utf8)
+            {
                 return password
             }
         } else if status == errSecItemNotFound {
-            NSLog("KeychainManager: Password not found for account: \(account)")
+            ErrorHandler.shared.debug(
+                "Password not found for account: \(account)", context: "KeychainManager")
         } else {
-            NSLog("KeychainManager: Failed to retrieve password. Status: \(status)")
+            ErrorHandler.shared.warning(
+                "Failed to retrieve password. Status: \(status)", context: "KeychainManager")
         }
 
         return nil
@@ -94,14 +100,15 @@ class KeychainManager {
     @discardableResult
     func updatePassword(_ password: String, forAccount account: String) -> Bool {
         guard let passwordData = password.data(using: .utf8) else {
-            NSLog("KeychainManager: Failed to convert password to data")
+            ErrorHandler.shared.warning(
+                "Failed to convert password to data", context: "KeychainManager")
             return false
         }
 
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
-            kSecAttrAccount as String: account
+            kSecAttrAccount as String: account,
         ]
 
         let attributes: [String: Any] = [
@@ -111,14 +118,17 @@ class KeychainManager {
         let status = SecItemUpdate(query as CFDictionary, attributes as CFDictionary)
 
         if status == errSecSuccess {
-            NSLog("KeychainManager: Successfully updated password for account: \(account)")
+            ErrorHandler.shared.debug(
+                "Successfully updated password for account: \(account)", context: "KeychainManager")
             return true
         } else if status == errSecItemNotFound {
             // If item doesn't exist, create it
-            NSLog("KeychainManager: Password not found, creating new entry")
+            ErrorHandler.shared.debug(
+                "Password not found, creating new entry", context: "KeychainManager")
             return savePassword(password, forAccount: account)
         } else {
-            NSLog("KeychainManager: Failed to update password. Status: \(status)")
+            ErrorHandler.shared.warning(
+                "Failed to update password. Status: \(status)", context: "KeychainManager")
             return false
         }
     }
@@ -133,18 +143,21 @@ class KeychainManager {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
-            kSecAttrAccount as String: account
+            kSecAttrAccount as String: account,
         ]
 
         let status = SecItemDelete(query as CFDictionary)
 
         if status == errSecSuccess || status == errSecItemNotFound {
             if status == errSecSuccess {
-                NSLog("KeychainManager: Successfully deleted password for account: \(account)")
+                ErrorHandler.shared.debug(
+                    "Successfully deleted password for account: \(account)",
+                    context: "KeychainManager")
             }
             return true
         } else {
-            NSLog("KeychainManager: Failed to delete password. Status: \(status)")
+            ErrorHandler.shared.warning(
+                "Failed to delete password. Status: \(status)", context: "KeychainManager")
             return false
         }
     }
@@ -165,7 +178,9 @@ class KeychainManager {
 
         // Check if password already exists in Keychain
         if getPassword(forAccount: account) != nil {
-            NSLog("KeychainManager: Password already exists in Keychain for account: \(account)")
+            ErrorHandler.shared.debug(
+                "Password already exists in Keychain for account: \(account)",
+                context: "KeychainManager")
             return true
         }
 
@@ -188,7 +203,8 @@ class KeychainManager {
 
         // Try to retrieve
         guard let retrieved = getPassword(forAccount: testAccount),
-              retrieved == testPassword else {
+            retrieved == testPassword
+        else {
             deletePassword(forAccount: testAccount)
             return false
         }

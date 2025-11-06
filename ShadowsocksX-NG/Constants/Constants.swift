@@ -5,6 +5,7 @@
 //  Type-safe constants and enumerations
 //
 
+import AppKit
 import Foundation
 
 /// Centralized constants for the application
@@ -41,9 +42,11 @@ enum Constants {
 
     enum Notification {
         static let configChanged = Foundation.Notification.Name("NOTIFY_CONF_CHANGED")
-        static let serverProfilesChanged = Foundation.Notification.Name("NOTIFY_SERVER_PROFILES_CHANGED")
+        static let serverProfilesChanged = Foundation.Notification.Name(
+            "NOTIFY_SERVER_PROFILES_CHANGED")
         static let foundSSURL = Foundation.Notification.Name("NOTIFY_FOUND_SS_URL")
-        static let pacGenerationFailed = Foundation.Notification.Name("NOTIFY_PAC_GENERATION_FAILED")
+        static let pacGenerationFailed = Foundation.Notification.Name(
+            "NOTIFY_PAC_GENERATION_FAILED")
     }
 
     // MARK: - File Paths
@@ -69,17 +72,23 @@ enum Constants {
 
         /// Returns full path to app support directory
         static var appSupport: String {
-            return NSHomeDirectory() + appSupportDirectory
+            return FileManager.default.homeDirectoryForCurrentUser
+                .appendingPathComponent(appSupportDirectory)
+                .path
         }
 
         /// Returns full path to user config directory
         static var userConfig: String {
-            return NSHomeDirectory() + userConfigDirectory
+            return FileManager.default.homeDirectoryForCurrentUser
+                .appendingPathComponent(userConfigDirectory)
+                .path
         }
 
         /// Returns full path to Launch Agents directory
         static var launchAgents: String {
-            return NSHomeDirectory() + launchAgentsDirectory
+            return FileManager.default.homeDirectoryForCurrentUser
+                .appendingPathComponent(launchAgentsDirectory)
+                .path
         }
     }
 
@@ -102,7 +111,8 @@ enum Constants {
         static let defaultTimeout: TimeInterval = 60.0
         static let defaultListenAddress = "127.0.0.1"
 
-        static let gfwListDefaultURL = "https://raw.githubusercontent.com/gfwlist/gfwlist/master/gfwlist.txt"
+        static let gfwListDefaultURL =
+            "https://raw.githubusercontent.com/gfwlist/gfwlist/master/gfwlist.txt"
     }
 
     // MARK: - Log Files
@@ -114,7 +124,9 @@ enum Constants {
 
         /// Returns full path to log directory
         static var directory: String {
-            return NSHomeDirectory() + "/Library/Logs"
+            return FileManager.default.homeDirectoryForCurrentUser
+                .appendingPathComponent("Library/Logs")
+                .path
         }
     }
 }
@@ -153,14 +165,18 @@ enum ProxyMode: String, Codable, CaseIterable {
     /// Returns the proxy mode from UserDefaults
     static var current: ProxyMode {
         get {
-            guard let rawValue = Foundation.UserDefaults.standard.string(forKey: Constants.UserDefaults.runningMode) else {
+            guard
+                let rawValue = Foundation.UserDefaults.standard.string(
+                    forKey: Constants.UserDefaults.runningMode)
+            else {
                 return .auto
             }
 
             // Migrate legacy "external_pac" to "externalPAC"
             if rawValue == "external_pac" {
                 let migratedMode = ProxyMode.externalPAC
-                Foundation.UserDefaults.standard.set(migratedMode.rawValue, forKey: Constants.UserDefaults.runningMode)
+                Foundation.UserDefaults.standard.set(
+                    migratedMode.rawValue, forKey: Constants.UserDefaults.runningMode)
                 return migratedMode
             }
 
@@ -170,7 +186,8 @@ enum ProxyMode: String, Codable, CaseIterable {
             return mode
         }
         set {
-            Foundation.UserDefaults.standard.set(newValue.rawValue, forKey: Constants.UserDefaults.runningMode)
+            Foundation.UserDefaults.standard.set(
+                newValue.rawValue, forKey: Constants.UserDefaults.runningMode)
         }
     }
 }
@@ -208,7 +225,7 @@ enum EncryptionMethod: String, Codable, CaseIterable {
     var isAEAD: Bool {
         switch self {
         case .aes128gcm, .aes192gcm, .aes256gcm,
-             .chacha20ietfpoly1305, .xchacha20ietfpoly1305:
+            .chacha20ietfpoly1305, .xchacha20ietfpoly1305:
             return true
         default:
             return false
@@ -227,7 +244,7 @@ enum EncryptionMethod: String, Codable, CaseIterable {
             .chacha20ietfpoly1305,
             .xchacha20ietfpoly1305,
             .aes192gcm,
-            .aes128gcm
+            .aes128gcm,
         ]
     }
 
@@ -235,7 +252,7 @@ enum EncryptionMethod: String, Codable, CaseIterable {
     static var categorized: [(category: String, methods: [EncryptionMethod])] {
         return [
             ("AEAD Ciphers (Recommended)", recommended),
-            ("Stream Ciphers (Legacy)", allCases.filter { $0.isLegacy })
+            ("Stream Ciphers (Legacy)", allCases.filter { $0.isLegacy }),
         ]
     }
 }

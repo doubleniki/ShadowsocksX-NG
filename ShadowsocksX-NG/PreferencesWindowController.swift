@@ -100,24 +100,21 @@ class PreferencesWindowController: NSWindowController
         guard let firstIndex = profilesTableView.selectedRowIndexes.first else {
             return
         }
-        let index = Int(firstIndex)
         var deleteCount = 0
-        if index >= 0 {
-            profilesTableView.beginUpdates()
-            for (_, toDeleteIndex) in profilesTableView.selectedRowIndexes.enumerated() {
-                print(profileMgr.profiles.count)
-                let profile = profileMgr.profiles[toDeleteIndex - deleteCount]
-                // Remove password from Keychain before deleting profile
-                profile.removePasswordFromKeychain()
-                profileMgr.profiles.remove(at: toDeleteIndex - deleteCount)
-                profilesTableView.removeRows(
-                    at: IndexSet(integer: toDeleteIndex - deleteCount),
-                    withAnimation: NSTableView.AnimationOptions.effectFade
-                )
-                deleteCount += 1
-            }
-            profilesTableView.endUpdates()
+        profilesTableView.beginUpdates()
+        for (_, toDeleteIndex) in profilesTableView.selectedRowIndexes.enumerated() {
+            print(profileMgr.profiles.count)
+            let profile = profileMgr.profiles[toDeleteIndex - deleteCount]
+            // Remove password from Keychain before deleting profile
+            profile.removePasswordFromKeychain()
+            profileMgr.profiles.remove(at: toDeleteIndex - deleteCount)
+            profilesTableView.removeRows(
+                at: IndexSet(integer: toDeleteIndex - deleteCount),
+                withAnimation: NSTableView.AnimationOptions.effectFade
+            )
+            deleteCount += 1
         }
+        profilesTableView.endUpdates()
         self.profilesTableView.scrollRowToVisible(index-1)
         self.profilesTableView.selectRowIndexes(IndexSet(integer: index-1), byExtendingSelection: false)
         updateProfileBoxVisible()
@@ -208,9 +205,9 @@ class PreferencesWindowController: NSWindowController
                 pboard.clearContents()
                 let rs = pboard.writeObjects([url as NSPasteboardWriting])
                 if rs {
-                    NSLog("copy to pasteboard success")
+                    ErrorHandler.shared.debug("copy to pasteboard success", context: "Preferences")
                 } else {
-                    NSLog("copy to pasteboard failed")
+                    ErrorHandler.shared.warning("copy to pasteboard failed", context: "Preferences")
                 }
             }
         }
@@ -231,7 +228,7 @@ class PreferencesWindowController: NSWindowController
     }
 
     func bindProfile(_ index:Int) {
-        NSLog("bind profile \(index)")
+        ErrorHandler.shared.debug("bind profile \(index)", context: "Preferences")
 
         if index >= 0 && index < profileMgr.profiles.count {
             let editingProfile = profileMgr.profiles[index]
