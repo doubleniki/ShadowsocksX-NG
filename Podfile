@@ -32,4 +32,16 @@ post_install do |installer|
       config.build_settings['MACOSX_DEPLOYMENT_TARGET'] = '11.0'
     end
   end
+
+  # Fix TOOLCHAIN_DIR compatibility for Xcode < 15
+  frameworks_script_path = 'Pods/Target Support Files/Pods-ShadowsocksX-NG/Pods-ShadowsocksX-NG-frameworks.sh'
+  if File.exist?(frameworks_script_path)
+    frameworks_script = File.read(frameworks_script_path)
+    # Replace TOOLCHAIN_DIR with fallback to DT_TOOLCHAIN_DIR for older Xcode
+    frameworks_script.gsub!(
+      'SWIFT_STDLIB_PATH="${TOOLCHAIN_DIR}/usr/lib/swift/${PLATFORM_NAME}"',
+      'SWIFT_STDLIB_PATH="${TOOLCHAIN_DIR:-$DT_TOOLCHAIN_DIR}/usr/lib/swift/${PLATFORM_NAME}"'
+    )
+    File.write(frameworks_script_path, frameworks_script)
+  end
 end
