@@ -48,7 +48,8 @@ class UserRulesController: NSWindowController {
             }
         }
 
-        let str = (try? String(contentsOfFile: PACUserRuleFilePath, encoding: String.Encoding.utf8)) ?? ""
+        let str =
+            (try? String(contentsOfFile: PACUserRuleFilePath, encoding: String.Encoding.utf8)) ?? ""
         userRulesView.string = str
 
         setupQuickAddUI()
@@ -62,10 +63,14 @@ class UserRulesController: NSWindowController {
 
         // Deactivate existing top constraint for scroll view to avoid conflicts
         for constraint in contentView.constraints {
-            if (constraint.firstItem as? NSScrollView) == scrollView && constraint.firstAttribute == .top {
+            if (constraint.firstItem as? NSScrollView) == scrollView
+                && constraint.firstAttribute == .top
+            {
                 constraint.isActive = false
             }
-            if (constraint.secondItem as? NSScrollView) == scrollView && constraint.secondAttribute == .top {
+            if (constraint.secondItem as? NSScrollView) == scrollView
+                && constraint.secondAttribute == .top
+            {
                 constraint.isActive = false
             }
         }
@@ -93,13 +98,16 @@ class UserRulesController: NSWindowController {
         quickAddContainer.addSubview(addButton)
 
         // Add from clipboard button
-        addFromClipboardButton = NSButton(title: "Add from Clipboard", target: self, action: #selector(addFromClipboard(_:)))
+        addFromClipboardButton = NSButton(
+            title: "Add from Clipboard", target: self, action: #selector(addFromClipboard(_:)))
         addFromClipboardButton.translatesAutoresizingMaskIntoConstraints = false
         addFromClipboardButton.bezelStyle = .rounded
         quickAddContainer.addSubview(addFromClipboardButton)
 
         // Examples label
-        examplesLabel = NSTextField(labelWithString: "Examples: ||domain.com  |http://domain.com  @@||domain.com (whitelist)")
+        examplesLabel = NSTextField(
+            labelWithString:
+                "Examples: ||domain.com  |http://domain.com  @@||domain.com (whitelist)")
         examplesLabel.translatesAutoresizingMaskIntoConstraints = false
         examplesLabel.font = NSFont.systemFont(ofSize: NSFont.smallSystemFontSize)
         examplesLabel.textColor = .secondaryLabelColor
@@ -112,8 +120,10 @@ class UserRulesController: NSWindowController {
         NSLayoutConstraint.activate([
             // Container positioning - at the top
             quickAddContainer.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 20),
-            quickAddContainer.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
-            quickAddContainer.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
+            quickAddContainer.leadingAnchor.constraint(
+                equalTo: contentView.leadingAnchor, constant: 20),
+            quickAddContainer.trailingAnchor.constraint(
+                equalTo: contentView.trailingAnchor, constant: -20),
             quickAddContainer.heightAnchor.constraint(equalToConstant: 60),
 
             // Quick add label
@@ -121,22 +131,26 @@ class UserRulesController: NSWindowController {
             quickAddLabel.topAnchor.constraint(equalTo: quickAddContainer.topAnchor),
 
             // Text field
-            quickAddTextField.leadingAnchor.constraint(equalTo: quickAddLabel.trailingAnchor, constant: 8),
+            quickAddTextField.leadingAnchor.constraint(
+                equalTo: quickAddLabel.trailingAnchor, constant: 8),
             quickAddTextField.centerYAnchor.constraint(equalTo: quickAddLabel.centerYAnchor),
             quickAddTextField.widthAnchor.constraint(equalToConstant: 200),
 
             // Add button
-            addButton.leadingAnchor.constraint(equalTo: quickAddTextField.trailingAnchor, constant: 8),
+            addButton.leadingAnchor.constraint(
+                equalTo: quickAddTextField.trailingAnchor, constant: 8),
             addButton.centerYAnchor.constraint(equalTo: quickAddTextField.centerYAnchor),
 
             // Add from clipboard button
-            addFromClipboardButton.leadingAnchor.constraint(equalTo: addButton.trailingAnchor, constant: 8),
+            addFromClipboardButton.leadingAnchor.constraint(
+                equalTo: addButton.trailingAnchor, constant: 8),
             addFromClipboardButton.centerYAnchor.constraint(equalTo: addButton.centerYAnchor),
 
             // Examples label
             examplesLabel.leadingAnchor.constraint(equalTo: quickAddContainer.leadingAnchor),
             examplesLabel.topAnchor.constraint(equalTo: quickAddLabel.bottomAnchor, constant: 8),
-            examplesLabel.trailingAnchor.constraint(lessThanOrEqualTo: quickAddContainer.trailingAnchor),
+            examplesLabel.trailingAnchor.constraint(
+                lessThanOrEqualTo: quickAddContainer.trailingAnchor),
 
             // Adjust scroll view to be below quick add container
             scrollView.topAnchor.constraint(equalTo: quickAddContainer.bottomAnchor, constant: 12),
@@ -211,7 +225,10 @@ class UserRulesController: NSWindowController {
         }
 
         // Basic domain validation
-        let domainRegex = try? NSRegularExpression(pattern: "^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\\.[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?)*$")
+        let domainRegex = try? NSRegularExpression(
+            pattern:
+                "^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\\.[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?)*$"
+        )
         let range = NSRange(domain.startIndex..<domain.endIndex, in: domain)
         if domainRegex?.firstMatch(in: domain, range: range) != nil {
             return domain
@@ -274,9 +291,10 @@ class UserRulesController: NSWindowController {
     @IBAction func didOK(_ sender: AnyObject) {
         if let str = userRulesView?.string {
             do {
-                try str.data(using: String.Encoding.utf8)?.write(to: URL(fileURLWithPath: PACUserRuleFilePath), options: .atomic)
+                try str.data(using: String.Encoding.utf8)?.write(
+                    to: URL(fileURLWithPath: PACUserRuleFilePath), options: .atomic)
 
-                if GeneratePACFile() {
+                if generatePACFile() {
                     // Popup a user notification
                     let notification = NSUserNotification()
                     notification.title = "PAC has been updated by User Rules.".localized

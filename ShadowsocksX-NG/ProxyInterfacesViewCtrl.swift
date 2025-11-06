@@ -47,14 +47,14 @@ class ProxyInterfacesViewCtrl: NSViewController, NSTableViewDataSource, NSTableV
         }
 
         guard row >= 0 && row < services.count else {
-            print("ProxyInterfacesViewCtrl: Row \(row) out of bounds (count: \(services.count))")
+            ErrorHandler.shared.warning("Row \(row) out of bounds (count: \(services.count))", context: "ProxyInterfacesViewCtrl")
             return nil
         }
 
         guard let networkService = services[row] as? [String: Any],
               let key = networkService["key"] as? String,
               let userDefinedName = networkService["userDefinedName"] as? String else {
-            print("ProxyInterfacesViewCtrl: Malformed network service data at row \(row)")
+            ErrorHandler.shared.warning("Malformed network service data at row \(row)", context: "ProxyInterfacesViewCtrl")
             return nil
         }
 
@@ -78,6 +78,7 @@ class ProxyInterfacesViewCtrl: NSViewController, NSTableViewDataSource, NSTableV
         guard let networkService = services[row] as? [String: Any],
               let key = networkService["key"] as? String,
               let objectValue = object as? NSNumber else {
+            ErrorHandler.shared.warning("Malformed data at row \(row): object type is \(type(of: object))", context: "ProxyInterfacesViewCtrl.tableView")
             return
         }
 

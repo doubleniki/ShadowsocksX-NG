@@ -15,7 +15,6 @@ let LAUNCH_AGENT_CONF_SSLOCAL_NAME = "com.qiuyuzhou.shadowsocksX-NG.local.plist"
 let LAUNCH_AGENT_CONF_PRIVOXY_NAME = "com.qiuyuzhou.shadowsocksX-NG.http.plist"
 let LAUNCH_AGENT_CONF_KCPTUN_NAME = "com.qiuyuzhou.shadowsocksX-NG.kcptun.plist"
 
-
 func getFileSHA1Sum(_ filepath: String) -> String {
     if let data = try? Data(contentsOf: URL(fileURLWithPath: filepath)) {
         return data.sha1()
@@ -39,7 +38,8 @@ func generateSSLocalLauchAgentPlist() -> Bool {
     let fileMgr = FileManager.default
     if !fileMgr.fileExists(atPath: launchAgentDirPath) {
         do {
-            try fileMgr.createDirectory(atPath: launchAgentDirPath, withIntermediateDirectories: true, attributes: nil)
+            try fileMgr.createDirectory(
+                atPath: launchAgentDirPath, withIntermediateDirectories: true, attributes: nil)
         } catch {
             ErrorHandler.shared.handle(
                 LaunchAgentError.directoryCreationFailed(path: launchAgentDirPath, error: error),
@@ -78,16 +78,18 @@ func generateSSLocalLauchAgentPlist() -> Bool {
         "StandardOutPath": logFilePath,
         "StandardErrorPath": logFilePath,
         "ProgramArguments": arguments,
-        "EnvironmentVariables": ["DYLD_LIBRARY_PATH": dyld_library_paths.joined(separator: ":")]
+        "EnvironmentVariables": ["DYLD_LIBRARY_PATH": dyld_library_paths.joined(separator: ":")],
     ]
     dict.write(toFile: plistTempFilepath, atomically: true)
-    let Sha1Sum = getFileSHA1Sum(plistTempFilepath)
-    if oldSha1Sum != Sha1Sum {
+    let sha1Sum = getFileSHA1Sum(plistTempFilepath)
+    if oldSha1Sum != sha1Sum {
         dict.write(toFile: plistFilepath, atomically: true)
-        ErrorHandler.shared.debug("generateSSLocalLauchAgentPlist - File has been changed.", context: "LaunchAgent")
+        ErrorHandler.shared.debug(
+            "generateSSLocalLauchAgentPlist - File has been changed.", context: "LaunchAgent")
         return true
     } else {
-        ErrorHandler.shared.debug("generateSSLocalLauchAgentPlist - File has not been changed.", context: "LaunchAgent")
+        ErrorHandler.shared.debug(
+            "generateSSLocalLauchAgentPlist - File has not been changed.", context: "LaunchAgent")
         return false
     }
 }
@@ -110,7 +112,8 @@ func startSSLocal() {
         ErrorHandler.shared.info("Start ss-local succeeded.", context: "LaunchAgent")
     } else {
         ErrorHandler.shared.handle(
-            LaunchAgentError.serviceStartFailed(service: "ss-local", exitCode: task.terminationStatus),
+            LaunchAgentError.serviceStartFailed(
+                service: "ss-local", exitCode: task.terminationStatus),
             context: "Start SS Local",
             showAlert: true
         )
@@ -135,7 +138,9 @@ func stopSSLocal() {
         ErrorHandler.shared.info("Stop ss-local succeeded.", context: "LaunchAgent")
     } else {
         ErrorHandler.shared.handle(
-            LaunchAgentError.serviceStopFailed(service: "ss-local", error: NSError(domain: "LaunchAgent", code: Int(task.terminationStatus))),
+            LaunchAgentError.serviceStopFailed(
+                service: "ss-local",
+                error: NSError(domain: "LaunchAgent", code: Int(task.terminationStatus))),
             context: "Stop SS Local",
             showAlert: true
         )
@@ -145,7 +150,7 @@ func stopSSLocal() {
 func installSSLocal() {
     let fileMgr = FileManager.default
     let homeDir = NSHomeDirectory()
-    let appSupportDir = homeDir+APP_SUPPORT_DIR
+    let appSupportDir = homeDir + APP_SUPPORT_DIR
     if fileMgr.fileExists(atPath: appSupportDir + "ss-local/ss-local") {
         do {
             try fileMgr.removeItem(atPath: appSupportDir + "ss-local/ss-local")
@@ -170,12 +175,14 @@ func installSSLocal() {
     if task.terminationStatus == 0 {
         ErrorHandler.shared.info("Install ss-local succeeded.", context: "LaunchAgent")
     } else {
-        ErrorHandler.shared.warning("Install ss-local failed with exit code: \(task.terminationStatus)", context: "LaunchAgent")
+        ErrorHandler.shared.warning(
+            "Install ss-local failed with exit code: \(task.terminationStatus)",
+            context: "LaunchAgent")
     }
 
 }
 
-func writeSSLocalConfFile(_ conf:[String:AnyObject]) -> Bool {
+func writeSSLocalConfFile(_ conf: [String: AnyObject]) -> Bool {
     do {
         let filepath = NSHomeDirectory() + APP_SUPPORT_DIR + "ss-local-config.json"
         var data: Data = try JSONSerialization.data(withJSONObject: conf, options: .prettyPrinted)
@@ -185,8 +192,10 @@ func writeSSLocalConfFile(_ conf:[String:AnyObject]) -> Bool {
         // Escaped forward slashes is also valid json.
         // Workaround:
         guard let s = String(data: data, encoding: .utf8),
-              let processedData = s.replacingOccurrences(of: "\\/", with: "/").data(using: .utf8) else {
-            ErrorHandler.shared.warning("Failed to process JSON data encoding", context: "LaunchAgent")
+            let processedData = s.replacingOccurrences(of: "\\/", with: "/").data(using: .utf8)
+        else {
+            ErrorHandler.shared.warning(
+                "Failed to process JSON data encoding", context: "LaunchAgent")
             return false
         }
         data = processedData
@@ -196,11 +205,13 @@ func writeSSLocalConfFile(_ conf:[String:AnyObject]) -> Bool {
         let newSum = data.sha1()
 
         if oldSum == newSum {
-            ErrorHandler.shared.debug("writeSSLocalConfFile - File has not been changed.", context: "LaunchAgent")
+            ErrorHandler.shared.debug(
+                "writeSSLocalConfFile - File has not been changed.", context: "LaunchAgent")
             return false
         }
 
-        ErrorHandler.shared.debug("writeSSLocalConfFile - File has been changed.", context: "LaunchAgent")
+        ErrorHandler.shared.debug(
+            "writeSSLocalConfFile - File has been changed.", context: "LaunchAgent")
         return true
     } catch {
         ErrorHandler.shared.warning("Write ss-local file failed.", context: "LaunchAgent")
@@ -246,7 +257,7 @@ func syncSSLocal() {
         removeSSLocalConfFile()
         stopSSLocal()
     }
-    SyncPac()
+    syncPac()
     syncPrivoxy()
 }
 
@@ -276,7 +287,9 @@ func installSimpleObfs() {
     if task.terminationStatus == 0 {
         ErrorHandler.shared.info("Install simple-obfs succeeded.", context: "LaunchAgent")
     } else {
-        ErrorHandler.shared.warning("Install simple-obfs failed with exit code: \(task.terminationStatus)", context: "LaunchAgent")
+        ErrorHandler.shared.warning(
+            "Install simple-obfs failed with exit code: \(task.terminationStatus)",
+            context: "LaunchAgent")
     }
 
 }
@@ -287,7 +300,7 @@ func installSimpleObfs() {
 func installKcptun() {
     let fileMgr = FileManager.default
     let homeDir = NSHomeDirectory()
-    let appSupportDir = homeDir+APP_SUPPORT_DIR
+    let appSupportDir = homeDir + APP_SUPPORT_DIR
     if fileMgr.fileExists(atPath: appSupportDir + "kcptun/client") {
         do {
             try fileMgr.removeItem(atPath: appSupportDir + "kcptun/client")
@@ -306,7 +319,9 @@ func installKcptun() {
     if task.terminationStatus == 0 {
         ErrorHandler.shared.info("Install kcptun succeeded.", context: "LaunchAgent")
     } else {
-        ErrorHandler.shared.warning("Install kcptun failed with exit code: \(task.terminationStatus)", context: "LaunchAgent")
+        ErrorHandler.shared.warning(
+            "Install kcptun failed with exit code: \(task.terminationStatus)",
+            context: "LaunchAgent")
     }
 }
 
@@ -316,7 +331,7 @@ func installKcptun() {
 func installV2rayPlugin() {
     let fileMgr = FileManager.default
     let homeDir = NSHomeDirectory()
-    let appSupportDir = homeDir+APP_SUPPORT_DIR
+    let appSupportDir = homeDir + APP_SUPPORT_DIR
     if fileMgr.fileExists(atPath: appSupportDir + "v2ray-plugin/v2ray-plugin") {
         do {
             try fileMgr.removeItem(atPath: appSupportDir + "v2ray-plugin/v2ray-plugin")
@@ -335,7 +350,9 @@ func installV2rayPlugin() {
     if task.terminationStatus == 0 {
         ErrorHandler.shared.info("Install v2ray-plugin succeeded.", context: "LaunchAgent")
     } else {
-        ErrorHandler.shared.warning("Install v2ray-plugin failed with exit code: \(task.terminationStatus)", context: "LaunchAgent")
+        ErrorHandler.shared.warning(
+            "Install v2ray-plugin failed with exit code: \(task.terminationStatus)",
+            context: "LaunchAgent")
     }
 }
 
@@ -353,7 +370,8 @@ func generatePrivoxyLauchAgentPlist() -> Bool {
     let fileMgr = FileManager.default
     if !fileMgr.fileExists(atPath: launchAgentDirPath) {
         do {
-            try fileMgr.createDirectory(atPath: launchAgentDirPath, withIntermediateDirectories: true, attributes: nil)
+            try fileMgr.createDirectory(
+                atPath: launchAgentDirPath, withIntermediateDirectories: true, attributes: nil)
         } catch {
             ErrorHandler.shared.handle(
                 LaunchAgentError.directoryCreationFailed(path: launchAgentDirPath, error: error),
@@ -375,11 +393,11 @@ func generatePrivoxyLauchAgentPlist() -> Bool {
         "WorkingDirectory": NSHomeDirectory() + APP_SUPPORT_DIR,
         "StandardOutPath": logFilePath,
         "StandardErrorPath": logFilePath,
-        "ProgramArguments": arguments
+        "ProgramArguments": arguments,
     ]
     dict.write(toFile: plistTempFilePath, atomically: true)
-    let Sha1Sum = getFileSHA1Sum(plistTempFilePath)
-    if oldSha1Sum != Sha1Sum {
+    let sha1Sum = getFileSHA1Sum(plistTempFilePath)
+    if oldSha1Sum != sha1Sum {
         dict.write(toFile: plistFilepath, atomically: true)
         return true
     } else {
@@ -404,7 +422,9 @@ func startPrivoxy() {
     if task.terminationStatus == 0 {
         ErrorHandler.shared.info("Start privoxy succeeded.", context: "LaunchAgent")
     } else {
-        ErrorHandler.shared.warning("Start privoxy failed with exit code: \(task.terminationStatus)", context: "LaunchAgent")
+        ErrorHandler.shared.warning(
+            "Start privoxy failed with exit code: \(task.terminationStatus)", context: "LaunchAgent"
+        )
     }
 }
 
@@ -425,14 +445,15 @@ func stopPrivoxy() {
     if task.terminationStatus == 0 {
         ErrorHandler.shared.info("Stop privoxy succeeded.", context: "LaunchAgent")
     } else {
-        ErrorHandler.shared.warning("Stop privoxy failed with exit code: \(task.terminationStatus)", context: "LaunchAgent")
+        ErrorHandler.shared.warning(
+            "Stop privoxy failed with exit code: \(task.terminationStatus)", context: "LaunchAgent")
     }
 }
 
 func installPrivoxy() {
     let fileMgr = FileManager.default
     let homeDir = NSHomeDirectory()
-    let appSupportDir = homeDir+APP_SUPPORT_DIR
+    let appSupportDir = homeDir + APP_SUPPORT_DIR
     if fileMgr.fileExists(atPath: appSupportDir + "privoxy/privoxy") {
         do {
             try fileMgr.removeItem(atPath: appSupportDir + "privoxy/privoxy")
@@ -457,14 +478,17 @@ func installPrivoxy() {
     if task.terminationStatus == 0 {
         ErrorHandler.shared.info("Install privoxy succeeded.", context: "LaunchAgent")
     } else {
-        ErrorHandler.shared.warning("Install privoxy failed with exit code: \(task.terminationStatus)", context: "LaunchAgent")
+        ErrorHandler.shared.warning(
+            "Install privoxy failed with exit code: \(task.terminationStatus)",
+            context: "LaunchAgent")
     }
 
     let userConfigDir = homeDir + USER_CONFIG_DIR
     // Make dir: '~/.ShadowsocksX-NG'
     if !fileMgr.fileExists(atPath: userConfigDir) {
         do {
-            try fileMgr.createDirectory(atPath: userConfigDir, withIntermediateDirectories: true, attributes: nil)
+            try fileMgr.createDirectory(
+                atPath: userConfigDir, withIntermediateDirectories: true, attributes: nil)
         } catch {
             ErrorHandler.shared.handle(
                 FileSystemError.writeFailed(path: userConfigDir, error: error),
@@ -499,7 +523,8 @@ func writePrivoxyConfFile() -> Bool {
     do {
         let defaults = UserDefaults.standard
         let bundle = Bundle.main
-        guard let templatePath = bundle.path(forResource: "privoxy.template.config", ofType: nil) else {
+        guard let templatePath = bundle.path(forResource: "privoxy.template.config", ofType: nil)
+        else {
             ErrorHandler.shared.warning("privoxy.template.config not found")
             return false
         }
@@ -508,7 +533,8 @@ func writePrivoxyConfFile() -> Bool {
         var template = try String(contentsOfFile: templatePath, encoding: .utf8)
 
         guard let httpAddress = defaults.string(forKey: "LocalHTTP.ListenAddress"),
-              let socks5Address = defaults.string(forKey: "LocalSocks5.ListenAddress") else {
+            let socks5Address = defaults.string(forKey: "LocalSocks5.ListenAddress")
+        else {
             ErrorHandler.shared.warning("Failed to get proxy addresses from defaults")
             return false
         }
@@ -517,7 +543,8 @@ func writePrivoxyConfFile() -> Bool {
         let socks5Port = defaults.integer(forKey: "LocalSocks5.ListenPort")
 
         template = template.replacingOccurrences(of: "{http}", with: "\(httpAddress):\(httpPort)")
-        template = template.replacingOccurrences(of: "{socks5}", with: "\(socks5Address):\(socks5Port)")
+        template = template.replacingOccurrences(
+            of: "{socks5}", with: "\(socks5Address):\(socks5Port)")
 
         // Append the user config file to the end
         let userConfigPath = NSHomeDirectory() + USER_CONFIG_DIR + "user-privoxy.config"

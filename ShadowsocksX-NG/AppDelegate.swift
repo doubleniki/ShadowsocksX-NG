@@ -6,8 +6,8 @@
 //  Copyright © 2016年 qiuyuzhou. All rights reserved.
 //
 
-import Cocoa
 import Carbon
+import Cocoa
 import RxCocoa
 import RxSwift
 
@@ -51,7 +51,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
     var statusItem: NSStatusItem!
     static let StatusItemIconWidth: CGFloat = NSStatusItem.variableLength
 
-    func ensureLaunchAgentsDirOwner () {
+    func ensureLaunchAgentsDirOwner() {
         let dirPath = NSHomeDirectory() + "/Library/LaunchAgents"
         let fileMgr = FileManager.default
         if fileMgr.fileExists(atPath: dirPath) {
@@ -60,18 +60,23 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
 
                 // Safe unwrap of owner name
                 guard let owner = attrs[FileAttributeKey.ownerAccountName] as? String else {
-                    ErrorHandler.shared.warning("Could not determine directory owner for \(dirPath)")
+                    ErrorHandler.shared.warning(
+                        "Could not determine directory owner for \(dirPath)")
                     return
                 }
 
                 if owner != NSUserName() {
                     // Safe unwrap of script path
-                    guard let bashFilePath = Bundle.main.path(forResource: "fix_dir_owner.sh", ofType: nil) else {
+                    guard
+                        let bashFilePath = Bundle.main.path(
+                            forResource: "fix_dir_owner.sh", ofType: nil)
+                    else {
                         ErrorHandler.shared.warning("fix_dir_owner.sh script not found in bundle")
                         return
                     }
 
-                    let script = "do shell script \"bash \\\"\(bashFilePath)\\\" \(NSUserName()) \" with administrator privileges"
+                    let script =
+                        "do shell script \"bash \\\"\(bashFilePath)\\\" \(NSUserName()) \" with administrator privileges"
                     if let appleScript = NSAppleScript(source: script) {
                         var err: NSDictionary? = nil
                         appleScript.executeAndReturnError(&err)
@@ -80,8 +85,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
                         }
                     }
                 }
-            }
-            catch {
+            } catch {
                 ErrorHandler.shared.handle(
                     error,
                     context: "Ensure LaunchAgents Directory Owner",
@@ -93,7 +97,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
 
     func applicationDidFinishLaunching(_ aNotification: Notification) {
 
-        _ = LaunchAtLoginController()// Ensure set when launch
+        _ = LaunchAtLoginController()  // Ensure set when launch
 
         NSUserNotificationCenter.default.delegate = self
 
@@ -114,7 +118,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
             "LocalSocks5.ListenPort": NSNumber(value: 1086 as UInt16),
             "LocalSocks5.ListenAddress": "127.0.0.1",
             "PacServer.BindToLocalhost": NSNumber(value: true as Bool),
-            "PacServer.ListenPort":NSNumber(value: 1089 as UInt16),
+            "PacServer.ListenPort": NSNumber(value: 1089 as UInt16),
             "LocalSocks5.Timeout": NSNumber(value: 60 as UInt),
             "LocalSocks5.EnableUDPRelay": NSNumber(value: false as Bool),
             "LocalSocks5.EnableVerboseMode": NSNumber(value: false as Bool),
@@ -124,13 +128,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
             "LocalHTTP.ListenPort": NSNumber(value: 1087 as UInt16),
             "LocalHTTPOn": true,
             "LocalHTTP.FollowGlobal": false,
-            "ProxyExceptions": "127.0.0.1, localhost, 192.168.0.0/16, 10.0.0.0/8, FE80::/64, ::1, FD00::/8",
+            "ProxyExceptions":
+                "127.0.0.1, localhost, 192.168.0.0/16, 10.0.0.0/8, FE80::/64, ::1, FD00::/8",
             "ExternalPACURL": "",
             "EnableSwitchMode.PAC": true,
             "EnableSwitchMode.Global": true,
             "EnableSwitchMode.Manual": false,
             "EnableSwitchMode.ExternalPAC": false,
-            ])
+        ])
 
         statusItem = NSStatusBar.system.statusItem(withLength: AppDelegate.StatusItemIconWidth)
         guard let image = NSImage(named: "menu_icon") else {
@@ -150,13 +155,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
                 self.updateCopyHttpProxyExportMenu()
             })
 
-        notifyCenter.addObserver(forName: NOTIFY_SERVER_PROFILES_CHANGED, object: nil, queue: nil
-            , using: {
+        notifyCenter.addObserver(
+            forName: NOTIFY_SERVER_PROFILES_CHANGED, object: nil, queue: nil,
+            using: {
                 (note) in
                 let profileMgr = ServerProfileManager.instance
-                if profileMgr.activeProfileId == nil &&
-                    profileMgr.profiles.count > 0{
-                    if profileMgr.profiles[0].isValid(){
+                if profileMgr.activeProfileId == nil && !profileMgr.profiles.isEmpty {
+                    if profileMgr.profiles[0].isValid() {
                         profileMgr.setActiveProfiledId(profileMgr.profiles[0].uuid)
                     }
                 }
@@ -186,7 +191,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
                     enabledModeList.append("manual")
                 }
                 if defaults.bool(forKey: "EnableSwitchMode.ExternalPAC")
-                    && self.externalPACModeMenuItem.isEnabled {
+                    && self.externalPACModeMenuItem.isEnabled
+                {
                     enabledModeList.append("externalPAC")
                 }
 
@@ -196,11 +202,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
 
                 var nextMode = ""
                 if enabledModeList.contains(mode),
-                   let i = enabledModeList.firstIndex(of: mode) {
+                    let i = enabledModeList.firstIndex(of: mode)
+                {
                     if i + 1 == enabledModeList.count {
                         nextMode = enabledModeList[0]
                     } else {
-                        nextMode = enabledModeList[i+1]
+                        nextMode = enabledModeList[i + 1]
                     }
                 } else {
                     nextMode = enabledModeList[0]
@@ -227,9 +234,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
             })
 
         // Handle ss url scheme
-        NSAppleEventManager.shared().setEventHandler(self
-            , andSelector: #selector(self.handleURLEvent)
-            , forEventClass: AEEventClass(kInternetEventClass), andEventID: AEEventID(kAEGetURL))
+        NSAppleEventManager.shared().setEventHandler(
+            self, andSelector: #selector(self.handleURLEvent),
+            forEventClass: AEEventClass(kInternetEventClass), andEventID: AEEventID(kAEGetURL))
 
         updateMainMenu()
         updateCopyHttpProxyExportMenu()
@@ -290,15 +297,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
         if showToast {
             if isOn {
                 self.makeToast("Shadowsocks: On".localized)
-            }
-            else {
+            } else {
                 self.makeToast("Shadowsocks: Off".localized)
             }
         }
     }
 
     @IBAction func updateGFWList(_ sender: NSMenuItem) {
-        UpdatePACFromGFWList()
+        updatePACFromGFWList()
     }
 
     @IBAction func editUserRulesForPAC(_ sender: NSMenuItem) {
@@ -317,7 +323,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
         if shareWinCtrl != nil {
             shareWinCtrl.close()
         }
-        shareWinCtrl = ShareServerProfilesWindowController(windowNibName: "ShareServerProfilesWindowController")
+        shareWinCtrl = ShareServerProfilesWindowController(
+            windowNibName: "ShareServerProfilesWindowController")
         shareWinCtrl.showWindow(self)
         NSApp.activate(ignoringOtherApps: true)
         shareWinCtrl.window?.makeKeyAndOrderFront(nil)
@@ -343,11 +350,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
             if let text = pb.string(forType: NSPasteboard.PasteboardType.URL) {
                 if let url = URL(string: text) {
                     NotificationCenter.default.post(
-                        name: NOTIFY_FOUND_SS_URL, object: nil
-                        , userInfo: [
+                        name: NOTIFY_FOUND_SS_URL, object: nil,
+                        userInfo: [
                             "urls": [url],
                             "source": "pasteboard",
-                            ])
+                        ])
                 }
             }
         }
@@ -358,11 +365,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
             urls = urls.filter { $0.scheme == "ss" }
 
             NotificationCenter.default.post(
-                name: NOTIFY_FOUND_SS_URL, object: nil
-                , userInfo: [
+                name: NOTIFY_FOUND_SS_URL, object: nil,
+                userInfo: [
                     "urls": urls,
                     "source": "pasteboard",
-                    ])
+                ])
         }
     }
 
@@ -398,7 +405,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
         if preferencesWinCtrl != nil {
             preferencesWinCtrl.close()
         }
-        preferencesWinCtrl = PreferencesWindowController(windowNibName: "PreferencesWindowController")
+        preferencesWinCtrl = PreferencesWindowController(
+            windowNibName: "PreferencesWindowController")
 
         preferencesWinCtrl.showWindow(self)
         NSApp.activate(ignoringOtherApps: true)
@@ -409,7 +417,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
             allInOnePreferencesWinCtrl.close()
         }
 
-        allInOnePreferencesWinCtrl = PreferencesWinController(windowNibName: "PreferencesWinController")
+        allInOnePreferencesWinCtrl = PreferencesWinController(
+            windowNibName: "PreferencesWinController")
 
         allInOnePreferencesWinCtrl.showWindow(self)
         NSApp.activate(ignoringOtherApps: true)
@@ -439,7 +448,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
         let port = defaults.integer(forKey: "LocalHTTP.ListenPort")
 
         // Format an export string.
-        let command = "export http_proxy=http://\(address):\(port);export https_proxy=http://\(address):\(port);"
+        let command =
+            "export http_proxy=http://\(address):\(port);export https_proxy=http://\(address):\(port);"
 
         // Copy to paste board.
         NSPasteboard.general.clearContents()
@@ -453,9 +463,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
         let ws = NSWorkspace.shared
         if let appUrl = ws.urlForApplication(withBundleIdentifier: "com.apple.Console") {
             do {
-                try ws.launchApplication(at: appUrl
-                    ,options: NSWorkspace.LaunchOptions.default
-                    ,configuration: [NSWorkspace.LaunchConfigurationKey.arguments: "~/Library/Logs/ss-local.log"])
+                try ws.launchApplication(
+                    at: appUrl, options: NSWorkspace.LaunchOptions.default,
+                    configuration: [
+                        NSWorkspace.LaunchConfigurationKey.arguments: "~/Library/Logs/ss-local.log"
+                    ])
             } catch {
                 ErrorHandler.shared.handle(
                     error,
@@ -475,7 +487,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
     }
 
     @IBAction func checkForUpdates(_ sender: NSMenuItem) {
-        guard let url = URL(string: "https://github.com/shadowsocks/ShadowsocksX-NG/releases") else {
+        guard let url = URL(string: "https://github.com/shadowsocks/ShadowsocksX-NG/releases")
+        else {
             ErrorHandler.shared.warning("Invalid update URL")
             return
         }
@@ -497,11 +510,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
 
         savePanel.becomeKey()
         let result = savePanel.runModal()
-        if (result.rawValue == NSFileHandlingPanelOKButton) {
+        if result.rawValue == NSFileHandlingPanelOKButton {
             if let url = savePanel.url {
                 let diagnosisText = diagnose()
                 do {
-                    try diagnosisText.write(to: url, atomically: false, encoding: String.Encoding.utf8)
+                    try diagnosisText.write(
+                        to: url, atomically: false, encoding: String.Encoding.utf8)
                 } catch {
                     ErrorHandler.shared.handle(
                         error,
@@ -523,7 +537,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
     }
 
     @IBAction func showAbout(_ sender: NSMenuItem) {
-        NSApp.orderFrontStandardAboutPanel(sender);
+        NSApp.orderFrontStandardAboutPanel(sender)
         NSApp.activate(ignoringOtherApps: true)
     }
 
@@ -562,7 +576,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
         let mgr = ServerProfileManager.instance
         for p in mgr.profiles {
             if mgr.activeProfileId == p.uuid {
-                var profileName :String
+                var profileName: String
                 if !p.remark.isEmpty {
                     profileName = String(p.remark.prefix(24))
                 } else {
@@ -582,14 +596,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
         if isOn {
             if let m = mode {
                 switch m {
-                    case "auto":
-                        statusItem.image = NSImage(named: "menu_p_icon")
-                    case "global":
-                        statusItem.image = NSImage(named: "menu_g_icon")
-                    case "manual":
-                        statusItem.image = NSImage(named: "menu_m_icon")
-                    case "externalPAC":
-                        statusItem.image = NSImage(named: "menu_e_icon")
+                case "auto":
+                    statusItem.image = NSImage(named: "menu_p_icon")
+                case "global":
+                    statusItem.image = NSImage(named: "menu_g_icon")
+                case "manual":
+                    statusItem.image = NSImage(named: "menu_m_icon")
+                case "externalPAC":
+                    statusItem.image = NSImage(named: "menu_e_icon")
                 default: break
                 }
                 statusItem.image?.isTemplate = true
@@ -666,15 +680,19 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
         serverProfilesEndSeparatorMenuItem.isHidden = profiles.isEmpty
     }
 
-    @objc func handleURLEvent(_ event: NSAppleEventDescriptor, withReplyEvent replyEvent: NSAppleEventDescriptor) {
-        if let urlString = event.paramDescriptor(forKeyword: AEKeyword(keyDirectObject))?.stringValue {
+    @objc func handleURLEvent(
+        _ event: NSAppleEventDescriptor, withReplyEvent replyEvent: NSAppleEventDescriptor
+    ) {
+        if let urlString = event.paramDescriptor(forKeyword: AEKeyword(keyDirectObject))?
+            .stringValue
+        {
             if let url = URL(string: urlString) {
                 NotificationCenter.default.post(
-                    name: NOTIFY_FOUND_SS_URL, object: nil
-                    , userInfo: [
+                    name: NOTIFY_FOUND_SS_URL, object: nil,
+                    userInfo: [
                         "urls": [url],
                         "source": "url",
-                        ])
+                    ])
             }
         }
     }
@@ -729,11 +747,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
     //------------------------------------------------------------
     // NSUserNotificationCenterDelegate
 
-    func userNotificationCenter(_ center: NSUserNotificationCenter
-        , shouldPresent notification: NSUserNotification) -> Bool {
+    func userNotificationCenter(
+        _ center: NSUserNotificationCenter, shouldPresent notification: NSUserNotification
+    ) -> Bool {
         return true
     }
-
 
     func makeToast(_ message: String) {
         if toastWindowCtrl != nil {

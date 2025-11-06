@@ -59,7 +59,7 @@ class ToastWindowController: NSWindowController {
         titleTextField.sizeToFit()
 
         guard let window = self.window else {
-            ErrorHandler.shared.logError(.unexpectedNilValue(context: "ToastWindowController.setupHud: window is nil"))
+            ErrorHandler.shared.warning("window is nil", context: "ToastWindowController.setupHud")
             return
         }
 
