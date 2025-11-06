@@ -242,37 +242,38 @@ class PreferencesWindowController: NSWindowController, NSTableViewDataSource, NS
         ErrorHandler.shared.debug("bind profile \(index)", context: "Preferences")
 
         if index >= 0 && index < profileMgr.profiles.count {
-            let editingProfile = profileMgr.profiles[index]
+            self.editingProfile = profileMgr.profiles[index]
+            let selectedProfile = self.editingProfile!
 
             hostTextField.bind(
-                NSBindingName(rawValue: "value"), to: editingProfile, withKeyPath: "serverHost",
+                NSBindingName(rawValue: "value"), to: selectedProfile, withKeyPath: "serverHost",
                 options: [NSBindingOption.continuouslyUpdatesValue: true])
             portTextField.bind(
-                NSBindingName(rawValue: "value"), to: editingProfile, withKeyPath: "serverPort",
+                NSBindingName(rawValue: "value"), to: selectedProfile, withKeyPath: "serverPort",
                 options: [NSBindingOption.continuouslyUpdatesValue: true])
 
             methodTextField.bind(
-                NSBindingName(rawValue: "value"), to: editingProfile, withKeyPath: "method",
+                NSBindingName(rawValue: "value"), to: selectedProfile, withKeyPath: "method",
                 options: [NSBindingOption.continuouslyUpdatesValue: true])
             passwordTextField.bind(
-                NSBindingName(rawValue: "value"), to: editingProfile, withKeyPath: "password",
+                NSBindingName(rawValue: "value"), to: selectedProfile, withKeyPath: "password",
                 options: [NSBindingOption.continuouslyUpdatesValue: true])
             passwordSecureTextField.bind(
-                NSBindingName(rawValue: "value"), to: editingProfile, withKeyPath: "password",
+                NSBindingName(rawValue: "value"), to: selectedProfile, withKeyPath: "password",
                 options: [NSBindingOption.continuouslyUpdatesValue: true])
 
             pluginTextField.bind(
-                NSBindingName(rawValue: "value"), to: editingProfile, withKeyPath: "plugin",
+                NSBindingName(rawValue: "value"), to: selectedProfile, withKeyPath: "plugin",
                 options: [NSBindingOption.continuouslyUpdatesValue: true])
             pluginOptionsTextField.bind(
-                NSBindingName(rawValue: "value"), to: editingProfile, withKeyPath: "pluginOptions",
+                NSBindingName(rawValue: "value"), to: selectedProfile, withKeyPath: "pluginOptions",
                 options: [NSBindingOption.continuouslyUpdatesValue: true])
 
             remarkTextField.bind(
-                NSBindingName(rawValue: "value"), to: editingProfile, withKeyPath: "remark",
+                NSBindingName(rawValue: "value"), to: selectedProfile, withKeyPath: "remark",
                 options: [NSBindingOption.continuouslyUpdatesValue: true])
         } else {
-            editingProfile = nil
+            self.editingProfile = nil
             hostTextField.unbind(NSBindingName(rawValue: "value"))
             portTextField.unbind(NSBindingName(rawValue: "value"))
 

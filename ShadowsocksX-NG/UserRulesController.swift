@@ -306,7 +306,16 @@ class UserRulesController: NSWindowController {
                     NSUserNotificationCenter.default
                         .deliver(notification)
                 }
-            } catch {}
+            } catch {
+                ErrorHandler.shared.handle(
+                    FileSystemError.writeFailed(path: PACUserRuleFilePath, error: error),
+                    context: "Save User Rules",
+                    showAlert: true,
+                    critical: true
+                )
+                // Don't close window on write failure so user can retry
+                return
+            }
         }
         window?.performClose(self)
     }

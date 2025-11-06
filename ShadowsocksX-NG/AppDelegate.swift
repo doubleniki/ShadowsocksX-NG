@@ -2,8 +2,8 @@
 //  AppDelegate.swift
 //  ShadowsocksX-NG
 //
-//  Created by 邱宇舟 on 16/6/5.
-//  Copyright © 2016年 qiuyuzhou. All rights reserved.
+//  Created by Qiu Yuzhou on 16/6/5.
+//  Copyright © 2016 qiuyuzhou. All rights reserved.
 //
 
 import Carbon
@@ -709,20 +709,20 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
         }
 
         if let userInfo = (note as NSNotification).userInfo {
-            // 检查错误
+            // Check for errors
             if let error = userInfo["error"] as? String {
                 sendNotify("Scan Failed", "", error.localized)
                 return
             }
 
-            // 使用新的通知信息
+            // Use new notification information
             let title = (userInfo["title"] as? String) ?? ""
             let subtitle = (userInfo["subtitle"] as? String) ?? ""
             let body = (userInfo["body"] as? String) ?? ""
 
-            // Safe cast of URLs array
-            guard let urls = userInfo["urls"] as? [URL], !urls.isEmpty else {
-                ErrorHandler.shared.warning("Invalid or empty URLs in notification")
+            // Safe cast of URLs array - allow empty array for informative notifications
+            guard let urls = userInfo["urls"] as? [URL] else {
+                ErrorHandler.shared.warning("Invalid URLs format in notification")
                 return
             }
 

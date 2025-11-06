@@ -8,8 +8,6 @@
 
 import Cocoa
 
-
-
 class PACURLFormatter: Formatter {
     override func string(for obj: Any?) -> String? {
         if let _obj = obj {
@@ -28,19 +26,6 @@ class PACURLFormatter: Formatter {
         for string: String,
         errorDescription error: AutoreleasingUnsafeMutablePointer<NSString?>?
     ) -> Bool {
-        guard let error = error else {
-            // Log the unexpected nil error parameter, but continue processing
-            ErrorHandler.shared.handle(
-                NSError(domain: "PACURLFormatter", code: -1, userInfo: [
-                    NSLocalizedDescriptionKey: "Error parameter is nil"
-                ]),
-                context: "PACURLFormatter.getObjectValue",
-                showAlert: false,
-                critical: false
-            )
-            return false
-        }
-
         let input = string.trimmingCharacters(in: .whitespaces)
         if input.isEmpty {
             return true
@@ -50,19 +35,19 @@ class PACURLFormatter: Formatter {
 
         if let url = URL.init(string: input) {
             if let scheme = url.scheme {
-                if !(["http", "https", "file"].contains(scheme) ) {
-                    error.pointee = errorMessage as NSString
+                if !(["http", "https", "file"].contains(scheme)) {
+                    error?.pointee = errorMessage as NSString
                     return false
                 }
 
                 obj?.pointee = url.absoluteString as AnyObject
                 return true
             } else {
-                error.pointee = errorMessage as NSString
+                error?.pointee = errorMessage as NSString
                 return false
             }
         } else {
-            error.pointee = errorMessage as NSString
+            error?.pointee = errorMessage as NSString
             return false
         }
     }
