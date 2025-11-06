@@ -78,7 +78,9 @@ class ProxyInterfacesViewCtrl: NSViewController, NSTableViewDataSource, NSTableV
         guard let networkService = services[row] as? [String: Any],
               let key = networkService["key"] as? String,
               let objectValue = object as? NSNumber else {
-            ErrorHandler.shared.warning("Malformed data at row \(row): object type is \(type(of: object))", context: "ProxyInterfacesViewCtrl.tableView")
+            ErrorHandler.shared.warning(
+                "Malformed data at row \(row): object type is \(type(of: object))",
+                context: "ProxyInterfacesViewCtrl.tableView")
             return
         }
 

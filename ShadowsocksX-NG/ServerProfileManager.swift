@@ -90,7 +90,7 @@ class ServerProfileManager: NSObject {
         for url in urls {
             if let profile = ServerProfile(url: url) {
                 profiles.append(profile)
-                addCount = addCount + 1
+                addCount += 1
             }
         }
 
