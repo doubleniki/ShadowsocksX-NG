@@ -37,7 +37,12 @@ class ErrorHandler {
     ///   - error: The error to handle
     ///   - context: Additional context about where the error occurred
     ///   - showAlert: Whether to show an alert to the user
-    ///   - critical: Whether this is a critical error
+    /// Handles and logs an error, optionally presenting a user alert.
+    /// - Parameters:
+    ///   - error: The error to handle and record.
+    ///   - context: An optional human-readable context; if `nil` the handler uses `AppError.context` when `error` is an `AppError`, otherwise `"Unknown"`.
+    ///   - showAlert: If `true`, presents an alert to the user describing the error.
+    ///   - critical: If `true`, treats the error as critical for logging and alert presentation.
     func handle(
         _ error: Error,
         context: String? = nil,
@@ -69,7 +74,12 @@ class ErrorHandler {
     ///   - error: The error to handle
     ///   - context: Additional context
     ///   - defaultValue: Default value to return
-    /// - Returns: The default value
+    /// Handles an error by logging it without presenting a user alert.
+    /// - Parameters:
+    ///   - error: The error to handle.
+    ///   - context: Optional context string to include in logs.
+    ///   - defaultValue: The value to return after handling the error.
+    /// - Returns: The provided `defaultValue`.
     func handleAndReturn<T>(
         _ error: Error,
         context: String? = nil,
@@ -81,7 +91,11 @@ class ErrorHandler {
 
     // MARK: - Private Methods
 
-    /// Log error to system log
+    /// Logs an error to the internal logger with an appropriate severity and includes any underlying error details.
+    /// - Parameters:
+    ///   - error: The error to log.
+    ///   - context: A short context label included in the log message.
+    ///   - critical: If `true`, logs at the error/critical level and marks the message as critical; otherwise logs at the default level.
     private func logError(_ error: Error, context: String, critical: Bool) {
         let message = formatErrorMessage(error, context: context)
 
@@ -98,7 +112,8 @@ class ErrorHandler {
         }
     }
 
-    /// Format error message for logging
+    /// Produce a human-readable error message, preferring an `AppError`'s `errorDescription` when available.
+    /// - Returns: A string containing the error description; uses `AppError.errorDescription` if present, otherwise `error.localizedDescription`.
     private func formatErrorMessage(_ error: Error, context: String) -> String {
         if let appError = error as? AppError {
             return appError.errorDescription ?? error.localizedDescription
@@ -107,7 +122,11 @@ class ErrorHandler {
         }
     }
 
-    /// Show alert to user
+    /// Displays an alert on the main thread showing the provided error and context; adds a "View Logs" button for critical errors.
+    /// - Parameters:
+    ///   - error: The error whose message (and underlying error details, if present) will be shown.
+    ///   - context: A short title or context string displayed as the alert's main message.
+    ///   - critical: If `true`, uses a critical alert style and includes a "View Logs" button that opens the app log directory when selected.
     private func showAlert(for error: Error, context: String, critical: Bool) {
         DispatchQueue.main.async {
             let alert = NSAlert()
@@ -134,7 +153,7 @@ class ErrorHandler {
         }
     }
 
-    /// Open system log file
+    /// Opens the application's log directory in Finder by revealing ~/Library/Logs/ShadowsocksX-NG.
     private func openLogFile() {
         let logPath = NSHomeDirectory() + "/Library/Logs/ShadowsocksX-NG"
         NSWorkspace.shared.selectFile(nil, inFileViewerRootedAtPath: logPath)
@@ -145,17 +164,26 @@ class ErrorHandler {
 
 extension ErrorHandler {
 
-    /// Log a warning message
+    /// Logs a warning-level message to the error handler's logger with an associated context.
+    /// - Parameters:
+    ///   - message: The warning message to record.
+    ///   - context: A short context or category for the message; defaults to "General".
     func warning(_ message: String, context: String = "General") {
         os_log(.default, log: logger, "WARNING [%{public}@]: %{public}@", context, message)
     }
 
-    /// Log an info message
+    /// Logs an informational message tagged with a context label.
+    /// - Parameters:
+    ///   - message: The message text to log.
+    ///   - context: A short label describing the context or subsystem (defaults to "General").
     func info(_ message: String, context: String = "General") {
         os_log(.info, log: logger, "[%{public}@]: %{public}@", context, message)
     }
 
-    /// Log a debug message
+    /// Logs a debug-level message with an optional context tag.
+    /// - Parameters:
+    ///   - message: The message to log.
+    ///   - context: A contextual tag included in the log output; defaults to `"General"`.
     func debug(_ message: String, context: String = "General") {
         os_log(.debug, log: logger, "[%{public}@]: %{public}@", context, message)
     }

@@ -51,6 +51,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
     var statusItem: NSStatusItem!
     static let StatusItemIconWidth: CGFloat = NSStatusItem.variableLength
 
+    /// Ensures the LaunchAgents directory in the user's Library is owned by the current user.
+    /// 
+    /// If ~/Library/LaunchAgents exists and its owner differs from the current user, attempts to run the bundled `fix_dir_owner.sh` script with administrator privileges via AppleScript to change ownership. Logs warnings if the directory owner cannot be determined or the script is missing; forwards filesystem or execution errors to `ErrorHandler`.
     func ensureLaunchAgentsDirOwner () {
         let dirPath = NSHomeDirectory() + "/Library/LaunchAgents"
         let fileMgr = FileManager.default
@@ -91,6 +94,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
         }
     }
 
+    /// Perform global initialization for the application at launch.
+    /// 
+    /// Sets up launch-on-login, ensures LaunchAgents ownership, installs required helper binaries and proxy helpers, registers user defaults, configures the status bar item and menus, registers runtime notification observers and URL handling, applies the current proxy configuration, and binds global shortcuts.
+    /// - Parameter aNotification: The notification sent by the system when the application has finished launching.
     func applicationDidFinishLaunching(_ aNotification: Notification) {
 
         _ = LaunchAtLoginController()// Ensure set when launch
@@ -244,6 +251,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
         ShortcutsController.bindShortcuts()
     }
 
+    /// Performs final teardown when the application is about to terminate.
+    /// 
+    /// Stops background networking components and disables the system proxy before exit.
+    /// - Parameter aNotification: The termination notification sent by the system.
     func applicationWillTerminate(_ aNotification: Notification) {
         // Insert code here to tear down your application
         stopSSLocal()
@@ -251,6 +262,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
         ProxyConfHelper.disableProxy()
     }
 
+    /// Applies the current persistent Shadowsocks configuration to the system.
+    /// 
+    /// Synchronizes the local ss-local state and sets the system proxy mode based on stored user defaults:
+    /// - Uses `ShadowsocksOn` to determine whether the proxy should be enabled.
+    /// - Uses `ShadowsocksRunningMode` to choose between `auto`, `global`, `manual`, or `externalPAC` proxy modes.
     func applyConfig() {
         syncSSLocal()
 
@@ -273,11 +289,15 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
         }
     }
 
-    // MARK: - UI Methods
+    /// Toggle the Shadowsocks running state and apply the resulting configuration without showing a toast.
+    /// - Parameter sender: The menu item that invoked this action.
     @IBAction func toggleRunning(_ sender: NSMenuItem) {
         self.doToggleRunning(showToast: false)
     }
 
+    /// Toggles the Shadowsocks running state, persists the new setting, updates the UI, and applies the configuration.
+    /// - Parameters:
+    ///   - showToast: If `true`, displays a brief toast indicating the new on/off state.
     func doToggleRunning(showToast: Bool) {
         let defaults = UserDefaults.standard
         var isOn = UserDefaults.standard.bool(forKey: "ShadowsocksOn")
@@ -297,10 +317,15 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
         }
     }
 
+    /// Triggers an update of the PAC configuration using the latest GFWList.
     @IBAction func updateGFWList(_ sender: NSMenuItem) {
         UpdatePACFromGFWList()
     }
 
+    /// Presents the User Rules editor for PAC, closing any existing editor window and bringing the new window to the front.
+    /// 
+    /// This closes a previously opened User Rules window controller if present, instantiates a new `UserRulesController`,
+    /// shows its window, and activates the app so the window is key and frontmost.
     @IBAction func editUserRulesForPAC(_ sender: NSMenuItem) {
         if editUserRulesWinCtrl != nil {
             editUserRulesWinCtrl.close()
@@ -313,6 +338,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
         ctrl.window?.makeKeyAndOrderFront(self)
     }
 
+    /// Presents the Share Server Profiles window.
+    /// 
+    /// Closes any existing ShareServerProfilesWindowController, creates and shows a new one, activates the app, and brings the window to the front.
     @IBAction func showShareServerProfiles(_ sender: NSMenuItem) {
         if shareWinCtrl != nil {
             shareWinCtrl.close()
@@ -323,6 +351,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
         shareWinCtrl.window?.makeKeyAndOrderFront(nil)
     }
 
+    /// Presents the import window for adding server profiles.
+    /// 
+    /// Closes any existing import window controller, creates and shows a new ImportWindowController, and brings the app and its window to the foreground.
     @IBAction func showImportWindow(_ sender: NSMenuItem) {
         if importWinCtrl != nil {
             importWinCtrl.close()
@@ -333,10 +364,19 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
         importWinCtrl.window?.makeKeyAndOrderFront(nil)
     }
 
+    /// Initiates a QR code scan of the screen.
+    /// - Parameter sender: The menu item that triggered this action.
     @IBAction func scanQRCodeFromScreen(_ sender: NSMenuItem) {
         ScanQRCodeOnScreen()
     }
 
+    /// Import Shadowsocks profile URLs from the system pasteboard and post a notification with the found URLs.
+    /// 
+    /// Reads the pasteboard URL type (on macOS 10.13+) and the plain string type, parses any URLs found, and posts a `NOTIFY_FOUND_SS_URL` notification with `userInfo` containing:
+    /// - `"urls"`: an array of `URL` objects parsed from the pasteboard
+    /// - `"source"`: the string `"pasteboard"`
+    ///
+    /// For plain text, lines are split on newlines, trimmed of whitespace, converted to `URL`, and filtered to include only URLs with the `ss` scheme.
     @IBAction func importProfileURLFromPasteboard(_ sender: NSMenuItem) {
         let pb = NSPasteboard.general
         if #available(OSX 10.13, *) {
@@ -366,6 +406,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
         }
     }
 
+    /// Selects the automatic (PAC) proxy mode.
+    /// 
+    /// Sets the saved running mode to `"auto"`, updates the running-mode UI, and applies the current configuration.
     @IBAction func selectPACMode(_ sender: NSMenuItem) {
         let defaults = UserDefaults.standard
         defaults.setValue("auto", forKey: "ShadowsocksRunningMode")
@@ -373,6 +416,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
         applyConfig()
     }
 
+    /// Sets the Shadowsocks running mode to global, updates the running-mode UI, and applies the new configuration.
+    /// - Parameter sender: The menu item that triggered the action.
     @IBAction func selectGlobalMode(_ sender: NSMenuItem) {
         let defaults = UserDefaults.standard
         defaults.setValue("global", forKey: "ShadowsocksRunningMode")
@@ -380,6 +425,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
         applyConfig()
     }
 
+    /// Selects the manual proxy mode for Shadowsocks.
+    /// Sets the running mode to "manual", refreshes the running-mode UI, and applies the updated configuration.
     @IBAction func selectManualMode(_ sender: NSMenuItem) {
         let defaults = UserDefaults.standard
         defaults.setValue("manual", forKey: "ShadowsocksRunningMode")
@@ -387,6 +434,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
         applyConfig()
     }
 
+    /// Switches the app to the External PAC proxy mode.
+    /// 
+    /// Persists "externalPAC" to `ShadowsocksRunningMode` in user defaults, updates the running-mode menu state, and applies the new proxy configuration.
     @IBAction func selectExternalPACMode(_ sender: NSMenuItem) {
         let defaults = UserDefaults.standard
         defaults.setValue("externalPAC", forKey: "ShadowsocksRunningMode")
@@ -394,6 +444,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
         applyConfig()
     }
 
+    /// Opens the server preferences window.
+    /// 
+    /// If a preferences window already exists it is closed first; then a new PreferencesWindowController is created, its window shown, and the app is activated.
     @IBAction func editServerPreferences(_ sender: NSMenuItem) {
         if preferencesWinCtrl != nil {
             preferencesWinCtrl.close()
@@ -404,6 +457,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
         NSApp.activate(ignoringOtherApps: true)
     }
 
+    /// Presents the consolidated preferences window, closing any existing instance before creating and showing a new one.
+    /// Ensures the app becomes active and brings the preferences window to the front.
     @IBAction func showAllInOnePreferences(_ sender: NSMenuItem) {
         if allInOnePreferencesWinCtrl != nil {
             allInOnePreferencesWinCtrl.close()
@@ -416,6 +471,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
         allInOnePreferencesWinCtrl.window?.makeKeyAndOrderFront(self)
     }
 
+    /// Selects the server profile represented by the given menu item and activates it.
+    /// If the selected profile differs from the current active profile, sets it active, updates the servers menu, synchronizes ss-local, and applies the configuration. Always updates the running-mode menu afterwards.
+    /// - Parameters:
+    ///   - sender: The server menu item. Its `tag` is expected to equal `kProfileMenuItemIndexBase + profileIndex`, where `profileIndex` is the index in `ServerProfileManager.instance.profiles`.
     @IBAction func selectServer(_ sender: NSMenuItem) {
         let index = sender.tag - kProfileMenuItemIndexBase
         let spMgr = ServerProfileManager.instance
@@ -429,6 +488,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
         updateRunningModeMenu()
     }
 
+    /// Copies a shell export command for the configured local HTTP proxy to the pasteboard and shows a confirmation toast.
+    /// Reads `LocalHTTP.ListenAddress` and `LocalHTTP.ListenPort` from UserDefaults, formats a shell string like
+    /// `export http_proxy=http://<address>:<port>;export https_proxy=http://<address>:<port>;`, places it on the general pasteboard,
+    /// and displays a transient toast saying the command was copied. If `LocalHTTP.ListenAddress` is not set, logs a warning and returns without copying.
     @IBAction func copyExportCommand(_ sender: NSMenuItem) {
         // Get the Http proxy config.
         let defaults = UserDefaults.standard
@@ -449,6 +512,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
         self.makeToast("Export Command Copied.".localized)
     }
 
+    /// Opens the Console app and attempts to display the ss-local log file.
+    /// - Parameters:
+    ///   - sender: The menu item that triggered this action.
+    /// - Note: If launching Console or opening the log fails, the error is reported to `ErrorHandler.shared` (which may present an alert).
     @IBAction func showLogs(_ sender: NSMenuItem) {
         let ws = NSWorkspace.shared
         if let appUrl = ws.urlForApplication(withBundleIdentifier: "com.apple.Console") {
@@ -466,6 +533,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
         }
     }
 
+    /// Open the project's GitHub issues page in the default browser.
+    /// 
+    /// If the feedback URL cannot be constructed, logs a warning via `ErrorHandler` and takes no action.
     @IBAction func feedback(_ sender: NSMenuItem) {
         guard let url = URL(string: "https://github.com/qiuyuzhou/ShadowsocksX-NG/issues") else {
             ErrorHandler.shared.warning("Invalid feedback URL")
@@ -474,6 +544,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
         NSWorkspace.shared.open(url)
     }
 
+    /// Opens the application's releases page on GitHub in the default web browser.
+    /// If the releases URL cannot be constructed, logs a warning and does nothing.
     @IBAction func checkForUpdates(_ sender: NSMenuItem) {
         guard let url = URL(string: "https://github.com/shadowsocks/ShadowsocksX-NG/releases") else {
             ErrorHandler.shared.warning("Invalid update URL")
@@ -482,6 +554,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
         NSWorkspace.shared.open(url)
     }
 
+    /// Presents a Save dialog to export the application's diagnostic information to a text file.
+    /// 
+    /// Shows a save panel prefilled with a timestamped filename, writes the output of `diagnose()` to the chosen file encoded as UTF-8, and reports any write failures via `ErrorHandler`.
     @IBAction func exportDiagnosis(_ sender: NSMenuItem) {
         let savePanel = NSSavePanel()
         savePanel.title = "Save Diagnosis to File".localized
@@ -514,6 +589,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
         }
     }
 
+    /// Opens the application's online help wiki in the default web browser.
+    /// If the help URL is invalid, logs a warning and does not attempt to open it.
     @IBAction func showHelp(_ sender: NSMenuItem) {
         guard let url = URL(string: "https://github.com/shadowsocks/ShadowsocksX-NG/wiki") else {
             ErrorHandler.shared.warning("Invalid help URL")
@@ -522,11 +599,20 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
         NSWorkspace.shared.open(url)
     }
 
+    /// Shows the standard About panel and brings the application to the foreground.
+    /// - Parameter sender: The menu item that triggered this action.
     @IBAction func showAbout(_ sender: NSMenuItem) {
         NSApp.orderFrontStandardAboutPanel(sender);
         NSApp.activate(ignoringOtherApps: true)
     }
 
+    /// Update the running-mode menu items and the servers menu title to reflect current settings.
+    /// 
+    /// Reads the external PAC URL and running mode from user defaults to:
+    /// - enable or disable the External PAC menu item,
+    /// - set the checked state for Auto, Global, Manual, or External PAC mode menu items,
+    /// - refresh the status item image to match the current mode,
+    /// and updates the Servers menu title to show the active profile's remark (truncated to 24 characters) or host, or a localized "(No Selected)" label when none is active.
     func updateRunningModeMenu() {
         let defaults = UserDefaults.standard
 
@@ -575,6 +661,15 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
         serversMenuItem.title = serverMenuText
     }
 
+    /// Update the status bar icon to reflect whether Shadowsocks is on and which running mode is active.
+    /// 
+    /// When Shadowsocks is enabled, sets the status item image to one of the mode-specific icons:
+    /// - `"auto"` -> `menu_p_icon`
+    /// - `"global"` -> `menu_g_icon`
+    /// - `"manual"` -> `menu_m_icon`
+    /// - `"externalPAC"` -> `menu_e_icon`
+    /// When Shadowsocks is disabled, sets the image to `menu_icon_disabled`.
+    /// The selected image is marked as a template to allow system tinting.
     func updateStatusMenuImage() {
         let defaults = UserDefaults.standard
         let mode = defaults.string(forKey: "ShadowsocksRunningMode")
@@ -600,6 +695,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
         }
     }
 
+    /// Updates the status bar menu and related menu items to reflect the current Shadowsocks running state.
+    /// 
+    /// Reads the `ShadowsocksOn` setting from `UserDefaults` and sets the running status title, toggle menu title,
+    /// the running status image, and the status item image accordingly. Marks the status item image as a template
+    /// and then refreshes the status-mode-specific icon by calling `updateStatusMenuImage()`.
     func updateMainMenu() {
         let defaults = UserDefaults.standard
         let isOn = defaults.bool(forKey: "ShadowsocksOn")
@@ -621,12 +721,23 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
         updateStatusMenuImage()
     }
 
+    /// Update the "Copy Export Command" menu item's visibility according to the "LocalHTTPOn" user preference.
     func updateCopyHttpProxyExportMenu() {
         let defaults = UserDefaults.standard
         let isOn = defaults.bool(forKey: "LocalHTTPOn")
         copyHttpProxyExportCmdLineMenuItem.isHidden = !isOn
     }
 
+    /// Rebuilds the Servers submenu to reflect the current server profiles.
+    /// 
+    /// Recreates menu items placed between the configured begin/end separators. Each menu item is:
+    /// - tagged with the profile index plus the menu base offset,
+    /// - titled using the profile's title,
+    /// - set to `.on` when it is the active profile and `.off` otherwise,
+    /// - enabled only if the profile is valid,
+    /// - assigned a key equivalent for quick selection (keys `1`–`9` and `0` for the tenth item) for the first ten profiles,
+    /// - connected to the `selectServer` action.
+    /// Hides the end separator when there are no profiles.
     func updateServersMenu() {
         guard let menu = serversMenuItem.submenu else { return }
 
@@ -666,6 +777,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
         serverProfilesEndSeparatorMenuItem.isHidden = profiles.isEmpty
     }
 
+    /// Handles an Apple Event containing a URL and posts a `NOTIFY_FOUND_SS_URL` notification when a valid URL is found.
+    /// - Parameters:
+    ///   - event: The Apple Event descriptor expected to contain a URL string in its direct object.
+    ///   - replyEvent: The reply Apple Event descriptor (ignored).
     @objc func handleURLEvent(_ event: NSAppleEventDescriptor, withReplyEvent replyEvent: NSAppleEventDescriptor) {
         if let urlString = event.paramDescriptor(forKeyword: AEKeyword(keyDirectObject))?.stringValue {
             if let url = URL(string: urlString) {
@@ -679,6 +794,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
         }
     }
 
+    /// Handles a notification that contains one or more Shadowsocks URLs and imports them as server profiles.
+    /// - Parameters:
+    ///   - note: A notification whose `userInfo` may include:
+    ///     - `"urls"`: an array of `URL` objects to import (required).
+    ///     - `"title"`, `"subtitle"`, `"body"`: optional `String` values used for the user-facing notification.
+    ///     - `"error"`: an optional `String` error message; if present, a failure notification is shown and import is aborted.
+    /// - Notes: Posts a local user notification to report success or failure and invokes the server profile manager to add any valid URLs. If the `"urls"` entry is missing or empty, a warning is recorded and no notification is delivered.
     func handleFoundSSURL(_ note: Notification) {
         let sendNotify = { (title: String, subtitle: String, infoText: String) in
             let userNote = NSUserNotification()
@@ -727,7 +849,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
     }
 
     //------------------------------------------------------------
-    // NSUserNotificationCenterDelegate
+    /// Always allows the system to present the given user notification.
+    /// - Returns: `true` to present the notification, `false` otherwise.
 
     func userNotificationCenter(_ center: NSUserNotificationCenter
         , shouldPresent notification: NSUserNotification) -> Bool {
@@ -735,6 +858,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
     }
 
 
+    /// Displays a transient HUD-style toast with the given message, replacing any existing toast.
+    /// - Parameter message: The text to show in the toast. The current toast (if any) is closed before the new one is shown.
     func makeToast(_ message: String) {
         if toastWindowCtrl != nil {
             toastWindowCtrl.close()

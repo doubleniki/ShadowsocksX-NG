@@ -17,7 +17,9 @@ let PACFilePath = PACRulesDirPath + "gfwlist.js"
 let GFWListFilePath = PACRulesDirPath + "gfwlist.txt"
 
 
-// Because of LocalSocks5.ListenPort may be changed
+/// Checks whether the PAC file needs to be regenerated and triggers generation when required.
+/// 
+/// This updates stored previous SOCKS5 listen address and port in UserDefaults, checks for the presence of the generated PAC file, and invokes GeneratePACFile() if any change or missing file requires regeneration. If generation fails, a failure message is logged.
 func SyncPac() {
     var needGenerate = false
 
@@ -48,6 +50,9 @@ func SyncPac() {
 }
 
 
+/// Generate PAC JavaScript and ensure required PAC rule files exist.
+/// Ensures the PAC rules directory and source files are present, merges GFW list and user rules, injects the configured SOCKS5 address and port into the PAC template, and writes the resulting PAC JavaScript to disk.
+/// - Returns: `true` if the PAC file was successfully generated and written to PACFilePath, `false` otherwise.
 func GeneratePACFile() -> Bool {
     let fileMgr = FileManager.default
     // Maker the dir if rulesDirPath is not exesited.
@@ -228,6 +233,13 @@ func GeneratePACFile() -> Bool {
     return false
 }
 
+/// Downloads the latest GFW list, saves it to the PAC rules directory, and regenerates the PAC file.
+/// - Note: The URL is read from UserDefaults under the key `"GFWListURL"`.
+/// - Side effects:
+///   - Creates the PAC rules directory if it does not exist.
+///   - Writes the downloaded GFW list to `GFWListFilePath`.
+///   - Calls `GeneratePACFile()` to regenerate the PAC; when regeneration succeeds, posts a user notification indicating success.
+///   - Posts a user notification on download failure and logs a warning if the `GFWListURL` setting is missing.
 func UpdatePACFromGFWList() {
     // Make the dir if rulesDirPath is not exesited.
     if !FileManager.default.fileExists(atPath: PACRulesDirPath) {

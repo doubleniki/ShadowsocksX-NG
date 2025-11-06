@@ -25,6 +25,10 @@ func shell(_ args: String...) -> String {
     return output ?? ""
 }
 
+/// Produce a diagnostic report containing app metadata, preferences, the active server profile, and selected system command outputs.
+/// 
+/// The report includes the app's Info.plist serialized as pretty-printed JSON (or an inline error message if unavailable or serialization fails), listed UserDefaults keys and values for a predefined set of preferences, the active server profile debug string (or a message if none), and the outputs of several shell commands. Sections are separated by delimiter lines for readability.
+/// - Returns: A single string containing the assembled diagnostic report; any errors encountered while gathering information are included inline as human-readable messages.
 func diagnose() -> String {
     var strs = [String]()
     

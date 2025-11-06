@@ -19,6 +19,11 @@ class UserRulesController: NSWindowController {
     private var examplesLabel: NSTextField!
     private var quickAddContainer: NSView!
 
+    /// Prepares the window and ensures the user rules file is available and loaded into the text view.
+    ///
+    — Sets the window frame autosave name to preserve position and size.
+    /// Ensures a user rules file exists at the configured path: if no file exists, attempts to copy the bundled `user-rule.txt` resource and reports errors via `ErrorHandler` if the resource is missing or the copy fails.
+    /// Loads the file's UTF‑8 contents into `userRulesView.string`, defaulting to an empty string if reading fails, and initializes the quick-add UI by calling `setupQuickAddUI()`.
     override func windowDidLoad() {
         super.windowDidLoad()
 
@@ -244,6 +249,8 @@ class UserRulesController: NSWindowController {
         showTemporarySuccess(message: "Added: \(rule)")
     }
 
+    /// Display a warning alert titled "Quick Add Domain" showing the provided message.
+    /// - Parameter message: The informative text displayed in the alert. If the window is available, the alert is presented as a sheet attached to that window.
     private func showAlert(message: String) {
         let alert = NSAlert()
         alert.messageText = "Quick Add Domain"
@@ -255,6 +262,9 @@ class UserRulesController: NSWindowController {
         }
     }
 
+    /// Temporarily shows a success message in the examples label and restores the original text after 2 seconds.
+    /// Updates the label to display a green checkmark-prefixed `message`, then returns the label text and color to their previous values after a 2-second delay.
+    /// - Parameter message: The success text to display (prefixed with a checkmark in the label).
     private func showTemporarySuccess(message: String) {
         // Could implement a temporary status message, for now just update the examples label briefly
         let originalText = "Examples: ||domain.com  |http://domain.com  @@||domain.com (whitelist)"

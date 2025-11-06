@@ -71,6 +71,10 @@ class ServerProfile: NSObject, NSCopying {
             }
         }
 
+        /// Decode a Shadowsocks URL (SIP002 or legacy) and extract an optional fragment tag.
+        /// - Parameters:
+        ///   - url: The Shadowsocks URL to decode; may be a SIP002-formatted URL or a legacy base64-encoded ss:// URL.
+        /// - Returns: A tuple where the first element is the decoded SIP002 URL string (or the original absoluteString if the input is not a legacy encoded string), or `nil` if decoding fails; the second element is the fragment tag percent-decoded if present, or `nil` otherwise.
         func decodeUrl(url: URL) -> (String?,String?) {
             let urlStr = url.absoluteString
             let base64Begin = urlStr.index(urlStr.startIndex, offsetBy: 5)
@@ -120,6 +124,9 @@ class ServerProfile: NSObject, NSCopying {
             }
             return (s, nil)
         }
+        /// Attempts to decode a legacy Shadowsocks `ss://` URL string into a normalized `URL` and an optional tag from the fragment.
+        /// - Parameter url: The raw legacy `ss://` URL string to decode; may contain base64-encoded userinfo and an optional fragment tag.
+        /// - Returns: A tuple where the first element is the decoded normalized `URL` if decoding succeeds, otherwise `nil`; the second element is the fragment tag if present, otherwise `nil`.
         func decodeLegacyFormat(url: String) -> (URL?,String?) {
             return (nil, nil)
         }
@@ -177,6 +184,10 @@ class ServerProfile: NSObject, NSCopying {
         }
     }
 
+    /// Creates a copy of the profile with selected fields duplicated.
+    /// - Parameters:
+    ///   - zone: Ignored. Present to satisfy NSCopying signature.
+    /// - Returns: A new `ServerProfile` whose `serverHost`, `serverPort`, `method`, `password`, `remark`, `plugin`, and `pluginOptions` match the original. The new profile receives a fresh `uuid`.
     public func copy(with zone: NSZone? = nil) -> Any {
         let copy = ServerProfile()
         copy.serverHost = self.serverHost
@@ -190,6 +201,20 @@ class ServerProfile: NSObject, NSCopying {
         return copy
     }
 
+    /// Creates a ServerProfile from a dictionary containing saved profile fields.
+    ///
+    — Parses required and optional keys from `data`, migrates a legacy `Password` value into the Keychain if present and not already stored, and returns a configured ServerProfile or `nil` if required fields are missing.
+    /// - Parameter data: Dictionary with profile fields. Required keys:
+    ///   - "ServerHost": String
+    ///   - "ServerPort": NSNumber (will be used as `UInt16`)
+    ///   - "Method": String
+    ///   Optional keys:
+    ///   - "Id": String (UUID to use for the profile)
+    ///   - "Password": String (migrated into Keychain if present and non-empty)
+    ///   - "Remark": String
+    ///   - "Plugin": String
+    ///   - "PluginOptions": String
+    /// - Returns: A configured `ServerProfile` when required fields are present; `nil` otherwise.
     static func fromDictionary(_ data:[String:Any?]) -> ServerProfile? {
         let cp = {
             (profile: ServerProfile) -> Bool in
@@ -261,6 +286,12 @@ class ServerProfile: NSObject, NSCopying {
         return d
     }
 
+    /// Builds a Shadowsocks configuration dictionary from this profile and current user defaults.
+    ///
+    /// The returned dictionary includes `password`, `method`, `server`, `server_port`, and locally-configured
+    /// `local_port`, `local_address`, and `timeout`. If the profile's `plugin` is non-empty, `plugin` (prefixed
+    /// with `plugins/`) and `plugin_opts` are included as well.
+    /// - Returns: A `[String: AnyObject]` dictionary ready for use by the Shadowsocks process.
     func toJsonConfig() -> [String: AnyObject] {
         var conf: [String: AnyObject] = ["password": password as AnyObject,
                                          "method": method as AnyObject,]
@@ -282,6 +313,8 @@ class ServerProfile: NSObject, NSCopying {
         return conf
     }
 
+    /// Produces a multi-line debug representation of the profile with sensitive fields masked.
+    /// - Returns: A string containing the profile fields: serverHost masked with asterisks, serverPort, method, password masked with asterisks, plugin, and pluginOptions.
     func debugString() -> String {
         var buf = ""
         print("ServerHost=\(String(repeating: "*", count: serverHost.count))", to: &buf)
@@ -293,6 +326,8 @@ class ServerProfile: NSObject, NSCopying {
         return buf
     }
 
+    /// Checks whether the profile's server address is valid and the password is present.
+    /// - Returns: `true` if `serverHost` is a valid IPv4 or IPv6 address or a valid domain name, and `password` is not empty; `false` otherwise.
     func isValid() -> Bool {
         func validateIpAddress(_ ipToValidate: String) -> Bool {
 
@@ -355,6 +390,9 @@ class ServerProfile: NSObject, NSCopying {
         return nil
     }
 
+    /// Constructs a Shadowsocks connection URL for this profile using SIP002 format, or a legacy ss:// URL when requested.
+    /// - Parameter legacy: If `true`, returns the legacy ss:// URL format produced by `makeLegacyURL()`. If `false`, produces a SIP002 URL.
+    /// - Returns: A `URL` representing the profile (SIP002 format by default, or legacy format when `legacy` is `true`), or `nil` if required encoding or component construction fails.
     func URL(legacy: Bool = false) -> URL? {
         // If you want the URL from <= 1.5.1
         if (legacy) {
@@ -387,6 +425,8 @@ class ServerProfile: NSObject, NSCopying {
         return url
     }
 
+    /// Generate the display title for the server profile, using the remark when available.
+    /// - Returns: A string formatted as "host:port" if `remark` is empty, otherwise "remark (host:port)" where `remark` is truncated to at most 24 characters.
     func title() -> String {
         if remark.isEmpty {
             return "\(serverHost):\(serverPort)"

@@ -27,6 +27,9 @@ class ToastWindowController: NSWindowController {
     var timerToFadeOut: Timer? = nil
     var fadingOut: Bool = false
 
+    /// Configure the window and HUD view after the window controller's window has been loaded.
+    ///
+    /// Sets window appearance and behavior for a borderless, transparent, floating HUD; creates and assigns a rounded, dark CALayer to `panelView` with initial opacity 0; updates `titleTextField` with `message` and calls `setupHud()` to finalize layout and display.
     override func windowDidLoad() {
         super.windowDidLoad()
 
@@ -55,6 +58,9 @@ class ToastWindowController: NSWindowController {
         setupHud()
     }
 
+    /// Lays out the toast HUD and its subviews, sizing the window to fit the message and centering it on the primary screen.
+    /// 
+    /// If the controller's window is unavailable, the method returns without making changes. The window width is set to the label width plus horizontal margins, the height to the fixed HUD height, and the title text field and panel view are positioned inside the window accordingly.
     func setupHud() -> Void {
         titleTextField.sizeToFit()
 
@@ -82,6 +88,9 @@ class ToastWindowController: NSWindowController {
         titleTextField.frame = labelFrame
     }
 
+    /// Animates the HUD to visible, cancels any pending hide timer, and triggers post-animation actions.
+    /// 
+    /// If a fade-out timer exists it is invalidated and cleared; the controller's `fadingOut` flag is set to `false`. Calls `didFadeIn()` when the fade-in animation completes.
     func fadeInHud() -> Void {
         if timerToFadeOut != nil {
             timerToFadeOut?.invalidate()

@@ -25,6 +25,7 @@ class ShareServerProfilesWindowController: NSWindowController
     var defaults: UserDefaults!
     var profileMgr: ServerProfileManager!
 
+    /// Initializes the window controller: loads user defaults and the shared profile manager, refreshes the profiles table, selects the first profile if any exist, and updates related UI controls (enables actions when profiles are present; disables copy/save buttons when none).
     override func windowDidLoad() {
         super.windowDidLoad()
 
@@ -44,6 +45,8 @@ class ShareServerProfilesWindowController: NSWindowController
         }
     }
 
+    /// Copies the selected profile's server URL string to the general pasteboard.
+    /// Does nothing if there is no selected profile or the selected profile does not provide a URL.
     @IBAction func copyURL(_ sender: NSButton) {
         let profile = getSelectedProfile()
         if profile.isValid(), let url = profile.URL() {
@@ -57,6 +60,9 @@ class ShareServerProfilesWindowController: NSWindowController
         }
     }
 
+    /// Copies the QR code currently displayed in `qrCodeImageView` to the general pasteboard.
+    /// 
+    /// If `qrCodeImageView` has an image, the image is written to the general pasteboard; if there is no image, the method does nothing.
     @IBAction func copyQRCode(_ sender: NSButton) {
         if let img = qrCodeImageView.image {
             let pb = NSPasteboard.general
@@ -69,6 +75,11 @@ class ShareServerProfilesWindowController: NSWindowController
         }
     }
 
+    /// Presents a save dialog to export the displayed QR code image as a GIF file.
+    /// 
+    /// If a QR code image is present, a save panel is shown with a default filename derived from the selected profile's remark. The image is converted to GIF data and written to the chosen file URL. Failures preparing the image or writing the file are reported via the shared ErrorHandler.
+    — Parameters:
+      - sender: The button that initiated the save action.
     @IBAction func saveQRCodeAsFile(_ sender: NSButton) {
         if let img = qrCodeImageView.image {
             let savePanel = NSSavePanel()
@@ -107,6 +118,8 @@ class ShareServerProfilesWindowController: NSWindowController
         }
     }
 
+    /// Copies all saved server profile URLs to the general pasteboard.
+    /// Writes a newline-separated list of all server profile URLs to the general pasteboard and logs whether the copy succeeded or failed.
     @IBAction func copyAllServerURLs(_ sender: NSButton) {
         let pb = NSPasteboard.general
         pb.clearContents()
@@ -117,6 +130,8 @@ class ShareServerProfilesWindowController: NSWindowController
         }
     }
 
+    /// Presents a Save panel to export all server profile URLs to a TXT file named "shadowsocks_profiles_yyyyMMdd.txt".
+    /// If the user confirms a destination, collects all server URLs, writes them as UTF-8 text to the selected file, and reports any write failures to `ErrorHandler.shared` with the context "Export Server URLs".
     @IBAction func saveAllServerURLsAsFile(_ sender: NSButton) {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyyMMdd"
@@ -148,6 +163,9 @@ class ShareServerProfilesWindowController: NSWindowController
         }
     }
 
+    /// Collects the absolute URL strings of all valid server profiles and joins them with newline characters.
+    /// Profiles that are invalid or do not have a URL are skipped.
+    /// - Returns: A single string containing each profile URL's `absoluteString` separated by `\n`; an empty string if no URLs are available.
     func getAllServerURLs() -> String {
         let urls = profileMgr.profiles.filter({ (profile) -> Bool in
             return profile.isValid()
@@ -157,11 +175,17 @@ class ShareServerProfilesWindowController: NSWindowController
         return urls.joined(separator: "\n")
     }
 
+    /// Get the ServerProfile for the currently selected table row.
+    /// - Returns: The `ServerProfile` at the table view's selected row. Assumes a valid selection; if no row is selected or the index is out of range, accessing this may trigger a runtime error.
     func getSelectedProfile() -> ServerProfile {
         let i = profilesTableView.selectedRow
         return profileMgr.profiles[i]
     }
 
+    /// Provide the display text for the profile at the given table row.
+    /// - Parameters:
+    ///   - index: The table row index of the profile.
+    /// - Returns: The profile's `remark` if it is not empty, otherwise the profile's `serverHost`.
     func getDataAtRow(_ index:Int) -> String {
         let profile = profileMgr.profiles[index]
         if !profile.remark.isEmpty {
@@ -172,7 +196,8 @@ class ShareServerProfilesWindowController: NSWindowController
     }
 
     //--------------------------------------------------
-    // For NSTableViewDataSource
+    /// Provides the number of server profiles available to display in the table view.
+    /// - Returns: The count of profiles managed by `profileMgr`, or `0` if the manager is unavailable.
 
     func numberOfRows(in tableView: NSTableView) -> Int {
         if let mgr = profileMgr {
@@ -182,7 +207,12 @@ class ShareServerProfilesWindowController: NSWindowController
     }
 
     //--------------------------------------------------
-    // For NSTableViewDelegate
+    /// Provides the table cell view that displays the profile title for a given row.
+    /// - Parameters:
+    ///   - tableView: The table view requesting the view.
+    ///   - tableColumn: The column for which the view is requested (ignored; single-column layout).
+    ///   - row: The row index whose data will be displayed.
+    /// - Returns: An `NSTableCellView` with its text field set to the profile title for `row`, or `nil` if a view could not be created.
 
     func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView? {
         let colId = NSUserInterfaceItemIdentifier(rawValue: "cellTitle")
@@ -193,6 +223,12 @@ class ShareServerProfilesWindowController: NSWindowController
         return nil
     }
 
+    /// Updates the QR code preview and related action buttons when the table selection changes.
+    /// 
+    /// If the newly selected profile is valid and has a URL, generates a 250×250 QR code for that URL,
+    /// assigns it to `qrCodeImageView`, and enables the copy/save buttons. Otherwise clears the image
+    /// and disables those buttons.
+    /// - Parameter notification: The selection-change `Notification` issued by the table view.
     func tableViewSelectionDidChange(_ notification: Notification) {
         if profilesTableView.selectedRow >= 0 {
             let profile = getSelectedProfile()

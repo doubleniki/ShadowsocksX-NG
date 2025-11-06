@@ -15,6 +15,7 @@ class PreferencesWinController: NSWindowController {
     @IBOutlet weak var toolbar: NSToolbar!
     @IBOutlet weak var tabView: NSTabView!
 
+    /// Configures the window after loading by selecting the "general" toolbar item, making the window resizable, enforcing a minimum size of 500×400, and ensuring the window width is at least 600 to accommodate toolbar items.
     override func windowDidLoad() {
         super.windowDidLoad()
 
@@ -39,20 +40,29 @@ class PreferencesWinController: NSWindowController {
         }
     }
 
+    /// Called when the window is about to close and posts the `NOTIFY_CONF_CHANGED` notification.
+    /// - Parameter notification: The `Notification` delivered by the system for the window close event.
     @objc func windowWillClose(_ notification: Notification) {
         NotificationCenter.default
             .post(name: NOTIFY_CONF_CHANGED, object: nil)
     }
 
+    /// Selects the tab whose identifier matches the provided toolbar item's identifier.
+    /// - Parameter sender: The toolbar item whose `itemIdentifier` is used to select the corresponding tab.
     @IBAction func toolbarAction(sender: NSToolbarItem) {
         tabView.selectTabViewItem(withIdentifier: sender.itemIdentifier)
     }
 
+    /// Clears the saved proxy exception list from user defaults.
+    /// - Parameter sender: The button that triggered this action.
     @IBAction func resetProxyExceptions(sender: NSButton) {
         let defaults = UserDefaults.standard
         defaults.removeObject(forKey: "ProxyExceptions")
     }
 
+    /// Presents a confirmation alert to reset all application preferences to their defaults and, if confirmed, triggers the preferences reset.
+    /// - Parameters:
+    ///   - sender: The button that initiated the action.
     @IBAction func resetAllPreferences(sender: NSButton) {
         let alert = NSAlert.init()
         alert.alertStyle = .warning;
@@ -65,6 +75,12 @@ class PreferencesWinController: NSWindowController {
         }
     }
 
+    /// Resets the application's user defaults while preserving server profile data.
+    /// 
+    /// Removes the app's persistent domain from UserDefaults, then restores the
+    /// values for the "ServerProfiles" and "ActiveServerProfileId" keys so server
+    /// profile configuration is retained. If the app bundle identifier cannot be
+    /// obtained, a warning is logged and no changes are made.
     func resetUserDefaults() {
         guard let domain = Bundle.main.bundleIdentifier else {
             ErrorHandler.shared.warning("Failed to get bundle identifier")

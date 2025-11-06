@@ -11,6 +11,10 @@ import Cocoa
 
 
 class PACURLFormatter: Formatter {
+    /// Provide the input string when the provided object is a `String`; otherwise provide an empty string.
+    /// - Parameters:
+    ///   - obj: The object to convert to a string.
+    /// - Returns: The original string if `obj` is a `String`, otherwise an empty string.
     override func string(for obj: Any?) -> String? {
         if let _obj = obj {
             switch _obj {
@@ -23,6 +27,14 @@ class PACURLFormatter: Formatter {
         return ""
     }
 
+    /// Validate a string as a URL with scheme "http", "https", or "file" and produce its absolute string.
+    /// 
+    /// An input that is empty or contains only whitespace is treated as valid and leaves `obj` unchanged.
+    /// - Parameters:
+    ///   - obj: Output pointer that will receive the URL's `absoluteString` as `AnyObject` when validation succeeds.
+    ///   - string: The input string to validate and parse as a URL.
+    ///   - error: Output pointer that will receive a localized error message when validation fails.
+    /// - Returns: `true` if the input is empty or a valid URL with an allowed scheme; `false` if the input is non-empty and not a valid allowed URL.
     override func getObjectValue(_ obj: AutoreleasingUnsafeMutablePointer<AnyObject?>?, for string: String, errorDescription error: AutoreleasingUnsafeMutablePointer<NSString?>?) -> Bool {
 
         let input = string.trimmingCharacters(in: .whitespaces)
