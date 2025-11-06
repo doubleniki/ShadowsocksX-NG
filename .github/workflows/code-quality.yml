@@ -2,9 +2,9 @@ name: Code Quality
 
 on:
   push:
-    branches: [ develop, main ]
+    branches: [develop, main]
   pull_request:
-    branches: [ develop ]
+    branches: [develop]
 
 jobs:
   swiftlint:
@@ -13,7 +13,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install SwiftLint
         run: |
@@ -35,7 +35,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: recursive
 
@@ -76,11 +76,11 @@ jobs:
             CODE_SIGN_IDENTITY="-" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO
-        continue-on-error: true
 
       - name: Check for compiler warnings
         run: |
           # Check compiler warnings count
+          set -o pipefail
           xcodebuild clean build \
             -workspace ShadowsocksX-NG.xcworkspace \
             -scheme ShadowsocksX-NG \
@@ -89,14 +89,14 @@ jobs:
             CODE_SIGN_IDENTITY="-" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
-            2>&1 | tee build.log || true
-          
+            2>&1 | tee build.log
+
           # Count warnings
           WARNING_COUNT=$(grep -c "warning:" build.log || true)
           echo "Found $WARNING_COUNT compiler warnings"
-          
+
           # Only inform, don't fail
-          if [ $WARNING_COUNT -gt 50 ]; then
+          if [ "$WARNING_COUNT" -gt 50 ]; then
             echo "::warning::Too many warnings: $WARNING_COUNT"
           fi
         continue-on-error: true

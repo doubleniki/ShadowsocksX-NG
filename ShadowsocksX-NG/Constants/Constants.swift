@@ -1,4 +1,3 @@
-//
 //  Constants.swift
 //  ShadowsocksX-NG
 //
@@ -154,8 +153,18 @@ enum ProxyMode: String, Codable, CaseIterable {
     /// Returns the proxy mode from UserDefaults
     static var current: ProxyMode {
         get {
-            guard let rawValue = Foundation.UserDefaults.standard.string(forKey: Constants.UserDefaults.runningMode),
-                  let mode = ProxyMode(rawValue: rawValue) else {
+            guard let rawValue = Foundation.UserDefaults.standard.string(forKey: Constants.UserDefaults.runningMode) else {
+                return .auto
+            }
+
+            // Migrate legacy "external_pac" to "externalPAC"
+            if rawValue == "external_pac" {
+                let migratedMode = ProxyMode.externalPAC
+                Foundation.UserDefaults.standard.set(migratedMode.rawValue, forKey: Constants.UserDefaults.runningMode)
+                return migratedMode
+            }
+
+            guard let mode = ProxyMode(rawValue: rawValue) else {
                 return .auto
             }
             return mode

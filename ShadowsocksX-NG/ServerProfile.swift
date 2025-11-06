@@ -49,7 +49,7 @@ class ServerProfile: NSObject, NSCopying {
     // SIP003 Plugin
     @objc var plugin: String = ""  // empty string disables plugin
     @objc var pluginOptions: String = ""
-    
+
     override init() {
         uuid = UUID().uuidString
     }
@@ -84,7 +84,7 @@ class ServerProfile: NSObject, NSCopying {
                 return (nil, nil)
             }
             var s = decoded.trimmingCharacters(in: CharacterSet(charactersIn: "\n"))
-            
+
             // May be legacy format URI
             // Note that the legacy URI doesn't follow RFC3986. It means the password here
             // should be plain text, not percent-encoded.
@@ -97,7 +97,7 @@ class ServerProfile: NSObject, NSCopying {
                       let r2 = Range(match.range(at: 2), in: s),
                       let r3 = Range(match.range(at: 3), in: s) else {
                     ErrorHandler.shared.warning("Failed to parse legacy SS URL ranges")
-                    return nil
+                    return (nil, nil)
                 }
 
                 let user = String(s[r1])
@@ -106,13 +106,13 @@ class ServerProfile: NSObject, NSCopying {
 
                 guard let rawUserInfo = "\(user):\(password)".data(using: .utf8) else {
                     ErrorHandler.shared.warning("Failed to encode user info to UTF-8")
-                    return nil
+                    return (nil, nil)
                 }
                 let userInfo = rawUserInfo.base64EncodedString()
 
                 s = "ss://\(userInfo)@\(hostAndPort)"
             }
-            
+
             if let index = base64End {
                 let i = urlStr.index(index, offsetBy: 1)
                 let fragment = String(urlStr[i...])
@@ -123,7 +123,7 @@ class ServerProfile: NSObject, NSCopying {
         func decodeLegacyFormat(url: String) -> (URL?,String?) {
             return (nil, nil)
         }
-        
+
         let (_decodedUrl, _tag) = decodeUrl(url: url)
         guard let decodedUrl = _decodedUrl else {
             return nil
@@ -142,7 +142,7 @@ class ServerProfile: NSObject, NSCopying {
         // This can be overriden by the fragment part of SIP002 URL
         remark = parsedUrl.queryItems?
             .filter({ $0.name == "Remark" }).first?.value ?? ""
-        
+
         if let tag = _tag {
             remark = tag
         }
@@ -176,7 +176,7 @@ class ServerProfile: NSObject, NSCopying {
             }
         }
     }
-    
+
     public func copy(with zone: NSZone? = nil) -> Any {
         let copy = ServerProfile()
         copy.serverHost = self.serverHost
@@ -184,12 +184,12 @@ class ServerProfile: NSObject, NSCopying {
         copy.method = self.method
         copy.password = self.password
         copy.remark = self.remark
-        
+
         copy.plugin = self.plugin
         copy.pluginOptions = self.pluginOptions
         return copy;
     }
-    
+
     static func fromDictionary(_ data:[String:Any?]) -> ServerProfile? {
         let cp = {
             (profile: ServerProfile) -> Bool in
@@ -264,7 +264,7 @@ class ServerProfile: NSObject, NSCopying {
     func toJsonConfig() -> [String: AnyObject] {
         var conf: [String: AnyObject] = ["password": password as AnyObject,
                                          "method": method as AnyObject,]
-        
+
         let defaults = UserDefaults.standard
         conf["local_port"] = NSNumber(value: UInt16(defaults.integer(forKey: "LocalSocks5.ListenPort")) as UInt16)
         conf["local_address"] = defaults.string(forKey: "LocalSocks5.ListenAddress") as AnyObject?
@@ -281,7 +281,7 @@ class ServerProfile: NSObject, NSCopying {
 
         return conf
     }
-    
+
     func debugString() -> String {
         var buf = ""
         print("ServerHost=\(String(repeating: "*", count: serverHost.count))", to: &buf)
@@ -386,7 +386,7 @@ class ServerProfile: NSObject, NSCopying {
 
         return url
     }
-    
+
     func title() -> String {
         if remark.isEmpty {
             return "\(serverHost):\(serverPort)"

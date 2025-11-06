@@ -45,6 +45,7 @@ class UserRulesController: NSWindowController {
                     showAlert: true
                 )
             }
+            return
         }
 
         let str = (try? String(contentsOfFile: PACUserRuleFilePath, encoding: String.Encoding.utf8)) ?? ""
