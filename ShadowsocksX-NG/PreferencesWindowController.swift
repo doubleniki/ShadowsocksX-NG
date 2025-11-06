@@ -244,8 +244,8 @@ class PreferencesWindowController: NSWindowController, NSTableViewDataSource, NS
         ErrorHandler.shared.debug("bind profile \(index)", context: "Preferences")
 
         if index >= 0 && index < profileMgr.profiles.count {
-            self.editingProfile = profileMgr.profiles[index]
-            let selectedProfile = self.editingProfile!
+            let selectedProfile = profileMgr.profiles[index]
+            self.editingProfile = selectedProfile
 
             hostTextField.bind(
                 NSBindingName(rawValue: "value"), to: selectedProfile, withKeyPath: "serverHost",
