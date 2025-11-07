@@ -100,10 +100,32 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
 
     func applicationDidFinishLaunching(_ aNotification: Notification) {
 
+        // Validate minimum macOS version
+        guard OSVersion.validateMinimumVersion() else {
+            let alert = NSAlert()
+            alert.messageText = "Unsupported macOS Version"
+            alert.informativeText = """
+                ShadowsocksX-NG requires macOS 11.0 (Big Sur) or later.
+                Your current version: \(OSVersion.fullVersionString)
+
+                Please upgrade your macOS or download an older version of the app.
+                """
+            alert.alertStyle = .critical
+            alert.runModal()
+            NSApp.terminate(nil)
+            return
+        }
+
+        // Print system info for debugging (can be disabled in production)
+        #if DEBUG
+            OSVersion.printSystemInfo()
+        #endif
+
         _ = LaunchAtLoginController.shared()  // Initialize singleton and ensure LaunchAtLogin is set
 
         // Request notification authorization
-        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { granted, error in
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) {
+            granted, error in
             if let error = error {
                 ErrorHandler.shared.handle(
                     error,
@@ -382,18 +404,20 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
 
     @IBAction func importProfileURLFromPasteboard(_ sender: NSMenuItem) {
         let pb = NSPasteboard.general
-        if #available(OSX 10.13, *) {
-            if let text = pb.string(forType: NSPasteboard.PasteboardType.URL) {
-                if let url = URL(string: text) {
-                    NotificationCenter.default.post(
-                        name: NOTIFY_FOUND_SS_URL, object: nil,
-                        userInfo: [
-                            "urls": [url],
-                            "source": "pasteboard",
-                        ])
-                }
+
+        // Check for URL type (always available on macOS 11.0+)
+        if let text = pb.string(forType: NSPasteboard.PasteboardType.URL) {
+            if let url = URL(string: text) {
+                NotificationCenter.default.post(
+                    name: NOTIFY_FOUND_SS_URL, object: nil,
+                    userInfo: [
+                        "urls": [url],
+                        "source": "pasteboard",
+                    ])
             }
         }
+
+        // Check for string type
         if let text = pb.string(forType: NSPasteboard.PasteboardType.string) {
             var urls = text.split(separator: "\n")
                 .map { String($0).trimmingCharacters(in: CharacterSet.whitespacesAndNewlines) }
@@ -500,7 +524,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
         if let appUrl = ws.urlForApplication(withBundleIdentifier: "com.apple.Console") {
             let configuration = NSWorkspace.OpenConfiguration()
             configuration.arguments = ["~/Library/Logs/ss-local.log"]
-            
+
             ws.openApplication(at: appUrl, configuration: configuration) { app, error in
                 if let error = error {
                     ErrorHandler.shared.handle(
@@ -799,7 +823,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
     func userNotificationCenter(
         _ center: UNUserNotificationCenter,
         willPresent notification: UNNotification,
-        withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
+        withCompletionHandler completionHandler:
+            @escaping (UNNotificationPresentationOptions) -> Void
     ) {
         // Show notification even when app is in foreground
         completionHandler([.banner, .sound])

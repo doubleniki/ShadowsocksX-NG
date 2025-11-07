@@ -17,15 +17,17 @@ class ImportWindowController: NSWindowController {
         // Implement this method to handle any initialization after your window controller's window has been loaded from its nib file.
 
         let pb = NSPasteboard.general
-        if #available(OSX 10.13, *) {
-            if let text = pb.string(forType: NSPasteboard.PasteboardType.URL) {
-                if let url = URL(string: text) {
-                    if url.scheme == "ss" {
-                        inputBox.stringValue = text
-                    }
+
+        // Check for URL type (always available on macOS 11.0+)
+        if let text = pb.string(forType: NSPasteboard.PasteboardType.URL) {
+            if let url = URL(string: text) {
+                if url.scheme == "ss" {
+                    inputBox.stringValue = text
                 }
             }
         }
+
+        // Check for string type
         if let text = pb.string(forType: NSPasteboard.PasteboardType.string) {
             let urls = ServerProfileManager.findURLSInText(text)
             if !urls.isEmpty {
