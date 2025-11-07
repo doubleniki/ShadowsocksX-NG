@@ -21,6 +21,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
     private var menuBarManager: MenuBarManager!
     private var windowCoordinator: WindowCoordinator!
     private var proxyCoordinator: ProxyCoordinator!
+    private let disposeBag = DisposeBag()
 
     // MARK: - IBOutlets
 
@@ -183,12 +184,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
     private func setupNotificationObservers() {
         let notifyCenter = NotificationCenter.default
 
-        _ = notifyCenter.rx.notification(NOTIFY_CONF_CHANGED)
+        notifyCenter.rx.notification(NOTIFY_CONF_CHANGED)
             .subscribe(onNext: { _ in
                 self.proxyCoordinator.applyConfig()
                 self.menuBarManager.updateRunningModeMenu()
                 self.menuBarManager.updateCopyHttpProxyExportMenu()
             })
+            .disposed(by: disposeBag)
 
         notifyCenter.addObserver(
             forName: NOTIFY_SERVER_PROFILES_CHANGED, object: nil, queue: nil
@@ -204,20 +206,23 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
             syncSSLocal()
         }
 
-        _ = notifyCenter.rx.notification(NOTIFY_TOGGLE_RUNNING_SHORTCUT)
+        notifyCenter.rx.notification(NOTIFY_TOGGLE_RUNNING_SHORTCUT)
             .subscribe(onNext: { _ in
                 self.doToggleRunning(showToast: true)
             })
+            .disposed(by: disposeBag)
 
-        _ = notifyCenter.rx.notification(NOTIFY_SWITCH_PROXY_MODE_SHORTCUT)
+        notifyCenter.rx.notification(NOTIFY_SWITCH_PROXY_MODE_SHORTCUT)
             .subscribe(onNext: { _ in
                 self.handleSwitchProxyModeShortcut()
             })
+            .disposed(by: disposeBag)
 
-        _ = notifyCenter.rx.notification(NOTIFY_FOUND_SS_URL)
+        notifyCenter.rx.notification(NOTIFY_FOUND_SS_URL)
             .subscribe(onNext: { notification in
                 self.handleFoundSSURL(notification)
             })
+            .disposed(by: disposeBag)
     }
 
     private func handleSwitchProxyModeShortcut() {
