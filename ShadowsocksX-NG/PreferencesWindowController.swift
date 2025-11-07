@@ -34,7 +34,7 @@ class PreferencesWindowController: NSWindowController, NSTableViewDataSource, NS
     var defaults: UserDefaults!
     var profileMgr: ServerProfileManager!
 
-    var editingProfile: ServerProfile!
+    var editingProfile: ServerProfile?
 
     override func windowDidLoad() {
         super.windowDidLoad()
@@ -78,7 +78,7 @@ class PreferencesWindowController: NSWindowController, NSTableViewDataSource, NS
     }
 
     @IBAction func addProfile(_ sender: NSButton) {
-        if editingProfile != nil && !editingProfile.isValid() {
+        if let profile = editingProfile, !profile.isValid() {
             shakeWindows()
             return
         }
@@ -130,12 +130,10 @@ class PreferencesWindowController: NSWindowController, NSTableViewDataSource, NS
     }
 
     @IBAction func ok(_ sender: NSButton) {
-        if editingProfile != nil {
-            if !editingProfile.isValid() {
-                // TODO Shake window?
-                shakeWindows()
-                return
-            }
+        if let profile = editingProfile, !profile.isValid() {
+            // TODO Shake window?
+            shakeWindows()
+            return
         }
         profileMgr.save()
         window?.performClose(nil)
@@ -420,10 +418,8 @@ class PreferencesWindowController: NSWindowController, NSTableViewDataSource, NS
             editingProfile = nil
             return true
         }
-        if editingProfile != nil {
-            if !editingProfile.isValid() {
-                return false
-            }
+        if let profile = editingProfile, !profile.isValid() {
+            return false
         }
 
         return true

@@ -78,12 +78,10 @@ class PreferencesWinController: NSWindowController {
         let activeProfileId = defaults.string(forKey: "ActiveServerProfileId")
 
         defaults.removePersistentDomain(forName: domain)
-        defaults.synchronize()
 
         // Restore server profiles.
         defaults.set(profiles, forKey: "ServerProfiles")
         defaults.set(activeProfileId, forKey: "ActiveServerProfileId")
-        defaults.synchronize()
 
         showResetSuccessAlert()
     }

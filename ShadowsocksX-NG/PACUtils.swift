@@ -178,12 +178,12 @@ func generatePACFile() -> Bool {
             }
 
             // Filter empty and comment lines
-            lines = lines.filter({ (s: String) -> Bool in
-                if s.isEmpty {
+            lines = lines.filter({ (line: String) -> Bool in
+                if line.isEmpty {
                     return false
                 }
-                let c = s[s.startIndex]
-                if c == "!" || c == "[" {
+                let character: Character = s[s.startIndex]
+                if character == "!" || character == "[" {
                     return false
                 }
                 return true
@@ -196,12 +196,36 @@ func generatePACFile() -> Bool {
                 let rulesJsonStr = String(data: rulesJsonData, encoding: String.Encoding.utf8)
 
                 // Get raw pac js
-                guard let jsPath = Bundle.main.url(forResource: "abp", withExtension: "js"),
-                    let jsData = try? Data(contentsOf: jsPath),
-                    var jsStr = String(data: jsData, encoding: String.Encoding.utf8),
-                    let rulesJsonStr = rulesJsonStr
-                else {
-                    ErrorHandler.shared.warning("Failed to load or process PAC resources")
+                guard let jsPath = Bundle.main.url(forResource: "abp", withExtension: "js") else {
+                    ErrorHandler.shared.handle(
+                        ResourceError.resourceNotFound(name: "abp", type: "js"),
+                        context: "Generate PAC File",
+                        showAlert: true
+                    )
+                    return false
+                }
+                guard let jsData = try? Data(contentsOf: jsPath) else {
+                    ErrorHandler.shared.handle(
+                        FileSystemError.readFailed(path: jsPath.path, error: nil),
+                        context: "Generate PAC File",
+                        showAlert: true
+                    )
+                    return false
+                }
+                guard var jsStr = String(data: jsData, encoding: String.Encoding.utf8) else {
+                    ErrorHandler.shared.handle(
+                        PACError.invalidFormat(reason: "Failed to decode abp.js as UTF-8"),
+                        context: "Generate PAC File",
+                        showAlert: true
+                    )
+                    return false
+                }
+                guard let rulesJsonStr = rulesJsonStr else {
+                    ErrorHandler.shared.handle(
+                        PACError.invalidFormat(reason: "Failed to encode rules as JSON string"),
+                        context: "Generate PAC File",
+                        showAlert: true
+                    )
                     return false
                 }
 
@@ -222,7 +246,11 @@ func generatePACFile() -> Bool {
 
                 // Write the pac js to file.
                 guard let jsData = jsStr.data(using: String.Encoding.utf8) else {
-                    ErrorHandler.shared.warning("Failed to encode PAC JS string")
+                    ErrorHandler.shared.handle(
+                        PACError.invalidFormat(reason: "Failed to encode PAC JS string as UTF-8"),
+                        context: "Generate PAC File",
+                        showAlert: true
+                    )
                     return false
                 }
                 try jsData.write(to: URL(fileURLWithPath: PACFilePath), options: .atomic)
@@ -266,7 +294,11 @@ func updatePACFromGFWList() {
     }
 
     guard let url = UserDefaults.standard.string(forKey: "GFWListURL") else {
-        ErrorHandler.shared.warning("GFWListURL not found in UserDefaults")
+        ErrorHandler.shared.handle(
+            PACError.invalidFormat(reason: "GFWListURL not configured"),
+            context: "Update PAC from GFW List",
+            showAlert: false
+        )
         return
     }
     AF.request(url)

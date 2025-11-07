@@ -54,6 +54,28 @@ jobs:
         run: |
           pod install
 
+      - name: Restore dependencies cache
+        id: deps-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            deps/dist
+            ShadowsocksX-NG/ss-local
+            ShadowsocksX-NG/privoxy
+            ShadowsocksX-NG/simple-obfs
+            ShadowsocksX-NG/v2ray-plugin
+            ShadowsocksX-NG/kcptun
+          key: deps-${{ runner.os }}-${{ hashFiles('deps/**', '!deps/dist') }}
+
+      - name: Build native dependencies if not cached
+        if: steps.deps-cache.outputs.cache-hit != 'true'
+        run: |
+          brew install automake autoconf libtool pcre
+          echo "Building native dependencies..."
+          make -C deps all
+        env:
+          MAKEFLAGS: "-j$(sysctl -n hw.ncpu)"
+
       - name: Build project
         run: |
           xcodebuild clean build \

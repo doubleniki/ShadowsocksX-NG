@@ -10,7 +10,7 @@ target 'ShadowsocksX-NG' do
   pod 'Alamofire', '~> 5.4.3'
   pod "GCDWebServer", "~> 3.0"
   pod 'MASShortcut', '~> 2'
-  
+
   # https://github.com/ReactiveX/RxSwift/blob/master/Documentation/GettingStarted.md
   pod 'RxSwift',    '~> 6.2.0'
   pod 'RxCocoa',    '~> 6.2.0'
@@ -41,6 +41,12 @@ post_install do |installer|
     frameworks_script.gsub!(
       'SWIFT_STDLIB_PATH="${TOOLCHAIN_DIR}/usr/lib/swift/${PLATFORM_NAME}"',
       'SWIFT_STDLIB_PATH="${TOOLCHAIN_DIR:-$DT_TOOLCHAIN_DIR}/usr/lib/swift/${PLATFORM_NAME}"'
+    )
+    # Fix readlink -f (GNU extension not available on macOS BSD readlink)
+    # Remove -f flag to maintain compatibility with macOS
+    frameworks_script.gsub!(
+      'source="$(readlink -f "${source}")"',
+      'source="$(readlink "${source}")"'
     )
     File.write(frameworks_script_path, frameworks_script)
   end
