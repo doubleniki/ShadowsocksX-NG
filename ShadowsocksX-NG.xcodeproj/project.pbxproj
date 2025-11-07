@@ -3,12 +3,14 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 46;
+	objectVersion = 54;
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1602F7D41D494AF9A7ACFF31 /* AppError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6358A583CE614DDBAC91D5CF /* AppError.swift */; };
 		1C82DBA81FA96C7500B32551 /* obfs-local in Resources */ = {isa = PBXBuildFile; fileRef = 1C82DBA51FA96C7400B32551 /* obfs-local */; };
 		1C82DBAA1FA96FB600B32551 /* install_simple_obfs.sh in Resources */ = {isa = PBXBuildFile; fileRef = 1C82DBA91FA96F0300B32551 /* install_simple_obfs.sh */; };
+		2A48570421CF60D17B2DBE57 /* Pods_ShadowsocksX_NGTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 388120F062D7EB7DD0D8DDCA /* Pods_ShadowsocksX_NGTests.framework */; };
 		9B07EFA71D048BBB0052D9DF /* ss-local in Resources */ = {isa = PBXBuildFile; fileRef = 9B07EFA61D048BBB0052D9DF /* ss-local */; };
 		9B0BFFE91D0460A70040E62B /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B0BFFE81D0460A70040E62B /* AppDelegate.swift */; };
 		9B0BFFEB1D0460A70040E62B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 9B0BFFEA1D0460A70040E62B /* Assets.xcassets */; };
@@ -82,6 +84,7 @@
 		9BEEF0781D04FE8A00FC52B3 /* LaunchAgentUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BEEF0771D04FE8A00FC52B3 /* LaunchAgentUtils.swift */; };
 		A2210AF62EB65F920069F23B /* KeychainManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2210AF52EB65F920069F23B /* KeychainManager.swift */; };
 		B5A2AB04221A72EC003F77B7 /* install_v2ray_plugin.sh in Resources */ = {isa = PBXBuildFile; fileRef = B5A2AB02221A72EC003F77B7 /* install_v2ray_plugin.sh */; };
+		BF7031FBFD924E2B87DBAB09 /* ErrorHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88EDAF36017C4A4D8838BA44 /* ErrorHandler.swift */; };
 		C6D429931DA75988002A5711 /* install_privoxy.sh in Resources */ = {isa = PBXBuildFile; fileRef = C6D4298E1DA75988002A5711 /* install_privoxy.sh */; };
 		C6D429941DA75988002A5711 /* privoxy in Resources */ = {isa = PBXBuildFile; fileRef = C6D4298F1DA75988002A5711 /* privoxy */; };
 		C6D429961DA75988002A5711 /* start_privoxy.sh in Resources */ = {isa = PBXBuildFile; fileRef = C6D429911DA75988002A5711 /* start_privoxy.sh */; };
@@ -89,6 +92,7 @@
 		C6D429991DA76FBC002A5711 /* privoxy.template.config in Resources */ = {isa = PBXBuildFile; fileRef = C6D429981DA76FBC002A5711 /* privoxy.template.config */; };
 		C8E42A6C1D4F270A0074C7EA /* UserRulesController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8E42A6A1D4F270A0074C7EA /* UserRulesController.swift */; };
 		C8E42A6E1D4F2CAF0074C7EA /* UserRulesController.xib in Resources */ = {isa = PBXBuildFile; fileRef = C8E42A701D4F2CAF0074C7EA /* UserRulesController.xib */; };
+		C9AD9A9DBFA84B284C9E9AC3 /* Pods_ShadowsocksX_NG.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 283ED1A8E9B711AC65670031 /* Pods_ShadowsocksX_NG.framework */; };
 		F0809FF1595BE2966343D3C7 /* libPods-proxy_conf_helper.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1E7783AEDB4A3BDDC9FF16AC /* libPods-proxy_conf_helper.a */; };
 /* End PBXBuildFile section */
 
@@ -139,6 +143,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		6358A583CE614DDBAC91D5CF /* AppError.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppError.swift; sourceTree = "<group>"; };
 		19083CFCED87354F006967FF /* Pods_ShadowsocksX_NGUITests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_ShadowsocksX_NGUITests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		1C82DBA51FA96C7400B32551 /* obfs-local */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = "obfs-local"; sourceTree = "<group>"; };
 		1C82DBA91FA96F0300B32551 /* install_simple_obfs.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = install_simple_obfs.sh; sourceTree = "<group>"; };
@@ -148,6 +153,7 @@
 		388120F062D7EB7DD0D8DDCA /* Pods_ShadowsocksX_NGTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_ShadowsocksX_NGTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		3AC7CD9886196A997D6FC78D /* Pods-ShadowsocksX-NGTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ShadowsocksX-NGTests.release.xcconfig"; path = "Pods/Target Support Files/Pods-ShadowsocksX-NGTests/Pods-ShadowsocksX-NGTests.release.xcconfig"; sourceTree = "<group>"; };
 		5B6203C1228FCD3D365814AC /* Pods-ShadowsocksX-NGTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ShadowsocksX-NGTests.debug.xcconfig"; path = "Pods/Target Support Files/Pods-ShadowsocksX-NGTests/Pods-ShadowsocksX-NGTests.debug.xcconfig"; sourceTree = "<group>"; };
+		88EDAF36017C4A4D8838BA44 /* ErrorHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorHandler.swift; sourceTree = "<group>"; };
 		9B07EFA61D048BBB0052D9DF /* ss-local */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = "ss-local"; sourceTree = "<group>"; };
 		9B0BFFE51D0460A70040E62B /* ShadowsocksX-NG.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "ShadowsocksX-NG.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		9B0BFFE81D0460A70040E62B /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -263,6 +269,7 @@
 			files = (
 				9B6BF9541E27B2570061B9A7 /* ServiceManagement.framework in Frameworks */,
 				9B3FFF3E1D08D9910019A709 /* SystemConfiguration.framework in Frameworks */,
+				C9AD9A9DBFA84B284C9E9AC3 /* Pods_ShadowsocksX_NG.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -278,12 +285,21 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2A48570421CF60D17B2DBE57 /* Pods_ShadowsocksX_NGTests.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		B941DFF968274EFF8A5A6915 /* Errors */ = {
+			isa = PBXGroup;
+			children = (
+				6358A583CE614DDBAC91D5CF /* AppError.swift */,
+			);
+			path = Errors;
+			sourceTree = "<group>";
+		};
 		1C82DBA31FA96C7400B32551 /* simple-obfs */ = {
 			isa = PBXGroup;
 			children = (
@@ -362,10 +378,12 @@
 				9B3FFF0B1D05D8B80019A709 /* UI */,
 				9B07EFB01D048E900052D9DF /* Support Files */,
 				9B0BFFE81D0460A70040E62B /* AppDelegate.swift */,
+				88EDAF36017C4A4D8838BA44 /* ErrorHandler.swift */,
 				9B0BFFEA1D0460A70040E62B /* Assets.xcassets */,
 				9B0BFFEC1D0460A70040E62B /* MainMenu.xib */,
 				9B0BFFEF1D0460A70040E62B /* Info.plist */,
 				9BEEF06D1D04DCE400FC52B3 /* ServerProfile.swift */,
+				B941DFF968274EFF8A5A6915 /* Errors */,
 				A2210AF52EB65F920069F23B /* KeychainManager.swift */,
 				9B7725E5232E30C50062299F /* PACURLFormatter.swift */,
 				9BEEF06F1D04DDB100FC52B3 /* ServerProfileManager.swift */,
@@ -564,6 +582,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 9B5DD7B42683A354005EFEF7 /* Build configuration list for PBXNativeTarget "ShadowsocksX-NGTests" */;
 			buildPhases = (
+				EA4093BCEE39AF3963E80B27 /* [CP] Check Pods Manifest.lock */,
 				9B5DD7A92683A354005EFEF7 /* Sources */,
 				9B5DD7AA2683A354005EFEF7 /* Frameworks */,
 				9B5DD7AB2683A354005EFEF7 /* Resources */,
@@ -584,8 +603,9 @@
 		9B0BFFDD1D0460A70040E62B /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
+				BuildIndependentTargetsInParallel = YES;
 				LastSwiftUpdateCheck = 1250;
-				LastUpgradeCheck = 1250;
+				LastUpgradeCheck = 2610;
 				ORGANIZATIONNAME = qiuyuzhou;
 				TargetAttributes = {
 					9B0BFFE41D0460A70040E62B = {
@@ -606,10 +626,9 @@
 			};
 			buildConfigurationList = 9B0BFFE01D0460A70040E62B /* Build configuration list for PBXProject "ShadowsocksX-NG" */;
 			compatibilityVersion = "Xcode 3.2";
-			developmentRegion = English;
+			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
-				English,
 				en,
 				Base,
 				"zh-Hans",
@@ -776,6 +795,28 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
+		EA4093BCEE39AF3963E80B27 /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-ShadowsocksX-NGTests-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -797,10 +838,12 @@
 				9B3FFF141D0705810019A709 /* Notifications.swift in Sources */,
 				9BEEF0701D04DDB100FC52B3 /* ServerProfileManager.swift in Sources */,
 				9BEEF06E1D04DCE400FC52B3 /* ServerProfile.swift in Sources */,
+				1602F7D41D494AF9A7ACFF31 /* AppError.swift in Sources */,
 				9B72FB62232782A300C6AAAE /* ImportWindowController.swift in Sources */,
 				9B3FFF0D1D05FEB30019A709 /* Utils.swift in Sources */,
 				9BEEF0751D04EF3E00FC52B3 /* PreferencesWindowController.swift in Sources */,
 				9B0BFFE91D0460A70040E62B /* AppDelegate.swift in Sources */,
+				BF7031FBFD924E2B87DBAB09 /* ErrorHandler.swift in Sources */,
 				9B84DAED2163A72F00DFF068 /* Diagnose.swift in Sources */,
 				9BA04B231D23D5A5005AAD7F /* ProxyConfTool.m in Sources */,
 				9B5831FF1E741969009D5B7D /* PreferencesWinController.swift in Sources */,
@@ -912,7 +955,6 @@
 		9B0B00061D0460A70040E62B /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = "$(inherited)";
 				ALWAYS_SEARCH_USER_PATHS = "$(inherited)";
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -942,9 +984,11 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_IDENTITY = "";
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -959,10 +1003,11 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MACOSX_DEPLOYMENT_TARGET = 11;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
 			name = Debug;
@@ -970,7 +1015,6 @@
 		9B0B00071D0460A70040E62B /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = "$(inherited)";
 				ALWAYS_SEARCH_USER_PATHS = "$(inherited)";
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -1000,9 +1044,11 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_IDENTITY = "";
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -1011,10 +1057,12 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MACOSX_DEPLOYMENT_TARGET = 11;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = macosx;
-				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
 			};
 			name = Release;
 		};
@@ -1030,6 +1078,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 2;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = "";
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1038,14 +1087,17 @@
 				);
 				INFOPLIST_FILE = "ShadowsocksX-NG/Info.plist";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(SDKROOT)/usr/lib/system",
 					"$(PROJECT_DIR)/ShadowsocksX-NG",
 					"$(PROJECT_DIR)/ShadowsocksX-NG/simple-obfs",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MACOSX_DEPLOYMENT_TARGET = 11.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.qiuyuzhou.ShadowsocksX-NG";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -1054,6 +1106,7 @@
 				SWIFT_SWIFT3_OBJC_INFERENCE = Default;
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
+							ENABLE_USER_SCRIPT_SANDBOXING = NO;
 			};
 			name = Debug;
 		};
@@ -1069,6 +1122,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 2;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = "";
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1077,14 +1131,17 @@
 				);
 				INFOPLIST_FILE = "ShadowsocksX-NG/Info.plist";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(SDKROOT)/usr/lib/system",
 					"$(PROJECT_DIR)/ShadowsocksX-NG",
 					"$(PROJECT_DIR)/ShadowsocksX-NG/simple-obfs",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MACOSX_DEPLOYMENT_TARGET = 11.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.qiuyuzhou.ShadowsocksX-NG";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -1092,6 +1149,7 @@
 				SWIFT_SWIFT3_OBJC_INFERENCE = Default;
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
+							ENABLE_USER_SCRIPT_SANDBOXING = NO;
 			};
 			name = Release;
 		};
@@ -1102,8 +1160,10 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = "";
-				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				ENABLE_HARDENED_RUNTIME = YES;
+				MACOSX_DEPLOYMENT_TARGET = 11.0;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SKIP_INSTALL = YES;
@@ -1117,8 +1177,10 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = "";
-				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				ENABLE_HARDENED_RUNTIME = YES;
+				MACOSX_DEPLOYMENT_TARGET = 11.0;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SKIP_INSTALL = YES;
@@ -1127,6 +1189,7 @@
 		};
 		9B5DD7B52683A354005EFEF7 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 5B6203C1228FCD3D365814AC /* Pods-ShadowsocksX-NGTests.debug.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				BUNDLE_LOADER = "$(TEST_HOST)";
@@ -1138,11 +1201,16 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = "";
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				INFOPLIST_FILE = "ShadowsocksX-NGTests/Info.plist";
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 11.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.qiuyuzhou.ShadowsocksX-NGTests";
@@ -1151,11 +1219,13 @@
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_VERSION = 5.0;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/ShadowsocksX-NG.app/Contents/MacOS/ShadowsocksX-NG";
+							ENABLE_USER_SCRIPT_SANDBOXING = NO;
 			};
 			name = Debug;
 		};
 		9B5DD7B62683A354005EFEF7 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 3AC7CD9886196A997D6FC78D /* Pods-ShadowsocksX-NGTests.release.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				BUNDLE_LOADER = "$(TEST_HOST)";
@@ -1167,17 +1237,23 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = "";
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				INFOPLIST_FILE = "ShadowsocksX-NGTests/Info.plist";
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 11.0;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.qiuyuzhou.ShadowsocksX-NGTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_VERSION = 5.0;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/ShadowsocksX-NG.app/Contents/MacOS/ShadowsocksX-NG";
+							ENABLE_USER_SCRIPT_SANDBOXING = NO;
 			};
 			name = Release;
 		};

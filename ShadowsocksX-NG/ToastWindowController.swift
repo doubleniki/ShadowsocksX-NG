@@ -9,12 +9,12 @@
 import Cocoa
 
 class ToastWindowController: NSWindowController {
-    
+
     var message: String = ""
-    
+
     @IBOutlet weak var titleTextField: NSTextField!
     @IBOutlet weak var panelView: NSView!
-    
+
     let kHudFadeInDuration: Double = 0.35
     let kHudFadeOutDuration: Double = 0.35
     let kHudDisplayDuration: Double = 1.2
@@ -23,7 +23,7 @@ class ToastWindowController: NSWindowController {
     let kHudCornerRadius: CGFloat = 18.0
     let kHudHorizontalMargin: CGFloat = 30
     let kHudHeight: CGFloat = 90.0
-    
+
     var timerToFadeOut: Timer? = nil
     var fadingOut: Bool = false
 
@@ -49,24 +49,29 @@ class ToastWindowController: NSWindowController {
         panelView.wantsLayer = true
         panelView.layer = viewLayer
         panelView.layer?.opacity = 0.0
-        
+
         self.titleTextField.stringValue = self.message
-        
+
         setupHud()
     }
-    
+
     func setupHud() -> Void {
         titleTextField.sizeToFit()
 
+        guard let window = self.window else {
+            ErrorHandler.shared.warning("window is nil", context: "ToastWindowController.setupHud")
+            return
+        }
+
         var labelFrame: CGRect = titleTextField.frame
-        var hudWindowFrame: CGRect = self.window!.frame
+        var hudWindowFrame: CGRect = window.frame
         hudWindowFrame.size.width = labelFrame.size.width + kHudHorizontalMargin * 2
         hudWindowFrame.size.height = kHudHeight
 
         let screenRect: NSRect = NSScreen.screens[0].visibleFrame
         hudWindowFrame.origin.x = (screenRect.size.width - hudWindowFrame.size.width) / 2
         hudWindowFrame.origin.y = (screenRect.size.height - hudWindowFrame.size.height) / 2
-        self.window!.setFrame(hudWindowFrame, display: true)
+        window.setFrame(hudWindowFrame, display: true)
 
         var viewFrame: NSRect = hudWindowFrame;
         viewFrame.origin.x = 0
@@ -77,7 +82,7 @@ class ToastWindowController: NSWindowController {
         labelFrame.origin.y = (hudWindowFrame.size.height - labelFrame.size.height) / 2
         titleTextField.frame = labelFrame
     }
-    
+
     func fadeInHud() -> Void {
         if timerToFadeOut != nil {
             timerToFadeOut?.invalidate()

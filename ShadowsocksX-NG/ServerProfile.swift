@@ -8,14 +8,13 @@
 
 import Cocoa
 
-
 class ServerProfile: NSObject, NSCopying {
 
     @objc var uuid: String
 
     @objc var serverHost: String = ""
     @objc var serverPort: uint16 = 8379
-    @objc var method:String = "aes-128-gcm"
+    @objc var method: String = "aes-128-gcm"
 
     // Password is now stored securely in Keychain
     // This property acts as a bridge to the Keychain
@@ -44,12 +43,12 @@ class ServerProfile: NSObject, NSCopying {
         }
     }
 
-    @objc var remark:String = ""
+    @objc var remark: String = ""
 
     // SIP003 Plugin
     @objc var plugin: String = ""  // empty string disables plugin
     @objc var pluginOptions: String = ""
-    
+
     override init() {
         uuid = UUID().uuidString
     }
@@ -71,7 +70,7 @@ class ServerProfile: NSObject, NSCopying {
             }
         }
 
-        func decodeUrl(url: URL) -> (String?,String?) {
+        func decodeUrl(url: URL) -> (String?, String?) {
             let urlStr = url.absoluteString
             let base64Begin = urlStr.index(urlStr.startIndex, offsetBy: 5)
             let base64End = urlStr.firstIndex(of: "#")
@@ -84,28 +83,38 @@ class ServerProfile: NSObject, NSCopying {
                 return (nil, nil)
             }
             var s = decoded.trimmingCharacters(in: CharacterSet(charactersIn: "\n"))
-            
+
             // May be legacy format URI
             // Note that the legacy URI doesn't follow RFC3986. It means the password here
             // should be plain text, not percent-encoded.
             // Ref: https://shadowsocks.org/en/config/quick-guide.html
             let parser = try? NSRegularExpression(
                 pattern: "(.+):(.+)@(.+)", options: .init())
-            if let match = parser?.firstMatch(in:s, options: [], range: NSRange(location: 0, length: s.utf16.count)) {
+            if let match = parser?.firstMatch(
+                in: s, options: [], range: NSRange(location: 0, length: s.utf16.count))
+            {
                 // Convert legacy format to SIP002 format
-                let r1 = Range(match.range(at: 1), in: s)!
-                let r2 = Range(match.range(at: 2), in: s)!
-                let r3 = Range(match.range(at: 3), in: s)!
+                guard let r1 = Range(match.range(at: 1), in: s),
+                    let r2 = Range(match.range(at: 2), in: s),
+                    let r3 = Range(match.range(at: 3), in: s)
+                else {
+                    ErrorHandler.shared.warning("Failed to parse legacy SS URL ranges")
+                    return (nil, nil)
+                }
+
                 let user = String(s[r1])
                 let password = String(s[r2])
                 let hostAndPort = String(s[r3])
-                
-                let rawUserInfo = "\(user):\(password)".data(using: .utf8)!
+
+                guard let rawUserInfo = "\(user):\(password)".data(using: .utf8) else {
+                    ErrorHandler.shared.warning("Failed to encode user info to UTF-8")
+                    return (nil, nil)
+                }
                 let userInfo = rawUserInfo.base64EncodedString()
-                
+
                 s = "ss://\(userInfo)@\(hostAndPort)"
             }
-            
+
             if let index = base64End {
                 let i = urlStr.index(index, offsetBy: 1)
                 let fragment = String(urlStr[i...])
@@ -113,10 +122,10 @@ class ServerProfile: NSObject, NSCopying {
             }
             return (s, nil)
         }
-        func decodeLegacyFormat(url: String) -> (URL?,String?) {
+        func decodeLegacyFormat(url: String) -> (URL?, String?) {
             return (nil, nil)
         }
-        
+
         let (_decodedUrl, _tag) = decodeUrl(url: url)
         guard let decodedUrl = _decodedUrl else {
             return nil
@@ -125,7 +134,8 @@ class ServerProfile: NSObject, NSCopying {
             return nil
         }
         guard let host = parsedUrl.host, let port = parsedUrl.port,
-            let user = parsedUrl.user else {
+            let user = parsedUrl.user
+        else {
             return nil
         }
 
@@ -133,16 +143,18 @@ class ServerProfile: NSObject, NSCopying {
         self.serverPort = UInt16(port)
 
         // This can be overriden by the fragment part of SIP002 URL
-        remark = parsedUrl.queryItems?
+        remark =
+            parsedUrl.queryItems?
             .filter({ $0.name == "Remark" }).first?.value ?? ""
-        
+
         if let tag = _tag {
             remark = tag
         }
 
         // SIP002 URL have no password section
         guard let data = Data(base64Encoded: padBase64(string: user)),
-            let userInfo = String(data: data, encoding: .utf8) else {
+            let userInfo = String(data: data, encoding: .utf8)
+        else {
             return nil
         }
 
@@ -159,7 +171,8 @@ class ServerProfile: NSObject, NSCopying {
         }
 
         if let pluginStr = parsedUrl.queryItems?
-            .filter({ $0.name == "plugin" }).first?.value {
+            .filter({ $0.name == "plugin" }).first?.value
+        {
             let parts = pluginStr.split(separator: ";", maxSplits: 1)
             if parts.count == 2 {
                 plugin = String(parts[0])
@@ -169,26 +182,37 @@ class ServerProfile: NSObject, NSCopying {
             }
         }
     }
-    
+
     public func copy(with zone: NSZone? = nil) -> Any {
         let copy = ServerProfile()
         copy.serverHost = self.serverHost
         copy.serverPort = self.serverPort
         copy.method = self.method
-        copy.password = self.password
+        // Copy password to cache only, without saving to Keychain
+        // The caller is responsible for setting the UUID and saving the password
+        copy._cachedPassword = self.password
         copy.remark = self.remark
-        
+
         copy.plugin = self.plugin
         copy.pluginOptions = self.pluginOptions
-        return copy;
+        return copy
     }
-    
-    static func fromDictionary(_ data:[String:Any?]) -> ServerProfile {
+
+    static func fromDictionary(_ data: [String: Any?]) -> ServerProfile? {
         let cp = {
-            (profile: ServerProfile) in
-            profile.serverHost = data["ServerHost"] as! String
-            profile.serverPort = (data["ServerPort"] as! NSNumber).uint16Value
-            profile.method = data["Method"] as! String
+            (profile: ServerProfile) -> Bool in
+            // Safe unwrap of required fields
+            guard let serverHost = data["ServerHost"] as? String,
+                let serverPortNum = data["ServerPort"] as? NSNumber,
+                let method = data["Method"] as? String
+            else {
+                ErrorHandler.shared.warning("Missing required fields in server profile dictionary")
+                return false
+            }
+
+            profile.serverHost = serverHost
+            profile.serverPort = serverPortNum.uint16Value
+            profile.method = method
 
             // Migrate password from UserDefaults to Keychain if it exists
             if let oldPassword = data["Password"] as? String {
@@ -196,14 +220,17 @@ class ServerProfile: NSObject, NSCopying {
                     // Check if password already exists in Keychain
                     if KeychainManager.shared.getPassword(forAccount: profile.uuid) == nil {
                         // Migrate from UserDefaults to Keychain
-                        NSLog("Migrating password to Keychain for server: \(profile.uuid)")
+                        ErrorHandler.shared.info(
+                            "Migrating password to Keychain for server: \(profile.uuid)",
+                            context: "ServerProfile")
                         profile.password = oldPassword
                     }
                 }
             }
 
-            if let remark = data["Remark"] {
-                profile.remark = remark as! String
+            // Safe unwrap of optional fields
+            if let remark = data["Remark"] as? String {
+                profile.remark = remark
             }
             if let plugin = data["Plugin"] as? String {
                 profile.plugin = plugin
@@ -211,21 +238,27 @@ class ServerProfile: NSObject, NSCopying {
             if let pluginOptions = data["PluginOptions"] as? String {
                 profile.pluginOptions = pluginOptions
             }
+
+            return true
         }
 
         if let id = data["Id"] as? String {
             let profile = ServerProfile(uuid: id)
-            cp(profile)
+            guard cp(profile) else {
+                return nil
+            }
             return profile
         } else {
             let profile = ServerProfile()
-            cp(profile)
+            guard cp(profile) else {
+                return nil
+            }
             return profile
         }
     }
 
-    func toDictionary() -> [String:AnyObject] {
-        var d = [String:AnyObject]()
+    func toDictionary() -> [String: AnyObject] {
+        var d = [String: AnyObject]()
         d["Id"] = uuid as AnyObject?
         d["ServerHost"] = serverHost as AnyObject?
         d["ServerPort"] = NSNumber(value: serverPort as UInt16)
@@ -240,13 +273,17 @@ class ServerProfile: NSObject, NSCopying {
     }
 
     func toJsonConfig() -> [String: AnyObject] {
-        var conf: [String: AnyObject] = ["password": password as AnyObject,
-                                         "method": method as AnyObject,]
-        
+        var conf: [String: AnyObject] = [
+            "password": password as AnyObject,
+            "method": method as AnyObject,
+        ]
+
         let defaults = UserDefaults.standard
-        conf["local_port"] = NSNumber(value: UInt16(defaults.integer(forKey: "LocalSocks5.ListenPort")) as UInt16)
+        conf["local_port"] = NSNumber(
+            value: UInt16(defaults.integer(forKey: "LocalSocks5.ListenPort")) as UInt16)
         conf["local_address"] = defaults.string(forKey: "LocalSocks5.ListenAddress") as AnyObject?
-        conf["timeout"] = NSNumber(value: UInt32(defaults.integer(forKey: "LocalSocks5.Timeout")) as UInt32)
+        conf["timeout"] = NSNumber(
+            value: UInt32(defaults.integer(forKey: "LocalSocks5.Timeout")) as UInt32)
         conf["server"] = serverHost as AnyObject
         conf["server_port"] = NSNumber(value: serverPort as UInt16)
 
@@ -259,7 +296,7 @@ class ServerProfile: NSObject, NSCopying {
 
         return conf
     }
-    
+
     func debugString() -> String {
         var buf = ""
         print("ServerHost=\(String(repeating: "*", count: serverHost.count))", to: &buf)
@@ -277,29 +314,32 @@ class ServerProfile: NSObject, NSCopying {
             var sin = sockaddr_in()
             var sin6 = sockaddr_in6()
 
-            if ipToValidate.withCString({ cstring in inet_pton(AF_INET6, cstring, &sin6.sin6_addr) }) == 1 {
+            if ipToValidate.withCString({ cstring in inet_pton(AF_INET6, cstring, &sin6.sin6_addr) }
+            ) == 1 {
                 // IPv6 peer.
                 return true
-            }
-            else if ipToValidate.withCString({ cstring in inet_pton(AF_INET, cstring, &sin.sin_addr) }) == 1 {
+            } else if ipToValidate.withCString({ cstring in
+                inet_pton(AF_INET, cstring, &sin.sin_addr)
+            }) == 1 {
                 // IPv4 peer.
                 return true
             }
 
-            return false;
+            return false
         }
 
         func validateDomainName(_ value: String) -> Bool {
-            let validHostnameRegex = "^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\\-]*[a-zA-Z0-9])\\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\\-]*[A-Za-z0-9])$"
+            let validHostnameRegex =
+                "^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\\-]*[a-zA-Z0-9])\\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\\-]*[A-Za-z0-9])$"
 
-            if (value.range(of: validHostnameRegex, options: .regularExpression) != nil) {
+            if value.range(of: validHostnameRegex, options: .regularExpression) != nil {
                 return true
             } else {
                 return false
             }
         }
 
-        if !(validateIpAddress(serverHost) || validateDomainName(serverHost)){
+        if !(validateIpAddress(serverHost) || validateDomainName(serverHost)) {
             return false
         }
 
@@ -335,7 +375,7 @@ class ServerProfile: NSObject, NSCopying {
 
     func URL(legacy: Bool = false) -> URL? {
         // If you want the URL from <= 1.5.1
-        if (legacy) {
+        if legacy {
             return self.makeLegacyURL()
         }
 
@@ -364,7 +404,7 @@ class ServerProfile: NSObject, NSCopying {
 
         return url
     }
-    
+
     func title() -> String {
         if remark.isEmpty {
             return "\(serverHost):\(serverPort)"

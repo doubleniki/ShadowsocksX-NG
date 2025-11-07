@@ -8,6 +8,7 @@
 
 #import "ProxyConfHelper.h"
 #import "proxy_conf_helper_version.h"
+#import <os/log.h>
 
 #define kShadowsocksHelper @"/Library/Application Support/ShadowsocksX-NG/proxy_conf_helper"
 
@@ -19,26 +20,26 @@ GCDWebServer *webServer = nil;
     NSTask *task;
     task = [[NSTask alloc] init];
     [task setLaunchPath:kShadowsocksHelper];
-    
+
     NSArray *args;
     args = [NSArray arrayWithObjects:@"-v", nil];
     [task setArguments: args];
-    
+
     NSPipe *pipe;
     pipe = [NSPipe pipe];
     [task setStandardOutput:pipe];
-    
+
     NSFileHandle *fd;
     fd = [pipe fileHandleForReading];
-    
+
     [task launch];
-    
+
     NSData *data;
     data = [fd readDataToEndOfFile];
-    
+
     NSString *str;
     str = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-    
+
     if (![str isGreaterThanOrEqualTo: kProxyConfHelperVersion]) {
         return NO;
     }
@@ -49,14 +50,14 @@ GCDWebServer *webServer = nil;
     NSFileManager *fileManager = [NSFileManager defaultManager];
     if (![fileManager fileExistsAtPath:kShadowsocksHelper] || ![self isVersionOk]) {
         NSString *helperPath = [NSString stringWithFormat:@"%@/%@", [[NSBundle mainBundle] resourcePath], @"install_helper.sh"];
-        NSLog(@"run install script: %@", helperPath);
+        os_log_info(OS_LOG_DEFAULT, "run install script: %{public}@", helperPath);
         NSDictionary *error;
         NSString *script = [NSString stringWithFormat:@"do shell script \"/bin/bash \\\"%@\\\"\" with administrator privileges", helperPath];
         NSAppleScript *appleScript = [[NSAppleScript new] initWithSource:script];
         if ([appleScript executeAndReturnError:&error]) {
-            NSLog(@"installation success");
+            os_log_info(OS_LOG_DEFAULT, "installation success");
         } else {
-            NSLog(@"installation failure: %@", error);
+            os_log(OS_LOG_DEFAULT, "installation failure: %{public}@", error);
         }
     }
 }
@@ -67,7 +68,7 @@ GCDWebServer *webServer = nil;
     [task setLaunchPath:kShadowsocksHelper];
 
     // this log is very important
-    NSLog(@"run shadowsocks helper: %@", kShadowsocksHelper);
+    os_log_info(OS_LOG_DEFAULT, "run shadowsocks helper: %{public}@", kShadowsocksHelper);
     [task setArguments:arguments];
 
     NSPipe *stdoutpipe;
@@ -89,20 +90,20 @@ GCDWebServer *webServer = nil;
     NSString *string;
     string = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
     if (string.length > 0) {
-        NSLog(@"%@", string);
+        os_log_info(OS_LOG_DEFAULT, "%{public}@", string);
     }
 
     file = [stderrpipe fileHandleForReading];
     data = [file readDataToEndOfFile];
     string = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
     if (string.length > 0) {
-        NSLog(@"%@", string);
+        os_log(OS_LOG_DEFAULT, "%{public}@", string);
     }
 }
 
 + (void)addArguments4ManualSpecifyNetworkServices:(NSMutableArray*) args {
     NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
-    
+
     if (![defaults boolForKey:@"AutoConfigureNetworkServices"]) {
         NSArray* serviceKeys = [defaults arrayForKey:@"Proxy4NetworkServices"];
         if (serviceKeys) {
@@ -142,11 +143,11 @@ GCDWebServer *webServer = nil;
     //next two lines can open gcdwebserver and work around pac file
     NSString* PACFilePath = [self getPACFilePath];
     [self startPACServer: PACFilePath];
-    
+
     NSURL* url = [NSURL URLWithString: [self getHttpPACUrl]];
-    
+
     NSMutableArray* args = [@[@"--mode", @"auto", @"--pac-url", [url absoluteString]]mutableCopy];
-    
+
     [self addArguments4ManualSpecifyNetworkServices:args];
     [self addArguments4ManualSpecifyProxyExceptions:args];
     [self callHelper:args];
@@ -155,10 +156,10 @@ GCDWebServer *webServer = nil;
 + (void)enableGlobalProxy {
     NSString* socks5ListenAddress = [[NSUserDefaults standardUserDefaults]stringForKey:@"LocalSocks5.ListenAddress"];
     NSUInteger port = [[NSUserDefaults standardUserDefaults]integerForKey:@"LocalSocks5.ListenPort"];
-    
+
     NSMutableArray* args = [@[@"--mode", @"global", @"--port"
                               , [NSString stringWithFormat:@"%lu", (unsigned long)port],@"--socks-listen-address",socks5ListenAddress]mutableCopy];
-    
+
     // Known issue #106 https://github.com/shadowsocks/ShadowsocksX-NG/issues/106
     if ([[NSUserDefaults standardUserDefaults] boolForKey:@"LocalHTTPOn"] && [[NSUserDefaults standardUserDefaults] boolForKey:@"LocalHTTP.FollowGlobal"]) {
         NSUInteger privoxyPort = [[NSUserDefaults standardUserDefaults]integerForKey:@"LocalHTTP.ListenPort"];
@@ -168,7 +169,7 @@ GCDWebServer *webServer = nil;
         [args addObject:@"--privoxy-listen-address"];
         [args addObject:privoxyListenAddress];
     }
-    
+
     [self addArguments4ManualSpecifyNetworkServices:args];
     [self addArguments4ManualSpecifyProxyExceptions:args];
     [self callHelper:args];
@@ -180,7 +181,7 @@ GCDWebServer *webServer = nil;
     NSURL* url = [NSURL URLWithString: [self getHttpPACUrl]];
     NSString* socks5ListenAddress = [[NSUserDefaults standardUserDefaults]stringForKey:@"LocalSocks5.ListenAddress"];
     NSUInteger port = [[NSUserDefaults standardUserDefaults]integerForKey:@"LocalSocks5.ListenPort"];
-    
+
     NSMutableArray* args = [@[@"--mode", @"off"
                               , @"--pac-url", [url absoluteString]
                               , @"--port", [NSString stringWithFormat:@"%lu", (unsigned long)port]
@@ -205,30 +206,30 @@ GCDWebServer *webServer = nil;
 
 + (NSString*)getHttpPACUrl {
     NSString * routerPath = @"/proxy.pac";
-    
+
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
 
     NSString * address = @"localhost";
     int port = (short)[defaults integerForKey:@"PacServer.ListenPort"];
-    
+
     return [NSString stringWithFormat:@"%@%@:%d%@",@"http://",address,port,routerPath];
 }
 
 + (NSString*)getExternalPACUrl {
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    
+
     return [defaults stringForKey:@"ExternalPACURL"];
 }
 
 + (void)startPACServer:(NSString*) PACFilePath {
     [self stopPACServer];
-    
+
     NSString * routerPath = @"/proxy.pac";
-    
+
     NSData* originalPACData = [NSData dataWithContentsOfFile:PACFilePath];
-    
+
     webServer = [[GCDWebServer alloc] init];
-    
+
 
     [webServer addHandlerForMethod:@"GET"
                               path:routerPath
@@ -240,12 +241,12 @@ GCDWebServer *webServer = nil;
         return resp;
     }
      ];
-    
+
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    
+
     BOOL bindToLocalhost = [defaults boolForKey:@"PacServer.BindToLocalhost"];
     int port = (short)[defaults integerForKey:@"PacServer.ListenPort"];
-    
+
     [webServer startWithOptions:@{
         GCDWebServerOption_BindToLocalhost: @(bindToLocalhost),
         GCDWebServerOption_Port: @(port)
@@ -274,7 +275,7 @@ GCDWebServer *webServer = nil;
                                           {
                                               dispatch_source_cancel(source);
                                           }
-                                          
+
                                           // The PAC file was written by atomically (PACUtils.swift:134)
                                           // That means DISPATCH_VNODE_DELETE event always be trigged
                                           // Need to be run the following statements in any events
@@ -286,7 +287,7 @@ GCDWebServer *webServer = nil;
                                               }
                                           }
                                       });
-    dispatch_source_set_cancel_handler(source, ^(void) 
+    dispatch_source_set_cancel_handler(source, ^(void)
                                        {
                                            close(fileId);
                                        });

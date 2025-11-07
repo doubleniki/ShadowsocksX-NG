@@ -12,26 +12,26 @@ class ShareServerProfilesWindowController: NSWindowController
     , NSTableViewDataSource, NSTableViewDelegate {
 
     @IBOutlet weak var profilesTableView: NSTableView!
-    
+
     @IBOutlet weak var qrCodeImageView: NSImageView!
-    
+
     @IBOutlet weak var copyAllServerURLsButton: NSButton!
     @IBOutlet weak var saveAllServerURLsAsFileButton: NSButton!
-    
+
     @IBOutlet weak var copyURLButton: NSButton!
     @IBOutlet weak var copyQRCodeButton: NSButton!
     @IBOutlet weak var saveQRCodeAsFileButton: NSButton!
-    
+
     var defaults: UserDefaults!
     var profileMgr: ServerProfileManager!
 
     override func windowDidLoad() {
         super.windowDidLoad()
-        
+
         defaults = UserDefaults.standard
         profileMgr = ServerProfileManager.instance
         profilesTableView.reloadData()
-        
+
         if !profileMgr.profiles.isEmpty {
             let index = IndexSet(integer: 0)
             profilesTableView.selectRowIndexes(index, byExtendingSelection: false)
@@ -43,32 +43,32 @@ class ShareServerProfilesWindowController: NSWindowController
             saveQRCodeAsFileButton.isEnabled = false
         }
     }
-    
+
     @IBAction func copyURL(_ sender: NSButton) {
         let profile = getSelectedProfile()
         if profile.isValid(), let url = profile.URL() {
             let pb = NSPasteboard.general
             pb.clearContents()
             if pb.writeObjects([url.absoluteString as NSPasteboardWriting]) {
-                NSLog("Copy URL to clipboard")
+                ErrorHandler.shared.debug("Copy URL to clipboard", context: "ShareProfiles")
             } else {
-                NSLog("Failed to copy URL to clipboard")
+                ErrorHandler.shared.warning("Failed to copy URL to clipboard", context: "ShareProfiles")
             }
         }
     }
-    
+
     @IBAction func copyQRCode(_ sender: NSButton) {
         if let img = qrCodeImageView.image {
             let pb = NSPasteboard.general
             pb.clearContents()
             if pb.writeObjects([img as NSPasteboardWriting]) {
-                NSLog("Copy QRCode to clipboard")
+                ErrorHandler.shared.debug("Copy QRCode to clipboard", context: "ShareProfiles")
             } else {
-                NSLog("Failed to copy QRCode to clipboard")
+                ErrorHandler.shared.warning("Failed to copy QRCode to clipboard", context: "ShareProfiles")
             }
         }
     }
-    
+
     @IBAction func saveQRCodeAsFile(_ sender: NSButton) {
         if let img = qrCodeImageView.image {
             let savePanel = NSSavePanel()
@@ -76,34 +76,47 @@ class ShareServerProfilesWindowController: NSWindowController
             savePanel.canCreateDirectories = true
             savePanel.allowedFileTypes = ["gif"]
             savePanel.isExtensionHidden = false
-            
+
             let profile = getSelectedProfile()
             if profile.remark.isEmpty {
                 savePanel.nameFieldStringValue = "shadowsocks_qrcode.gif"
             } else {
                 savePanel.nameFieldStringValue = "shadowsocks_qrcode_\(profile.remark).gif"
             }
-            
+
             savePanel.becomeKey()
             let result = savePanel.runModal()
             if (result.rawValue == NSFileHandlingPanelOKButton && (savePanel.url) != nil) {
-                let imgRep = NSBitmapImageRep(data: img.tiffRepresentation!)
-                let data = imgRep?.representation(using: NSBitmapImageRep.FileType.gif, properties: [:])
-                try! data?.write(to: savePanel.url!)
+                guard let tiffData = img.tiffRepresentation,
+                      let imgRep = NSBitmapImageRep(data: tiffData),
+                      let data = imgRep.representation(using: NSBitmapImageRep.FileType.gif, properties: [:]),
+                      let url = savePanel.url else {
+                    ErrorHandler.shared.warning("Failed to prepare QR code image for saving")
+                    return
+                }
+                do {
+                    try data.write(to: url)
+                } catch {
+                    ErrorHandler.shared.handle(
+                        FileSystemError.writeFailed(path: url.path, error: error),
+                        context: "Save QR Code",
+                        showAlert: true
+                    )
+                }
             }
         }
     }
-    
+
     @IBAction func copyAllServerURLs(_ sender: NSButton) {
         let pb = NSPasteboard.general
         pb.clearContents()
         if pb.writeObjects([getAllServerURLs() as NSPasteboardWriting]) {
-            NSLog("Copy all server URLs to clipboard")
+            ErrorHandler.shared.debug("Copy all server URLs to clipboard", context: "ShareProfiles")
         } else {
-            NSLog("Failed to all server URLs to clipboard")
+            ErrorHandler.shared.warning("Failed to all server URLs to clipboard", context: "ShareProfiles")
         }
     }
-    
+
     @IBAction func saveAllServerURLsAsFile(_ sender: NSButton) {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyyMMdd"
@@ -117,26 +130,38 @@ class ShareServerProfilesWindowController: NSWindowController
         savePanel.nameFieldStringValue = "shadowsocks_profiles_\(date_string).txt"
         savePanel.becomeKey()
         let result = savePanel.runModal()
-        if (result.rawValue == NSFileHandlingPanelOKButton && (savePanel.url) != nil) {
+        if (result.rawValue == NSFileHandlingPanelOKButton) {
+            guard let url = savePanel.url else {
+                ErrorHandler.shared.warning("No URL selected for saving")
+                return
+            }
             let urls = getAllServerURLs()
-            try! urls.write(to: (savePanel.url)!, atomically: true, encoding: String.Encoding.utf8)
+            do {
+                try urls.write(to: url, atomically: true, encoding: String.Encoding.utf8)
+            } catch {
+                ErrorHandler.shared.handle(
+                    FileSystemError.writeFailed(path: url.path, error: error),
+                    context: "Export Server URLs",
+                    showAlert: true
+                )
+            }
         }
     }
-    
+
     func getAllServerURLs() -> String {
         let urls = profileMgr.profiles.filter({ (profile) -> Bool in
             return profile.isValid()
-        }).map { (profile) -> String in
-            return profile.URL()!.absoluteString
+        }).compactMap { (profile) -> String? in
+            return profile.URL()?.absoluteString
         }
         return urls.joined(separator: "\n")
     }
-    
+
     func getSelectedProfile() -> ServerProfile {
         let i = profilesTableView.selectedRow
         return profileMgr.profiles[i]
     }
-    
+
     func getDataAtRow(_ index:Int) -> String {
         let profile = profileMgr.profiles[index]
         if !profile.remark.isEmpty {
@@ -145,20 +170,20 @@ class ShareServerProfilesWindowController: NSWindowController
             return profile.serverHost
         }
     }
-    
+
     //--------------------------------------------------
     // For NSTableViewDataSource
-    
+
     func numberOfRows(in tableView: NSTableView) -> Int {
         if let mgr = profileMgr {
             return mgr.profiles.count
         }
         return 0
     }
-    
+
     //--------------------------------------------------
     // For NSTableViewDelegate
-    
+
     func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView? {
         let colId = NSUserInterfaceItemIdentifier(rawValue: "cellTitle")
         if let cell = tableView.makeView(withIdentifier: colId, owner: self) as? NSTableCellView {
@@ -167,14 +192,14 @@ class ShareServerProfilesWindowController: NSWindowController
         }
         return nil
     }
-    
+
     func tableViewSelectionDidChange(_ notification: Notification) {
         if profilesTableView.selectedRow >= 0 {
             let profile = getSelectedProfile()
             if profile.isValid(), let url = profile.URL() {
                 let img = createQRImage(url.absoluteString, NSMakeSize(250, 250))
                 qrCodeImageView.image = img
-                
+
                 copyURLButton.isEnabled = true
                 copyQRCodeButton.isEnabled = true
                 saveQRCodeAsFileButton.isEnabled = true
@@ -182,7 +207,7 @@ class ShareServerProfilesWindowController: NSWindowController
             }
         }
         qrCodeImageView.image = nil
-            
+
         copyURLButton.isEnabled = false
         copyQRCodeButton.isEnabled = false
         saveQRCodeAsFileButton.isEnabled = false

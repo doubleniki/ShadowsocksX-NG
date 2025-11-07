@@ -8,6 +8,8 @@
  * SHARED STRINGS
  */
 
+"OK" = "OK";
+
 /*
  * ./ShadowsocksX-NG/UserRulesController.swift
  */
@@ -82,3 +84,18 @@
 
 "New Server" = "New Server";
 
+/*
+ * ./ShadowsocksX-NG/PreferencesWinController.swift
+ */
+
+"Are you sure you want to reset the preferences to defaults?" = "Are you sure you want to reset the preferences to defaults?";
+
+"All your changes of preferences will be lost." = "All your changes of preferences will be lost.";
+
+"Failed to Reset Preferences" = "Failed to Reset Preferences";
+
+"Unable to reset preferences due to a system error. Please try restarting the application." = "Unable to reset preferences due to a system error. Please try restarting the application.";
+
+"Preferences Reset Successfully" = "Preferences Reset Successfully";
+
+"Your preferences have been reset to defaults. Server profiles have been preserved." = "Your preferences have been reset to defaults. Server profiles have been preserved.";

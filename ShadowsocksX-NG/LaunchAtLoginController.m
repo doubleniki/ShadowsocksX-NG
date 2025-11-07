@@ -24,6 +24,7 @@
 
 #import "LaunchAtLoginController.h"
 #import <ServiceManagement/SMLoginItem.h>
+#import <os/log.h>
 
 //static NSString *const StartAtLoginKey = @"launchAtLogin";
 
@@ -50,7 +51,7 @@
     }
     return self;
 }
-    
+
 - (void) dealloc
 {
 }
@@ -67,17 +68,17 @@
 - (void) setLaunchAtLogin: (BOOL) enabled
 {
     static NSString* bundleID = @"com.qiuyuzhou.ShadowsocksX-NG.LaunchHelper";
-    
+
     if (SMLoginItemSetEnabled(
                               (__bridge CFStringRef)bundleID
                               , enabled)) {
         _enabled = enabled;
         NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
         [defaults setBool: enabled forKey: @"LaunchAtLogin"];
-        
-        NSLog(@"Call SMLoginItemSetEnabled with [%hhd] success", enabled);
+
+        os_log_info(OS_LOG_DEFAULT, "Call SMLoginItemSetEnabled with [%hhd] success", enabled);
     } else {
-        NSLog(@"Call SMLoginItemSetEnabled with [%hhd] failed", enabled);
+        os_log(OS_LOG_DEFAULT, "Call SMLoginItemSetEnabled with [%hhd] failed", enabled);
     }
 }
 

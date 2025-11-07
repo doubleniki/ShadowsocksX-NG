@@ -6,6 +6,8 @@
  * SHARED STRINGS
  */
 
+"OK" = "确定";
+
 /*
  * ./PACUtils.swift
  */
@@ -82,4 +84,18 @@
 
 "New Server" = "新建服务器";
 
+/*
+ * ./ShadowsocksX-NG/PreferencesWinController.swift
+ */
 
+"Are you sure you want to reset the preferences to defaults?" = "确定要将偏好设置重置为默认值吗？";
+
+"All your changes of preferences will be lost." = "您的所有偏好设置更改将丢失。";
+
+"Failed to Reset Preferences" = "重置偏好设置失败";
+
+"Unable to reset preferences due to a system error. Please try restarting the application." = "由于系统错误无法重置偏好设置。请尝试重启应用程序。";
+
+"Preferences Reset Successfully" = "偏好设置重置成功";
+
+"Your preferences have been reset to defaults. Server profiles have been preserved." = "您的偏好设置已重置为默认值。服务器配置已保留。";
