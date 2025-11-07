@@ -334,7 +334,7 @@ extension OSVersion {
 
 ### Хорошие commit messages
 
-```
+```text
 refactor: migrate version checks to OSVersion utility
 
 - Replace #available checks with OSVersion.isVenturaOrLater
@@ -344,7 +344,7 @@ refactor: migrate version checks to OSVersion utility
 Files changed: AppDelegate.swift, PreferencesController.swift
 ```
 
-```
+```text
 refactor: use OSVersion helpers for UI components
 
 - Replace manual table view setup with OSVersion.createModernTableView()

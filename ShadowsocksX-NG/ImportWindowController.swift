@@ -18,7 +18,7 @@ class ImportWindowController: NSWindowController {
 
         let pb = NSPasteboard.general
 
-        // Check for URL type (always available on macOS 11.0+)
+        // Check for URL type (version check removed as minimum deployment is macOS 11.0)
         if let text = pb.string(forType: NSPasteboard.PasteboardType.URL) {
             if let url = URL(string: text) {
                 if url.scheme == "ss" {

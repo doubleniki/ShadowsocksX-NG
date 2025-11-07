@@ -23,7 +23,7 @@
 
 ```bash
 # В терминале
-cd /Users/doubleniki/Repo/Personal/ShadowsocksX-NG
+cd "$(git rev-parse --show-toplevel)"
 
 # Компиляция
 xcodebuild -workspace ShadowsocksX-NG.xcworkspace \

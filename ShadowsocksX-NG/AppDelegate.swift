@@ -405,7 +405,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
     @IBAction func importProfileURLFromPasteboard(_ sender: NSMenuItem) {
         let pb = NSPasteboard.general
 
-        // Check for URL type (always available on macOS 11.0+)
+        // Check for URL type (version check removed as minimum deployment is macOS 11.0)
         if let text = pb.string(forType: NSPasteboard.PasteboardType.URL) {
             if let url = URL(string: text) {
                 NotificationCenter.default.post(

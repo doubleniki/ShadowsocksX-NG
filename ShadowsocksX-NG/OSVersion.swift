@@ -230,19 +230,30 @@ extension OSVersion {
 // MARK: - Property Wrapper для версионных фич
 
 /// Property wrapper для ленивой инициализации версионно-зависимых фич
+/// Использует reference semantics (class) для поддержки кэширования в классах
+///
+/// Пример использования:
+/// ```swift
+/// class MyViewController: NSViewController {
+///     @VersionDependent(
+///         minimumVersion: .ventura,
+///         builder: { "Modern Feature" },
+///         fallback: "Legacy Feature"
+///     )
+///     var featureString: String
+/// }
+/// ```
 @propertyWrapper
-struct VersionDependent<T> {
+final class VersionDependent<T> {
   private let builder: () -> T?
   private let fallback: T
   private var cached: T?
 
   var wrappedValue: T {
-    mutating get {
-      if cached == nil {
-        cached = builder() ?? fallback
-      }
-      return cached!
+    if cached == nil {
+      cached = builder() ?? fallback
     }
+    return cached ?? fallback
   }
 
   init(minimumVersion: OSVersion.MinimumVersion, builder: @escaping () -> T, fallback: T) {
