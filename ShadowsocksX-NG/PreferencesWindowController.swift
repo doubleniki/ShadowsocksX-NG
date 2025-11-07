@@ -193,7 +193,9 @@ class PreferencesWindowController: NSWindowController, NSTableViewDataSource, NS
                 at: index, withAnimation: NSTableView.AnimationOptions.effectFade)
             profilesTableView.endUpdates()
 
-            // Collect indices for final selection
+            // Adjust previously collected indices that were shifted by this insertion
+            // When inserting at insertIndex, all indices >= insertIndex shift up by 1
+            newSelectionIndices = IndexSet(newSelectionIndices.map { $0 >= insertIndex ? $0 + 1 : $0 })
             newSelectionIndices.insert(insertIndex)
         }
 
