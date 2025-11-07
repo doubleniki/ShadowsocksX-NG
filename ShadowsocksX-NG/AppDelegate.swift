@@ -112,7 +112,38 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
         installKcptun()
         installV2rayPlugin()
 
-        // Prepare defaults
+        registerDefaultSettings()
+        setupStatusBarItem()
+        setupNotificationObservers()
+
+        // Handle ss url scheme
+        NSAppleEventManager.shared().setEventHandler(
+            self, andSelector: #selector(self.handleURLEvent),
+            forEventClass: AEEventClass(kInternetEventClass), andEventID: AEEventID(kAEGetURL))
+
+        updateMainMenu()
+        updateCopyHttpProxyExportMenu()
+        updateServersMenu()
+        updateRunningModeMenu()
+
+        ProxyConfHelper.install()
+        ProxyConfHelper.startMonitorPAC()
+        applyConfig()
+
+        // Register global hotkey
+        ShortcutsController.bindShortcuts()
+    }
+
+    func applicationWillTerminate(_ aNotification: Notification) {
+        // Insert code here to tear down your application
+        stopSSLocal()
+        stopPrivoxy()
+        ProxyConfHelper.disableProxy()
+    }
+
+    // MARK: - Setup Methods
+
+    private func registerDefaultSettings() {
         let defaults = UserDefaults.standard
         defaults.register(defaults: [
             "ShadowsocksOn": true,
@@ -138,7 +169,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
             "EnableSwitchMode.Manual": false,
             "EnableSwitchMode.ExternalPAC": false,
         ])
+    }
 
+    private func setupStatusBarItem() {
         statusItem = NSStatusBar.system.statusItem(withLength: AppDelegate.StatusItemIconWidth)
         guard let image = NSImage(named: "menu_icon") else {
             ErrorHandler.shared.warning("menu_icon image not found")
@@ -147,7 +180,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
         image.isTemplate = true
         statusItem.image = image
         statusItem.menu = statusMenu
+    }
 
+    private func setupNotificationObservers() {
         let notifyCenter = NotificationCenter.default
 
         _ = notifyCenter.rx.notification(NOTIFY_CONF_CHANGED)
@@ -172,92 +207,80 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
                 syncSSLocal()
             }
         )
+
         _ = notifyCenter.rx.notification(NOTIFY_TOGGLE_RUNNING_SHORTCUT)
             .subscribe(onNext: { noti in
                 self.doToggleRunning(showToast: true)
             })
+
         _ = notifyCenter.rx.notification(NOTIFY_SWITCH_PROXY_MODE_SHORTCUT)
             .subscribe(onNext: { noti in
-                guard let mode = defaults.string(forKey: "ShadowsocksRunningMode") else {
-                    return
-                }
-
-                var enabledModeList: [String] = []
-                if defaults.bool(forKey: "EnableSwitchMode.PAC") {
-                    enabledModeList.append("auto")
-                }
-                if defaults.bool(forKey: "EnableSwitchMode.Global") {
-                    enabledModeList.append("global")
-                }
-                if defaults.bool(forKey: "EnableSwitchMode.Manual") {
-                    enabledModeList.append("manual")
-                }
-                if defaults.bool(forKey: "EnableSwitchMode.ExternalPAC")
-                    && self.externalPACModeMenuItem.isEnabled
-                {
-                    enabledModeList.append("externalPAC")
-                }
-
-                if enabledModeList.isEmpty {
-                    return
-                }
-
-                var nextMode = ""
-                if enabledModeList.contains(mode),
-                    let i = enabledModeList.firstIndex(of: mode)
-                {
-                    if i + 1 == enabledModeList.count {
-                        nextMode = enabledModeList[0]
-                    } else {
-                        nextMode = enabledModeList[i + 1]
-                    }
-                } else {
-                    nextMode = enabledModeList[0]
-                }
-
-                defaults.setValue(nextMode, forKey: "ShadowsocksRunningMode")
-
-                self.updateRunningModeMenu()
-                self.applyConfig()
-
-                // Show toast message
-                let toastMessages = [
-                    "auto": "Auto Mode By PAC".localized,
-                    "global": "Global Mode".localized,
-                    "manual": "Manual Mode".localized,
-                    "externalPAC": "Auto Mode By External PAC".localized,
-                ]
-                self.makeToast(toastMessages[nextMode]!)
+                self.handleSwitchProxyModeShortcut()
             })
 
         _ = notifyCenter.rx.notification(NOTIFY_FOUND_SS_URL)
             .subscribe(onNext: { noti in
                 self.handleFoundSSURL(noti)
             })
-
-        // Handle ss url scheme
-        NSAppleEventManager.shared().setEventHandler(
-            self, andSelector: #selector(self.handleURLEvent),
-            forEventClass: AEEventClass(kInternetEventClass), andEventID: AEEventID(kAEGetURL))
-
-        updateMainMenu()
-        updateCopyHttpProxyExportMenu()
-        updateServersMenu()
-        updateRunningModeMenu()
-
-        ProxyConfHelper.install()
-        ProxyConfHelper.startMonitorPAC()
-        applyConfig()
-
-        // Register global hotkey
-        ShortcutsController.bindShortcuts()
     }
 
-    func applicationWillTerminate(_ aNotification: Notification) {
-        // Insert code here to tear down your application
-        stopSSLocal()
-        stopPrivoxy()
-        ProxyConfHelper.disableProxy()
+    private func handleSwitchProxyModeShortcut() {
+        let defaults = UserDefaults.standard
+        guard let mode = defaults.string(forKey: "ShadowsocksRunningMode") else {
+            return
+        }
+
+        var enabledModeList: [String] = []
+        if defaults.bool(forKey: "EnableSwitchMode.PAC") {
+            enabledModeList.append("auto")
+        }
+        if defaults.bool(forKey: "EnableSwitchMode.Global") {
+            enabledModeList.append("global")
+        }
+        if defaults.bool(forKey: "EnableSwitchMode.Manual") {
+            enabledModeList.append("manual")
+        }
+        if defaults.bool(forKey: "EnableSwitchMode.ExternalPAC")
+            && self.externalPACModeMenuItem.isEnabled
+        {
+            enabledModeList.append("externalPAC")
+        }
+
+        if enabledModeList.isEmpty {
+            return
+        }
+
+        var nextMode = ""
+        if enabledModeList.contains(mode),
+            let i = enabledModeList.firstIndex(of: mode)
+        {
+            if i + 1 == enabledModeList.count {
+                nextMode = enabledModeList[0]
+            } else {
+                nextMode = enabledModeList[i + 1]
+            }
+        } else {
+            nextMode = enabledModeList[0]
+        }
+
+        defaults.setValue(nextMode, forKey: "ShadowsocksRunningMode")
+
+        self.updateRunningModeMenu()
+        self.applyConfig()
+
+        // Show toast message
+        let toastMessages = [
+            "auto": "Auto Mode By PAC".localized,
+            "global": "Global Mode".localized,
+            "manual": "Manual Mode".localized,
+            "externalPAC": "Auto Mode By External PAC".localized,
+        ]
+        if let message = toastMessages[nextMode] {
+            self.makeToast(message)
+        } else {
+            ErrorHandler.shared.warning(
+                "Unknown mode: \(nextMode)", context: "Switch Running Mode")
+        }
     }
 
     func applyConfig() {
