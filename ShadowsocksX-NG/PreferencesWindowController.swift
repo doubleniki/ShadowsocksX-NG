@@ -7,6 +7,7 @@
 //
 
 import Cocoa
+import Foundation
 import RxCocoa
 import RxSwift
 
@@ -217,7 +218,7 @@ class PreferencesWindowController: NSWindowController, NSTableViewDataSource, NS
 
     @IBAction func openPluginFolder(_ sender: Any) {
         let folderPath = FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent(Constants.Path.appSupportDirectory)
+            .appendingPathComponent("Library/Application Support/ShadowsocksX-NG")
             .appendingPathComponent("plugins")
         NSWorkspace.shared.open(folderPath)
     }

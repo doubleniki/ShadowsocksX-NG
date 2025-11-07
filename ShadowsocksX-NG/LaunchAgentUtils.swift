@@ -604,7 +604,7 @@ func writePrivoxyConfFile() -> Bool {
         guard let templatePath = bundle.path(forResource: "privoxy.template.config", ofType: nil)
         else {
             ErrorHandler.shared.handle(
-                ResourceError.resourceNotFound(name: "privoxy.template.config", type: nil),
+                ResourceError.resourceNotFound(name: "privoxy.template.config", type: ""),
                 context: "Write Privoxy Config",
                 showAlert: true
             )
