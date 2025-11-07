@@ -144,14 +144,10 @@ class MenuBarManager {
             runningStatusMenuItem.title = "Shadowsocks: On".localized
             runningStatusMenuItem.image = NSImage(named: "NSStatusAvailable")
             toggleRunningMenuItem.title = "Turn Shadowsocks Off".localized
-            let image = NSImage(named: "menu_icon")
-            statusItem.button?.image = image
         } else {
             runningStatusMenuItem.title = "Shadowsocks: Off".localized
             toggleRunningMenuItem.title = "Turn Shadowsocks On".localized
             runningStatusMenuItem.image = NSImage(named: "NSStatusNone")
-            let image = NSImage(named: "menu_icon_disabled")
-            statusItem.button?.image = image
         }
         statusItem.button?.image?.isTemplate = true
 
