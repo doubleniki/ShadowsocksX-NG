@@ -2,10 +2,11 @@
 
 ## ShadowsocksX-NG → macOS Sequoia Design
 
-**Document Version:** 1.0
-**Created:** 2025-11-02
+**Document Version:** 2.0
+**Last Updated:** 2025-11-07
+**Current Minimum:** macOS 11.0 Big Sur
 **Target macOS:** Sequoia (15.x) and later
-**Current Architecture:** AppKit with XIB files
+**Current Architecture:** AppKit with XIB files + OSVersion utility
 **Target Architecture:** Hybrid AppKit + SwiftUI
 
 ---
@@ -57,112 +58,136 @@ This roadmap outlines a **phased approach** to modernizing ShadowsocksX-NG's use
 
 ## Backward Compatibility Overview
 
-**Current minimum:** macOS 10.12 (Sierra) - found in `MACOSX_DEPLOYMENT_TARGET`
+**Current minimum:** macOS 11.0 (Big Sur) - enforced in `MACOSX_DEPLOYMENT_TARGET = 11.0`
 
-### Gradual Migration Strategy
+### Current State (v2.0+)
 
-This roadmap employs a **conservative, gradual approach** that maintains wide compatibility while progressively adopting modern features:
+The project has **already migrated to macOS 11.0+** as the baseline:
 
-| Phase   | Minimum macOS      | What's Available               | Coverage | Rationale                   |
-| ------- | ------------------ | ------------------------------ | -------- | --------------------------- |
-| **1-2** | **10.12** Sierra   | PNG icons, basic AppKit        | ~99%     | Maintain current user base  |
-| **3**   | **10.14** Mojave   | Dark Mode API, semantic colors | ~97%     | SwiftUI integration begins  |
-| **4**   | **10.15** Catalina | SwiftUI 1.0, Combine           | ~95%     | RxSwift → Combine migration |
-| **5**   | **11.0** Big Sur   | SF Symbols, modern design      | ~93%     | Full modernization          |
+- ✅ SF Symbols support (native, no fallbacks needed)
+- ✅ Modern AppKit features (fullWidth table style, etc.)
+- ✅ SwiftUI 2.0 available
+- ✅ Combine framework available
+- ✅ OSVersion utility for feature detection
+
+### Future Migration Strategy
+
+This roadmap focuses on **further modernization** while maintaining Big Sur compatibility:
+
+| Phase   | Minimum macOS    | What's Available                  | Status         | Timeline |
+| ------- | ---------------- | --------------------------------- | -------------- | -------- |
+| **1**   | **11.0** Big Sur | SF Symbols, SwiftUI 2.0, Combine  | ✅ Complete    | Current  |
+| **2**   | **11.0** Big Sur | Component modernization           | 🚧 In Progress | Q1 2025  |
+| **3**   | **12.0+**        | Widgets, SF Symbols 3+            | 📋 Planned     | Q2 2025  |
+| **4**   | **13.0+**        | App Intents, Menu Bar Extras API  | 📋 Planned     | Q3 2025  |
+| **5**   | **14.0+**        | Advanced widgets, latest features | 📋 Planned     | Q4 2025  |
 
 ### Key Principles
 
-1. **No Breaking Changes in Phase 1-2**
+1. **Progressive Enhancement (11.0+ Baseline)**
 
-   - All features use `@available` checks with fallbacks
-   - PNG icons remain as fallbacks for SF Symbols
-   - Hardcoded colors as fallbacks for semantic colors
-   - App works identically on 10.12 and 15.x (visually different, functionally same)
+   - All modern features (SF Symbols, semantic colors, SwiftUI 2.0) available by default
+   - Use `@available` checks only for 12.0+ features
+   - OSVersion utility provides clean feature detection
+   - No need for PNG fallbacks (SF Symbols native on 11.0+)
 
-2. **Communicate Early** (Phase 3+)
+2. **Communicate Early** (Phase 3+ Version Bumps)
 
    - Announce minimum version changes 2-3 months before
    - Tag last compatible version for legacy support
    - Provide clear migration guide for users
 
-3. **Feature Detection Over Version Checks**
+3. **Feature Detection for Advanced Features**
 
    ```swift
-   // Good: Test capability
-   if #available(macOS 11.0, *) {
-       image = NSImage(systemSymbolName: "paperplane.fill")
+   // For features beyond 11.0
+   if OSVersion.isMontereyOrLater {
+       // Use SF Symbols 3+ features
+       image = NSImage(systemSymbolName: "paperplane.circle.fill")
    } else {
-       image = NSImage(named: "menu_icon")
+       // Use SF Symbols 1 (available on Big Sur)
+       image = NSImage(systemSymbolName: "paperplane.fill")
    }
-
-   // Avoid: Assuming features without check
-   // image = NSImage(systemSymbolName: "paperplane.fill") // Crashes on 10.15!
    ```
 
-4. **Graceful Degradation**
-   - Older macOS: functional but simpler visuals
-   - Newer macOS: enhanced with modern features
-   - No features completely unavailable (except Phase 5 Widgets/Shortcuts - optional)
+4. **Graceful Enhancement**
+   - Big Sur (11.0): Full functionality with modern design
+   - Monterey+ (12.0): Enhanced with newer symbol variants, widgets
+   - Ventura+ (13.0): App Intents, Shortcuts integration
+   - Optional features (Widgets, Shortcuts) degrade gracefully
 
 ### Compatibility Matrix Quick Reference
 
-| Feature    | 10.12 | 10.14 | 10.15 | 11.0+ | Fallback   |
-| ---------- | ----- | ----- | ----- | ----- | ---------- |
-| SF Symbols | ❌    | ❌    | ❌    | ✅    | PNG files  |
-| Dark Mode  | ❌    | ✅    | ✅    | ✅    | Light only |
-| SwiftUI    | ❌    | ❌    | ✅    | ✅    | XIB/AppKit |
-| Combine    | ❌    | ❌    | ✅    | ✅    | RxSwift    |
-| Vibrancy   | ⚠️    | ✅    | ✅    | ✅    | Solid BG   |
+| Feature            | 11.0 Big Sur | 12.0 Monterey | 13.0 Ventura | 14.0+ Sonoma+ |
+| ------------------ | ------------ | ------------- | ------------ | ------------- |
+| SF Symbols (v1-2)  | ✅           | ✅            | ✅           | ✅            |
+| SF Symbols 3+      | ❌           | ✅            | ✅           | ✅            |
+| SF Symbols 4+      | ❌           | ❌            | ❌           | ✅            |
+| Dark Mode          | ✅           | ✅            | ✅           | ✅            |
+| SwiftUI 2.0        | ✅           | ✅            | ✅           | ✅            |
+| SwiftUI 3.0+       | ❌           | ✅            | ✅           | ✅            |
+| Combine            | ✅           | ✅            | ✅           | ✅            |
+| Modern Table Style | ✅           | ✅            | ✅           | ✅            |
+| App Intents        | ❌           | ❌            | ✅           | ✅            |
+| Widgets            | ❌           | ❌            | ❌           | ✅            |
+| Menu Bar Extras    | ❌           | ❌            | ✅           | ✅            |
 
 **See "Important Considerations → Backward Compatibility Strategy" for detailed implementation patterns and testing strategy.**
 
 ---
 
-## Phase 1: Visual Modernization (Quick Wins)
+## Phase 1: Foundation & Tooling (Completed ✅)
 
-**Duration:** 2-3 weeks (Sprint 1-2)
-**Risk Level:** 🟢 Low
-**Dependencies:** None
-**Minimum macOS:** 10.12 (Sierra) - No breaking changes
-**Backward Compatibility:** ✅ Full - All features have fallbacks
+**Duration:** Completed
+**Status:** ✅ Infrastructure in place
+**Minimum macOS:** 11.0 (Big Sur)
+**Key Achievement:** OSVersion utility implemented
 
 ### Objectives
 
-Transform visual appearance without changing underlying architecture.
+Establish foundation for modern UI development with proper version detection.
 
-### Compatibility Note
+### Completed Work
 
-Phase 1 maintains **100% backward compatibility** with macOS 10.12+:
+✅ **OSVersion utility created:**
 
-- SF Symbols used on 11.0+, PNG icons on older systems
-- Semantic colors on 10.14+, hardcoded colors on older systems
-- Vibrancy on 10.14+, solid backgrounds on older systems
-- All functionality identical across versions
+- Centralized version detection system
+- Clean API for checking macOS versions (isMontereyOrLater, isVenturaOrLater, etc.)
+- Feature availability checks (supportsSFSymbols3, supportsWidgets, etc.)
+- Helper methods for SF Symbols and UI components
+- Documentation in `docs/ui-modernization/VERSION_DETECTION_GUIDE.md`
 
-### Tasks
+✅ **Modern baseline established:**
 
-#### 1.1. SF Symbols Migration
+- Project migrated to macOS 11.0 minimum
+- SF Symbols support available natively
+- SwiftUI 2.0 and Combine framework available
+- Modern AppKit features accessible
+
+### Next Steps (Phase 2 Preparation)
+
+#### 2.1. SF Symbols Migration (To Do)
 
 **Files to modify:**
 
 - `ShadowsocksX-NG/AppDelegate.swift`
-- `ShadowsocksX-NG/images/` (deprecate PNG icons)
+- `ShadowsocksX-NG/images/` (deprecate PNG icons after migration)
 
-**Implementation:**
+**Implementation (Big Sur baseline, no fallbacks needed):**
 
 ```swift
-// Before
+// Current (using PNG)
 let icon = NSImage(named: "menu_icon")
 
-// After (with fallback for older macOS)
-let icon: NSImage = {
-    if #available(macOS 11.0, *) {
-        return NSImage(systemSymbolName: "paperplane.fill",
+// Target (using SF Symbols - native on 11.0+)
+let icon = NSImage(systemSymbolName: "paperplane.fill",
                        accessibilityDescription: "Shadowsocks")!
-    } else {
-        return NSImage(named: "menu_icon")!
-    }
-}()
+
+// For Monterey+ enhanced symbols (optional)
+let icon = OSVersion.symbol(
+    primary: "paperplane.circle.fill",  // SF Symbols 3 (12.0+)
+    fallback: "paperplane.fill"         // SF Symbols 1 (11.0+)
+)
 ```
 
 **Icon Mapping:**
@@ -185,7 +210,7 @@ let icon: NSImage = {
 - 📦 Reduced app bundle size (~200KB savings)
 - ⚡ Better performance (vector vs raster)
 
-#### 1.2. Semantic Colors
+#### 2.2. Semantic Colors Migration (To Do)
 
 **Files to modify:**
 
@@ -200,15 +225,11 @@ let icon: NSImage = {
 import Cocoa
 
 extension NSColor {
-    // Background colors
+    // Background colors (all available on 11.0+)
     static var appBackground: NSColor { .controlBackgroundColor }
     static var appSecondaryBackground: NSColor { .textBackgroundColor }
     static var appToastBackground: NSColor {
-        if #available(macOS 10.14, *) {
-            return .controlBackgroundColor.withAlphaComponent(0.95)
-        } else {
-            return NSColor(white: 0.05, alpha: 0.75)
-        }
+        .controlBackgroundColor.withAlphaComponent(0.95)
     }
 
     // Text colors
@@ -314,26 +335,27 @@ extension NSFont {
 
 ---
 
-## Phase 2: Component Modernization
+## Phase 2: Visual & Component Modernization (Current Phase 🚧)
 
-**Duration:** 3-4 weeks (Sprint 3-4)
-**Risk Level:** 🟡 Medium
-**Dependencies:** Phase 1 complete
-**Minimum macOS:** 10.12 (Sierra) - No breaking changes
-**Backward Compatibility:** ✅ Full - Modern styles where available, classic fallbacks
+**Duration:** 3-4 weeks
+**Status:** 🚧 In Progress
+**Risk Level:** 🟢 Low
+**Dependencies:** Phase 1 complete ✅
+**Minimum macOS:** 11.0 (Big Sur) - No version bump
+**Target Completion:** Q1 2025
 
 ### Objectives
 
-Update UI controls to modern macOS standards while maintaining AppKit architecture.
+Migrate visual assets to SF Symbols and update UI controls to modern macOS standards.
 
-### Compatibility Note
+### Status
 
-Phase 2 maintains **full backward compatibility** with macOS 10.12+:
+**In Progress:**
 
-- Modern table styles (.fullWidth) on 11.0+, classic styles on older systems
-- Enhanced button styles on 11.0+, standard styles on older systems
-- All controls remain functional on all supported versions
-- UI appears more modern on newer macOS, but works identically on all versions
+- ✅ OSVersion utility integrated
+- 🚧 SF Symbols migration ongoing
+- 📋 Semantic colors planned
+- 📋 Component modernization planned
 
 ### Tasks
 
@@ -345,20 +367,21 @@ Phase 2 maintains **full backward compatibility** with macOS 10.12+:
 - `ShadowsocksX-NG/ShareServerProfilesWindowController.swift`
 - `ShadowsocksX-NG/ProxyInterfacesViewCtrl.swift`
 
-**Updates:**
+**Updates (native on 11.0+):**
 
 ```swift
 // Server list table (PreferencesWindowController.swift)
-tableView.style = .fullWidth // macOS 11+
+// Modern fullWidth style is available on Big Sur
+tableView.style = .fullWidth
 tableView.floatsGroupRows = false
 tableView.rowSizeStyle = .default
 tableView.intercellSpacing = NSSize(width: 0, height: 2)
 tableView.selectionHighlightStyle = .regular
 tableView.usesAutomaticRowHeights = true
 
-// Enable modern table features
-if #available(macOS 11.0, *) {
-    tableView.style = .fullWidth
+// Use OSVersion for Monterey+ enhancements (optional)
+OSVersion.onMontereyOrLater {
+    // Additional Monterey-specific refinements if needed
 }
 ```
 
@@ -495,32 +518,33 @@ item.label = "Servers"
 
 ---
 
-## Phase 3: Architecture Modernization
+## Phase 3: Advanced Features & Monterey Integration
 
-**Duration:** 4-6 weeks (Sprint 5-8)
-**Risk Level:** 🔴 High
-**Dependencies:** Phase 1 & 2 complete
-**Minimum macOS:** 10.14 (Mojave) - ⚠️ First breaking change
-**Backward Compatibility:** ⚠️ Requires 10.14+ for dark mode support
+**Duration:** 4-6 weeks
+**Status:** 📋 Planned
+**Risk Level:** 🟡 Medium
+**Dependencies:** Phase 2 complete
+**Minimum macOS:** 12.0 (Monterey) - ⚠️ Optional version bump
+**Target Completion:** Q2 2025
 
 ### Objectives
 
-Introduce SwiftUI for new features and simple windows while maintaining AppKit for complex components.
+Leverage Monterey+ features (SF Symbols 3, improved SwiftUI) while maintaining Big Sur fallbacks.
 
 ### Compatibility Note
 
-Phase 3 **raises minimum to macOS 10.14 (Mojave)**:
+Phase 3 **optionally raises minimum to macOS 12.0 (Monterey)**:
 
-- **Why:** SwiftUI works better with modern dark mode API
-- **Impact:** Drops support for 10.12-10.13 (~2-3% of users)
-- **Timeline:** Announce 2-3 months before release, tag v1.x as legacy
-- **Mitigation:** SwiftUI only for NEW features; existing XIB windows remain
-- **Fallback:** XIB-based windows still available on 10.14 if SwiftUI problematic
+- **Why:** SF Symbols 3 with richer icon set, mature SwiftUI 3.0
+- **Impact:** Drops Big Sur support (~5-10% of users if implemented)
+- **Alternative:** Keep 11.0 minimum, use OSVersion checks for Monterey features
+- **Decision:** To be made based on Phase 2 feedback and usage metrics
 
-**User migration:**
+**Recommended approach:**
 
-- Users on 10.12-10.13 can stay on v1.x (security updates for 6 months)
-- Or update macOS to 10.14+ (free, supports Macs from 2012+)
+- Keep 11.0 as minimum
+- Use OSVersion checks for Monterey+ enhancements
+- Delay minimum version bump to Phase 4 if needed
 
 ### Strategy: Hybrid Approach
 
@@ -735,39 +759,33 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
 ---
 
-## Phase 4: User Experience Enhancement
+## Phase 4: Platform Integration & Ventura Features
 
-**Duration:** 6-8 weeks (Sprint 9-12)
+**Duration:** 6-8 weeks
+**Status:** 📋 Planned
 **Risk Level:** 🟡 Medium
 **Dependencies:** Phase 3 complete
-**Minimum macOS:** 10.15 (Catalina) - ⚠️ Second breaking change (optional)
-**Backward Compatibility:** ⚠️ Prefer 10.15+ for stable SwiftUI, can stay on 10.14
+**Minimum macOS:** 13.0 (Ventura) - ⚠️ Optional version bump
+**Target Completion:** Q3 2025
 
 ### Objectives
 
-Polish interactions and add modern UX patterns.
+Add App Intents, Shortcuts, and Menu Bar Extras (Ventura+ features).
 
 ### Compatibility Note
 
-Phase 4 **optionally raises minimum to macOS 10.15 (Catalina)**:
+Phase 4 **optionally raises minimum to macOS 13.0 (Ventura)**:
 
-- **Recommended:** 10.15+ for mature SwiftUI and Combine
-- **Alternative:** Can stay on 10.14 if SwiftUI features limited
-- **Why 10.15:** SwiftUI 2.0 (in Big Sur) much better, but 1.0 workable
-- **Impact:** Drops 10.14 (~2% additional users)
-- **Decision point:** Evaluate based on Phase 3 SwiftUI experience
+- **Why:** App Intents, Shortcuts integration, Menu Bar Extras API
+- **Impact:** Drops 11.0-12.x support (~10-15% of users if implemented)
+- **Alternative:** Keep 11.0/12.0 minimum, make these features optional
+- **Decision:** Based on Phase 3 metrics and feature demand
 
-**If staying on 10.14:**
+**Recommended approach:**
 
-- Limit SwiftUI usage to simple views
-- More testing required for SwiftUI 1.0 quirks
-- AppKit animations work fine on 10.14
-
-**If moving to 10.15:**
-
-- Better SwiftUI stability
-- Combine framework available
-- Can begin RxSwift migration
+- Keep 11.0 as minimum
+- App Intents/Shortcuts available only on 13.0+ (graceful degradation)
+- Core functionality works identically on all versions
 
 ### Tasks
 
@@ -932,53 +950,56 @@ struct EmptyServerListView: View {
 
 ---
 
-## Phase 5: Platform Integration
+## Phase 5: Advanced Integration & Sonoma+ Features
 
-**Duration:** 6-8 weeks (Sprint 13-16)
-**Risk Level:** 🟡 Medium
+**Duration:** 6-8 weeks
+**Status:** 📋 Planned
+**Risk Level:** 🟢 Low (optional features only)
 **Dependencies:** Phase 4 complete
-**Minimum macOS:** 11.0 (Big Sur) - 🔴 Final breaking change
-**Backward Compatibility:** 🔴 Requires 11.0+ for SF Symbols and modern features
+**Minimum macOS:** 11.0 (Big Sur) - No version bump required
+**Target Completion:** Q4 2025
 
 ### Objectives
 
-Leverage macOS-specific features for deeper system integration.
+Add Widgets (14.0+) and other advanced integration features as optional enhancements.
 
 ### Compatibility Note
 
-Phase 5 **requires macOS 11.0 (Big Sur)** as final minimum:
+Phase 5 **maintains 11.0 minimum** with optional Sonoma+ features:
 
-- **Why:** SF Symbols essential for modern appearance, App Intents/Widgets optional
-- **Impact:** Drops 10.14-10.15 (~2-5% of users)
-- **Timeline:** This is the final version bump, stays on 11.0+ long-term
-- **Coverage:** Still covers 93%+ of active macOS users
+- **Core app:** Works fully on Big Sur 11.0+
+- **Enhanced features:** Widgets available on Sonoma 14.0+
+- **Graceful degradation:** Features unavailable on older versions simply don't appear
+- **No functionality loss:** All essential features work on 11.0+
 
 **Features by version:**
 
-- **11.0 (required):** SF Symbols, modern table styles, SwiftUI 2.0
-- **13.0+ (optional):** App Intents, Shortcuts integration
-- **14.0+ (optional):** Widgets, enhanced notifications
+- **11.0+ (baseline):** Full functionality, modern UI
+- **12.0+ (enhanced):** SF Symbols 3, better SwiftUI
+- **13.0+ (optional):** App Intents, Shortcuts
+- **14.0+ (optional):** Widgets, advanced notifications
 
-**Graceful degradation for optional features:**
+**Implementation approach:**
 
 ```swift
-// Shortcuts available on 13.0+
-if #available(macOS 13.0, *) {
-    AppShortcuts.updateShortcuts()
-} else {
-    // No shortcuts, but app works fine
-}
-
-// Widgets available on 14.0+
+// Widgets available only on 14.0+ (optional feature)
 #if canImport(WidgetKit)
-    // Build widget extension
+    if OSVersion.isSonomaOrLater {
+        // Build and register widgets
+    }
 #endif
+
+// Shortcuts available on 13.0+ (optional feature)
+OSVersion.onVenturaOrLater {
+    AppShortcuts.updateShortcuts()
+}
 ```
 
-**Long-term support:**
+**Long-term strategy:**
 
-- macOS 11.0 remains minimum for v2.x line (2+ years)
-- Eventually bump to 13.0 when 11-12 usage < 5%
+- Keep 11.0 minimum through v2.x (2+ years minimum)
+- Monitor usage metrics for future version bumps
+- Consider 13.0 minimum for v3.0 (2026+) when 11-12 usage < 5%
 
 ### Tasks
 
@@ -1263,225 +1284,237 @@ if #available(macOS 10.15, *) {
 
 #### Current State
 
-**Minimum supported version:** macOS 10.12 (Sierra, 2016)
+**Minimum supported version:** macOS 11.0 (Big Sur, 2020)
 
-- Found in `project.pbxproj`: `MACOSX_DEPLOYMENT_TARGET = 10.12`
-- This is a 9-year-old OS version with diminishing user base
+- Enforced in `project.pbxproj`: `MACOSX_DEPLOYMENT_TARGET = 11.0`
+- Enforced in `Podfile`: `platform :macos, '11.0'`
+- OSVersion utility provides centralized feature detection
 
-#### Proposed Gradual Migration Strategy
+#### Current Migration Status
 
-**Conservative Approach - Maintain Wide Compatibility:**
+**Phase 1 Complete** - Project successfully migrated to macOS 11.0 baseline:
 
-The strategy balances modernization with backward compatibility by introducing new features conditionally while maintaining core functionality on older systems.
+✅ **Completed:**
 
-| Phase         | Minimum Version  | Key Capabilities Available    | User Base Coverage\* |
-| ------------- | ---------------- | ----------------------------- | -------------------- |
-| **Phase 1-2** | 10.12 (Sierra)   | AppKit, basic dark mode       | ~98-99%              |
-| **Phase 3**   | 10.14 (Mojave)   | NSAppearance, semantic colors | ~97%                 |
-| **Phase 4**   | 10.15 (Catalina) | SwiftUI 1.0, Combine          | ~95%                 |
-| **Phase 5**   | 11.0 (Big Sur)   | SF Symbols, modern APIs       | ~93%                 |
+- MACOSX_DEPLOYMENT_TARGET updated to 11.0 across all targets
+- OSVersion utility implemented for clean feature detection
+- Documentation updated (README, BACKWARD_COMPATIBILITY.md, etc.)
+- Modern baseline established (SF Symbols, SwiftUI 2.0, Combine available)
 
-\*Based on typical Apple ecosystem metrics (2024-2025)
+#### Future Migration Strategy
 
-#### Detailed Version Analysis
+The strategy focuses on **progressive enhancement** while maintaining Big Sur compatibility:
 
-**macOS 10.12 Sierra (2016)**
+| Phase         | Minimum Version  | Key Capabilities Available       | User Base Coverage\* | Status    |
+| ------------- | ---------------- | -------------------------------- | -------------------- | --------- |
+| **Phase 1**   | 11.0 (Big Sur)   | SF Symbols, SwiftUI 2.0, Combine | ~95%+                | ✅ Complete |
+| **Phase 2**   | 11.0 (Big Sur)   | Visual & component modernization | ~95%+                | 🚧 Current |
+| **Phase 3**   | 11.0 or 12.0     | Monterey enhancements (optional) | ~90%+                | 📋 Planned |
+| **Phase 4**   | 11.0 or 13.0     | App Intents (optional)           | ~85%+                | 📋 Planned |
+| **Phase 5**   | 11.0             | Widgets on 14.0+ (optional)      | ~95%+                | 📋 Planned |
 
-- ✅ **Keep:** Core AppKit, NSStatusItem, Launch Agents
-- ❌ **Missing:** SF Symbols, SwiftUI, Combine, modern NSTableView styles
-- 🎯 **Phase 1-2 Strategy:** Use PNG icons, manual dark mode detection
+\*Based on typical Apple ecosystem metrics (2025)
 
-**macOS 10.13 High Sierra (2017)**
+#### Supported Version Analysis
 
-- ✅ **Added:** Minimal improvements over Sierra
-- 🎯 **Consideration:** Not worth making this the new minimum (few benefits)
+**macOS 11.0 Big Sur (2020) - Current Minimum ✅**
 
-**macOS 10.14 Mojave (2018)**
+- ✅ **Available:** SF Symbols 1-2, SwiftUI 2.0, Combine, modern AppKit
+- ✅ **Benefits:** Modern design baseline, all essential features
+- 🎯 **Status:** Fully supported, baseline for all development
+- 📦 **Coverage:** ~95%+ of active users
 
-- ✅ **Added:** Official Dark Mode API (`NSAppearance`), semantic colors
-- ✅ **Benefits:** Proper dark mode, better color handling
-- 🎯 **Phase 3 minimum:** This is where SwiftUI integration begins
-- ⚠️ **Migration trigger:** When SwiftUI becomes required
+**macOS 12.0 Monterey (2021) - Enhanced Features**
 
-**macOS 10.15 Catalina (2019)**
+- ✅ **Added:** SF Symbols 3+, SwiftUI 3.0, improved performance
+- 🎯 **Strategy:** Optional enhancements via OSVersion checks
+- 📦 **Coverage:** ~90%+ of active users
 
-- ✅ **Added:** SwiftUI 1.0, Combine framework, notarization required
-- ✅ **Benefits:** First SwiftUI support, Combine for reactive programming
-- 🎯 **Phase 4 minimum:** When migrating from RxSwift to Combine
-- ⚠️ **Breaking change:** 32-bit app support dropped
+**macOS 13.0 Ventura (2022) - Platform Integration**
 
-**macOS 11.0 Big Sur (2020)**
+- ✅ **Added:** App Intents, Shortcuts, Menu Bar Extras API
+- 🎯 **Strategy:** Optional features with graceful degradation
+- 📦 **Coverage:** ~85%+ of active users
 
-- ✅ **Added:** SF Symbols, modern design language, SwiftUI 2.0
-- ✅ **Benefits:** Native SF Symbols, fullWidth table style, mature SwiftUI
-- 🎯 **Phase 5 minimum:** For full modernization with App Intents
-- 🎨 **Visual refresh:** Matches modern macOS aesthetic
+**macOS 14.0 Sonoma (2023) - Advanced Features**
 
-**macOS 12.0+ (Monterey and later)**
+- ✅ **Added:** Widgets, SF Symbols 4+, interactive widgets
+- 🎯 **Strategy:** Completely optional, no functionality loss on older versions
+- 📦 **Coverage:** ~75%+ of active users
 
-- ✅ **Added:** SF Symbols 3+, App Shortcuts (13.0), Widgets (14.0)
-- 🎯 **Optional features:** Use with `@available` checks
+**macOS 15.0 Sequoia (2024+) - Latest**
 
-#### Recommended Migration Timeline
+- ✅ **Added:** Latest APIs and refinements
+- 🎯 **Strategy:** Use latest features where beneficial, always with fallbacks
+- 📦 **Coverage:** ~50%+ and growing
+
+#### Current Development Timeline
 
 ```
-Current: 10.12 → Phase 1-2 → Phase 3 → Phase 4 → Phase 5
-           |          |          |          |         |
-           |          |          |          |         └─ 11.0+ (Full modernization)
-           |          |          |          └─────────── 10.15+ (SwiftUI/Combine)
-           |          |          └────────────────────── 10.14+ (Dark Mode APIs)
-           |          └───────────────────────────────── 10.12+ (Maintain compatibility)
-           └──────────────────────────────────────────── Current baseline
+v1.x (Legacy)  →  v2.0 (11.0+)  →  v2.x (Future)
+                      ↓
+                  Phase 1 ✅
+                      ↓
+                  Phase 2 🚧
+                      ↓
+                  Phase 3-5 📋
+                      ↓
+              Full modernization
+
+11.0 Big Sur:    Baseline (current minimum)
+                 All core features available
+
+12.0+ Monterey:  Enhanced symbols, better SwiftUI
+                 Optional via OSVersion checks
+
+13.0+ Ventura:   App Intents, Shortcuts
+                 Optional features
+
+14.0+ Sonoma:    Widgets, advanced features
+                 Optional enhancements
 ```
 
-#### Implementation Patterns for Backward Compatibility
+#### Implementation Patterns for Current Baseline (11.0+)
 
-**1. Feature Detection Pattern**
+**1. Using OSVersion Utility (Recommended)**
 
 ```swift
-// Recommended approach for most features
-extension ProcessInfo {
-    static var supportsSFSymbols: Bool {
-        if #available(macOS 11.0, *) {
-            return true
-        }
-        return false
-    }
+// Check for Monterey+ features
+if OSVersion.isMontereyOrLater {
+    // Use SF Symbols 3+ features
+    image = NSImage(systemSymbolName: "paperplane.circle.fill")
+} else {
+    // Use SF Symbols 1-2 (available on Big Sur)
+    image = NSImage(systemSymbolName: "paperplane.fill")
+}
 
-    static var supportsModernDarkMode: Bool {
-        if #available(macOS 10.14, *) {
-            return true
-        }
-        return false
-    }
+// Check for Ventura+ features
+OSVersion.onVenturaOrLater {
+    // Setup App Intents
+    AppShortcuts.updateShortcuts()
+}
 
-    static var supportsSwiftUI: Bool {
-        if #available(macOS 10.15, *) {
-            return true
-        }
-        return false
-    }
+// Feature availability checks
+if OSVersion.supportsWidgets {  // Sonoma 14.0+
+    // Setup widgets
 }
 ```
 
-**2. Icon Rendering Pattern**
+**2. SF Symbols Pattern (Native on 11.0+)**
 
 ```swift
-// Icon helper with automatic fallback
-class IconProvider {
-    static func icon(named: String, fallbackPNG: String) -> NSImage {
-        if #available(macOS 11.0, *), ProcessInfo.supportsSFSymbols {
-            if let sfSymbol = NSImage(systemSymbolName: named,
-                                     accessibilityDescription: nil) {
-                return sfSymbol
-            }
-        }
-        // Fallback to PNG
-        return NSImage(named: fallbackPNG) ?? NSImage()
-    }
+// Direct SF Symbols usage (no PNG fallback needed)
+let statusBarIcon = NSImage(
+    systemSymbolName: "paperplane.fill",
+    accessibilityDescription: "Shadowsocks Status"
+)!
 
-    // Convenience methods
-    static var statusBarIcon: NSImage {
-        icon(named: "paperplane.fill", fallbackPNG: "menu_icon")
-    }
+// Using OSVersion helper for version-specific symbols
+let enhancedIcon = OSVersion.symbol(
+    primary: "paperplane.circle.fill",  // SF Symbols 3 (12.0+)
+    fallback: "paperplane.fill"         // SF Symbols 1-2 (11.0+)
+)
 
-    static var statusBarIconDisabled: NSImage {
-        icon(named: "paperplane", fallbackPNG: "menu_icon_disabled")
-    }
+// Check symbol availability
+if OSVersion.symbolAvailable("wifi.router.fill") {
+    // Use specific symbol
+} else {
+    // Use alternative symbol
 }
 
 // Usage
-statusItem.button?.image = IconProvider.statusBarIcon
+statusItem.button?.image = statusBarIcon
 ```
 
-**3. Color System with Fallbacks**
+**3. Color System (Native on 11.0+)**
 
 ```swift
 extension NSColor {
-    // Semantic colors with Sierra-compatible fallbacks
+    // All semantic colors are available on Big Sur+
     static var appBackground: NSColor {
-        if #available(macOS 10.14, *) {
-            return .controlBackgroundColor
-        } else {
-            // Manual light mode color for Sierra/High Sierra
-            return NSColor(white: 0.95, alpha: 1.0)
-        }
+        .controlBackgroundColor
     }
 
     static var appPrimaryText: NSColor {
-        if #available(macOS 10.14, *) {
-            return .labelColor
-        } else {
-            return .black
+        .labelColor
         }
+
+    static var appSecondaryText: NSColor {
+        .secondaryLabelColor
     }
 
     static var appToastBackground: NSColor {
-        if #available(macOS 10.14, *) {
-            return .controlBackgroundColor.withAlphaComponent(0.95)
-        } else {
-            // Fixed dark color for older systems
-            return NSColor(white: 0.05, alpha: 0.75)
-        }
+        .controlBackgroundColor.withAlphaComponent(0.95)
     }
 
-    // Detect dark mode on older systems
+    // Semantic colors for status
+    static var appSuccess: NSColor { .systemGreen }
+    static var appError: NSColor { .systemRed }
+    static var appWarning: NSColor { .systemOrange }
+    static var appInfo: NSColor { .systemBlue }
+
+    // Accent color
+    static var appAccent: NSColor { .controlAccentColor }
+
+    // Dark mode is always available on 11.0+
     static var isDarkMode: Bool {
-        if #available(macOS 10.14, *) {
-            return NSApp.effectiveAppearance.bestMatch(
+        NSApp.effectiveAppearance.bestMatch(
                 from: [.darkAqua, .aqua]
             ) == .darkAqua
-        } else {
-            // No dark mode on Sierra/High Sierra
-            return false
-        }
     }
 }
 ```
 
-**4. UI Component Factory Pattern**
+**4. UI Component Factory Pattern (Leveraging OSVersion)**
 
 ```swift
-// Factory for creating appropriate UI components
+// Factory for creating modern UI components
 class UIComponentFactory {
     static func createTableView() -> NSTableView {
-        let tableView = NSTableView()
-
-        if #available(macOS 11.0, *) {
-            tableView.style = .fullWidth
-        } else {
-            // Classic table style for older macOS
-            tableView.selectionHighlightStyle = .regular
-        }
-
-        return tableView
+        // Use OSVersion helper (creates modern table on 11.0+)
+        return OSVersion.createModernTableView()
     }
 
-    static func createButton(title: String,
+    static func createButton(
+        title: String,
                             action: Selector,
-                            target: Any?) -> NSButton {
+        target: Any?,
+        prominence: ButtonProminence = .standard
+    ) -> NSButton {
         let button = NSButton()
         button.title = title
         button.action = action
         button.target = target as? AnyObject
 
-        if #available(macOS 11.0, *) {
+        // Modern styles available on 11.0+
+        switch prominence {
+        case .primary:
             button.bezelStyle = .rounded
             button.controlSize = .large
-        } else {
+            button.contentTintColor = .controlAccentColor
+        case .secondary:
+            button.bezelStyle = .roundRect
+            button.controlSize = .regular
+        case .destructive:
+            button.bezelStyle = .rounded
+            button.contentTintColor = .systemRed
+        default:
             button.bezelStyle = .rounded
         }
 
         return button
     }
+
+    enum ButtonProminence {
+        case primary, secondary, destructive, standard
+    }
 }
 ```
 
-**5. SwiftUI Conditional Usage**
+**5. SwiftUI Integration (Available on 11.0+)**
 
 ```swift
-// Wrapper for optional SwiftUI features
-@available(macOS 10.15, *)
+// SwiftUI 2.0 is available on Big Sur
 class SwiftUIWindowFactory {
     static func createImportWindow() -> NSWindow {
         let hostingController = NSHostingController(
@@ -1489,34 +1522,42 @@ class SwiftUIWindowFactory {
         )
         let window = NSWindow(contentViewController: hostingController)
         window.title = "Import Server"
+        window.styleMask = [.titled, .closable, .resizable]
+        window.setContentSize(NSSize(width: 400, height: 300))
+        return window
+    }
+
+    // Use newer SwiftUI features on Monterey+
+    static func createModernWindow<Content: View>(
+        title: String,
+        content: Content
+    ) -> NSWindow {
+        let hostingController = NSHostingController(rootView: content)
+        let window = NSWindow(contentViewController: hostingController)
+        window.title = title
+
+        // Enhanced features on Monterey+
+        OSVersion.onMontereyOrLater {
+            // SwiftUI 3.0 enhancements
+            window.toolbarStyle = .unified
+        }
+
         return window
     }
 }
 
-// AppKit fallback for older versions
-class LegacyImportWindowController: NSWindowController {
-    // XIB-based implementation
-}
-
-// Usage with version check
+// Usage (SwiftUI always available on 11.0+)
 func showImportWindow() {
-    if #available(macOS 10.15, *) {
         let window = SwiftUIWindowFactory.createImportWindow()
         window.makeKeyAndOrderFront(nil)
-    } else {
-        // Use legacy XIB-based controller
-        let controller = LegacyImportWindowController()
-        controller.showWindow(nil)
-    }
 }
 ```
 
-**6. Vibrancy with Graceful Degradation**
+**6. Vibrancy and Materials (Native on 11.0+)**
 
 ```swift
 func setupWindowAppearance(_ window: NSWindow) {
-    if #available(macOS 10.14, *) {
-        // Modern vibrancy with dark mode support
+    // Vibrancy fully supported on Big Sur+
         let visualEffectView = NSVisualEffectView()
         visualEffectView.material = .hudWindow
         visualEffectView.blendingMode = .behindWindow
@@ -1525,52 +1566,54 @@ func setupWindowAppearance(_ window: NSWindow) {
         window.contentView = visualEffectView
         window.titlebarAppearsTransparent = true
         window.styleMask.insert(.fullSizeContentView)
-    } else {
-        // Solid background for Sierra/High Sierra
-        let backgroundView = NSView()
-        backgroundView.wantsLayer = true
-        backgroundView.layer?.backgroundColor = NSColor(
-            white: 0.95,
-            alpha: 1.0
-        ).cgColor
 
-        window.contentView = backgroundView
+    // Use OSVersion helper for enhanced materials
+    OSVersion.applyModernMaterial(to: window)
+
+    // Or use Monterey+ materials if available
+    OSVersion.onMontereyOrLater {
+        visualEffectView.material = .sidebar  // Better on Monterey+
     }
 }
 ```
 
-#### Feature Compatibility Matrix
+#### Feature Compatibility Matrix (Current Baseline: 11.0+)
 
-| Feature                 | 10.12 | 10.13 | 10.14 | 10.15 | 11.0+    | Fallback Strategy   |
-| ----------------------- | ----- | ----- | ----- | ----- | -------- | ------------------- |
-| **SF Symbols**          | ❌    | ❌    | ❌    | ❌    | ✅       | Keep PNG assets     |
-| **Semantic Colors**     | ❌    | ❌    | ✅    | ✅    | ✅       | Hardcoded colors    |
-| **Dark Mode API**       | ❌    | ❌    | ✅    | ✅    | ✅       | Light mode only     |
-| **SwiftUI**             | ❌    | ❌    | ❌    | ✅    | ✅       | Keep XIB/AppKit     |
-| **Combine**             | ❌    | ❌    | ❌    | ✅    | ✅       | Keep RxSwift longer |
-| **Modern Table Styles** | ❌    | ❌    | ⚠️    | ⚠️    | ✅       | Classic table style |
-| **App Intents**         | ❌    | ❌    | ❌    | ❌    | ⚠️ 13.0+ | Feature unavailable |
-| **Widgets**             | ❌    | ❌    | ❌    | ❌    | ⚠️ 14.0+ | Feature unavailable |
-| **Vibrancy Effects**    | ⚠️    | ⚠️    | ✅    | ✅    | ✅       | Solid backgrounds   |
+| Feature                 | 11.0 Big Sur | 12.0 Monterey | 13.0 Ventura | 14.0+ Sonoma+ | Enhancement Strategy    |
+| ----------------------- | ------------ | ------------- | ------------ | ------------- | ----------------------- |
+| **SF Symbols (1-2)**    | ✅           | ✅            | ✅           | ✅            | Native support          |
+| **SF Symbols 3**        | ❌           | ✅            | ✅           | ✅            | OSVersion checks        |
+| **SF Symbols 4**        | ❌           | ❌            | ❌           | ✅            | OSVersion checks        |
+| **Semantic Colors**     | ✅           | ✅            | ✅           | ✅            | Native support          |
+| **Dark Mode**           | ✅           | ✅            | ✅           | ✅            | Native support          |
+| **SwiftUI 2.0**         | ✅           | ✅            | ✅           | ✅            | Native support          |
+| **SwiftUI 3.0+**        | ❌           | ✅            | ✅           | ✅            | OSVersion checks        |
+| **Combine**             | ✅           | ✅            | ✅           | ✅            | Can replace RxSwift     |
+| **Modern Table Styles** | ✅           | ✅            | ✅           | ✅            | Native support          |
+| **App Intents**         | ❌           | ❌            | ✅           | ✅            | Optional feature        |
+| **Widgets**             | ❌           | ❌            | ❌           | ✅            | Optional feature        |
+| **Menu Bar Extras**     | ❌           | ❌            | ✅           | ✅            | Optional feature        |
+| **Vibrancy Effects**    | ✅           | ✅            | ✅           | ✅            | Native support          |
 
 **Legend:**
 
-- ✅ Fully supported
-- ⚠️ Partial support or performance concerns
-- ❌ Not available
+- ✅ Fully available - use directly
+- ❌ Not available - implement enhancement for newer versions only
 
-#### Testing Strategy for Multiple Versions
+**Key Insight:** All essential modern features are available on Big Sur 11.0+. Newer versions only add optional enhancements.
+
+#### Testing Strategy for Supported Versions
 
 **1. Virtual Machine Setup**
 
 ```bash
 # Recommended test configurations
 VMs_TO_TEST=(
-    "macOS 10.12 Sierra"    # Minimum supported
-    "macOS 10.14 Mojave"    # Dark mode baseline
-    "macOS 10.15 Catalina"  # SwiftUI baseline
-    "macOS 11.0 Big Sur"    # SF Symbols baseline
-    "macOS 15.0 Sequoia"    # Target version
+    "macOS 11.0 Big Sur"     # Minimum supported (baseline)
+    "macOS 12.0 Monterey"    # SF Symbols 3, SwiftUI 3
+    "macOS 13.0 Ventura"     # App Intents, Menu Bar Extras
+    "macOS 14.0 Sonoma"      # Widgets, SF Symbols 4
+    "macOS 15.0 Sequoia"     # Target version (latest)
 )
 ```
 
@@ -1579,40 +1622,68 @@ VMs_TO_TEST=(
 ```swift
 // Add to test suite
 class CompatibilityTests: XCTestCase {
-    func testSFSymbolFallback() {
-        let icon = IconProvider.statusBarIcon
-        XCTAssertNotNil(icon, "Icon should never be nil")
+    func testOSVersionDetection() {
+        // OSVersion utility should work correctly
+        XCTAssertTrue(OSVersion.isBigSurOrLater, "Minimum is 11.0")
 
-        if #available(macOS 11.0, *) {
-            // Verify SF Symbol is used
-            XCTAssertTrue(icon.isTemplate)
-        } else {
-            // Verify PNG fallback works
-            XCTAssertEqual(icon, NSImage(named: "menu_icon"))
+        // Check feature availability matches actual OS
+        let actualVersion = ProcessInfo.processInfo.operatingSystemVersion
+        if actualVersion.majorVersion >= 12 {
+            XCTAssertTrue(OSVersion.isMontereyOrLater)
+            XCTAssertTrue(OSVersion.supportsSFSymbols3)
+        }
+        if actualVersion.majorVersion >= 13 {
+            XCTAssertTrue(OSVersion.isVenturaOrLater)
+            XCTAssertTrue(OSVersion.supportsAppIntents)
+        }
+        if actualVersion.majorVersion >= 14 {
+            XCTAssertTrue(OSVersion.isSonomaOrLater)
+            XCTAssertTrue(OSVersion.supportsWidgets)
         }
     }
 
-    func testColorSystemFallback() {
-        let backgroundColor = NSColor.appBackground
-        XCTAssertNotNil(backgroundColor)
+    func testSFSymbolAvailability() {
+        // SF Symbols should always be available on 11.0+
+        let icon = NSImage(systemSymbolName: "paperplane.fill",
+                           accessibilityDescription: nil)
+        XCTAssertNotNil(icon, "SF Symbols must be available on 11.0+")
+    }
 
-        // Should work on all versions
-        XCTAssertGreaterThan(backgroundColor.alphaComponent, 0)
+    func testColorSystem() {
+        // All semantic colors should be available
+        XCTAssertNotNil(NSColor.appBackground)
+        XCTAssertNotNil(NSColor.appPrimaryText)
+        XCTAssertNotNil(NSColor.appAccent)
+        XCTAssertGreaterThan(NSColor.appBackground.alphaComponent, 0)
+    }
+
+    func testModernTableView() {
+        // Modern table view should be creatable
+        let tableView = OSVersion.createModernTableView()
+        XCTAssertEqual(tableView.style, .fullWidth)
     }
 }
 ```
 
 **3. Manual Testing Checklist**
 
-Create regression test plan for each supported version:
+Create regression test plan for each supported version (11.0+):
+
+**All Versions (11.0-15.0):**
 
 - [ ] App launches successfully
-- [ ] Status bar icon appears correctly
+- [ ] Status bar icon appears correctly (SF Symbols)
 - [ ] Menu opens and functions
 - [ ] Preferences window works
 - [ ] Server connection succeeds
-- [ ] Dark mode (10.14+) or light mode (10.12-10.13) works
+- [ ] Dark mode and light mode both work
 - [ ] No crashes or warnings in Console.app
+
+**Version-Specific Features:**
+
+- [ ] Monterey 12.0+: SF Symbols 3 render correctly
+- [ ] Ventura 13.0+: App Intents/Shortcuts available and functional
+- [ ] Sonoma 14.0+: Widgets appear and update correctly
 
 **4. Continuous Integration**
 
@@ -1626,18 +1697,20 @@ jobs:
     strategy:
       matrix:
         os:
-          - macos-12 # Closest to 10.15
-          - macos-13 # Closest to 11.0+
-          - macos-14 # Latest
+          - macos-12 # Monterey (12.x)
+          - macos-13 # Ventura (13.x)
+          - macos-14 # Sonoma (14.x)
+          - macos-15 # Sequoia (15.x) - if available
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Build and Test
         run: |
           xcodebuild test \
             -workspace ShadowsocksX-NG.xcworkspace \
             -scheme ShadowsocksX-NG \
-            -configuration Debug
+            -configuration Debug \
+            MACOSX_DEPLOYMENT_TARGET=11.0
 ```
 
 #### Deprecation Communication Plan
@@ -2315,8 +2388,9 @@ For questions or suggestions about this roadmap:
 **Document History:**
 
 - v1.0 (2025-11-02): Initial roadmap created
-- v1.1 (TBD): Updates after Phase 1 completion
-- v2.0 (TBD): Major revision after Phase 3 lessons learned
+- v2.0 (2025-11-07): **Major update** - Reflected current state (macOS 11.0+ baseline, Phase 1 complete, OSVersion utility implemented)
+- v2.1 (TBD): Updates after Phase 2 completion
+- v3.0 (TBD): Major revision after Phase 3 lessons learned
 
 ---
 
