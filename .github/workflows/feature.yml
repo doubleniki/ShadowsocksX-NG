@@ -172,6 +172,9 @@ jobs:
           restore-keys: |
             pods-
 
+      - name: Install CocoaPods dependencies
+        run: pod install
+
       # Debug build для feature branches (быстрее)
       - name: Build application (Debug)
         run: |
