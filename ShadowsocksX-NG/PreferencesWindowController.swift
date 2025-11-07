@@ -155,11 +155,24 @@ class PreferencesWindowController: NSWindowController, NSTableViewDataSource, NS
             ErrorHandler.shared.debug(
                 "Duplicating profile, total profiles count: \(profileMgr.profiles.count)")
             let profile = profileMgr.profiles[toDuplicateIndex + copyCount]
+
+            // Save password before copying
+            let passwordToPreserve = profile.password
+
             guard let duplicateProfile = profile.copy() as? ServerProfile else {
                 ErrorHandler.shared.warning("Failed to copy server profile")
                 continue
             }
+
+            // Remove password stored under the temporary UUID created in copy()
+            duplicateProfile.removePasswordFromKeychain()
+
+            // Set new UUID
             duplicateProfile.uuid = UUID().uuidString
+
+            // Set password which will save it under the new UUID
+            duplicateProfile.password = passwordToPreserve
+
             profileMgr.profiles.insert(duplicateProfile, at: toDuplicateIndex + copyCount)
 
             profilesTableView.beginUpdates()
