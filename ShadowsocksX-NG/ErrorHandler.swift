@@ -87,31 +87,19 @@ class ErrorHandler {
     private func logError(_ error: Error, context: String, critical: Bool) {
         let message = formatErrorMessage(error, context: context)
 
-        if #available(macOS 10.14, *) {
-            if critical {
-                os_log(.error, log: logger, "CRITICAL [%{public}@]: %{public}@", context, message)
-            } else {
-                os_log(.default, log: logger, "[%{public}@]: %{public}@", context, message)
-            }
-
-            // Log underlying error if present
-            if let appError = error as? AppError,
-                let underlyingError = appError.underlyingError
-            {
-                os_log(
-                    .default, log: logger, "  Underlying: %{public}@",
-                    underlyingError.localizedDescription)
-            }
+        if critical {
+            os_log(.error, log: logger, "CRITICAL [%{public}@]: %{public}@", context, message)
         } else {
-            // Fallback for older macOS versions
-            let prefix = critical ? "CRITICAL" : "ERROR"
-            NSLog("[\(prefix)][\(context)]: \(message)")
+            os_log(.default, log: logger, "[%{public}@]: %{public}@", context, message)
+        }
 
-            if let appError = error as? AppError,
-                let underlyingError = appError.underlyingError
-            {
-                NSLog("  Underlying: \(underlyingError.localizedDescription)")
-            }
+        // Log underlying error if present
+        if let appError = error as? AppError,
+            let underlyingError = appError.underlyingError
+        {
+            os_log(
+                .default, log: logger, "  Underlying: %{public}@",
+                underlyingError.localizedDescription)
         }
     }
 
