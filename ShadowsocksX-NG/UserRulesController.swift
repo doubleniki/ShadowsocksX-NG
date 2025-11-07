@@ -291,8 +291,16 @@ class UserRulesController: NSWindowController {
     @IBAction func didOK(_ sender: AnyObject) {
         if let str = userRulesView?.string {
             do {
-                try str.data(using: String.Encoding.utf8)?.write(
-                    to: URL(fileURLWithPath: PACUserRuleFilePath), options: .atomic)
+                guard let data = str.data(using: String.Encoding.utf8) else {
+                    throw NSError(
+                        domain: "com.shadowsocksx-ng.userRules",
+                        code: -1,
+                        userInfo: [
+                            NSLocalizedDescriptionKey: "Failed to convert user rules to UTF-8 data"
+                        ]
+                    )
+                }
+                try data.write(to: URL(fileURLWithPath: PACUserRuleFilePath), options: .atomic)
 
                 if generatePACFile() {
                     // Popup a user notification

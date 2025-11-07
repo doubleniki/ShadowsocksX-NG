@@ -152,7 +152,8 @@ class PreferencesWindowController: NSWindowController, NSTableViewDataSource, NS
     @IBAction func duplicate(_ sender: Any) {
         var copyCount = 0
         for (_, toDuplicateIndex) in profilesTableView.selectedRowIndexes.enumerated() {
-            print(profileMgr.profiles.count)
+            ErrorHandler.shared.debug(
+                "Duplicating profile, total profiles count: \(profileMgr.profiles.count)")
             let profile = profileMgr.profiles[toDuplicateIndex + copyCount]
             guard let duplicateProfile = profile.copy() as? ServerProfile else {
                 ErrorHandler.shared.warning("Failed to copy server profile")

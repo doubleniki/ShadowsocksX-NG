@@ -125,3 +125,35 @@ GitHub Actions automatically runs:
 - Code coverage reports
 
 See `.github/workflows/code-quality.yml` for configuration.
+
+## System Requirements
+
+- **macOS**: 11.0 or later (Big Sur+)
+- **Xcode**: 14.0 or later (compatible with Xcode 15+)
+- **CocoaPods**: 1.10 or later
+
+### Deployment Target
+
+The project uses a unified deployment target across all components:
+
+- Main app: macOS 11.0
+- CocoaPods dependencies: macOS 11.0 (enforced via post_install hook)
+- LaunchHelper: macOS 11.0
+
+The Podfile includes automatic configuration to ensure all pods use the correct deployment target:
+
+```ruby
+platform :macos, '11.0'
+
+post_install do |installer|
+  installer.pods_project.targets.each do |target|
+    target.build_configurations.each do |config|
+      config.build_settings['MACOSX_DEPLOYMENT_TARGET'] = '11.0'
+    end
+  end
+end
+```
+
+### Xcode Compatibility
+
+The project includes a compatibility fix for Xcode versions < 15. The TOOLCHAIN_DIR variable is automatically patched to fall back to DT_TOOLCHAIN_DIR when not available, ensuring builds work on both older and newer Xcode versions.

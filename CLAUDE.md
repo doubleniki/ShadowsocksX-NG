@@ -233,3 +233,59 @@ launchctl unload ~/Library/LaunchAgents/com.qiuyuzhou.shadowsocksX-NG.local.plis
 networksetup -getwebproxy Wi-Fi
 networksetup -getsocksfirewallproxy Wi-Fi
 ```
+
+## Refactoring Progress
+
+### Phase 1: Foundation & Safety (Completed)
+
+**Code Quality Improvements:**
+- ✅ Eliminated all force unwrapping (`!`) in test files
+- ✅ Fixed variable shadowing in `PreferencesWindowController` (editingProfile)
+- ✅ Centralized error handling through `ErrorHandler` singleton
+- ✅ Fixed directory path construction in `Constants.swift` (removed leading slashes)
+- ✅ Replaced all non-public error logging calls with public API
+- ✅ Renamed functions to comply with Swift naming conventions (e.g., `SyncPac` → `syncPac`)
+- ✅ Fixed shorthand operators (e.g., `addCount = addCount + 1` → `addCount += 1`)
+
+**Project Configuration:**
+- ✅ Updated deployment target from 10.12 to 11.0 across all components:
+  - Main app: macOS 11.0
+  - Podfile: macOS 11.0
+  - LaunchHelper: macOS 11.0
+  - All pod targets: macOS 11.0 (via post_install hook)
+- ✅ Added TOOLCHAIN_DIR fallback for Xcode < 15 compatibility
+- ✅ Fixed RxSwift compilation errors related to Date availability
+
+**SwiftLint Configuration:**
+- ✅ Added exceptions for components pending future refactoring:
+  - `AppDelegate` (type_body_length: 624 lines)
+  - `generatePACFile` (function_body_length: 161 lines, cyclomatic_complexity: 24)
+- ✅ All code now passes SwiftLint checks with documented exceptions
+
+**Documentation:**
+- ✅ Restored `DEVELOPMENT_SETUP.md` with proper UTF-8 encoding
+- ✅ All corrupted placeholder characters ("???????") replaced with readable English text
+
+**Test Suite:**
+- ✅ All test classes renamed to comply with Swift naming conventions
+- ✅ Comprehensive guard statements with `XCTFail` for better test diagnostics
+
+### Known Limitations
+
+**Binary Dependencies:**
+- v2ray-plugin binary must be built separately via `make -C deps`
+- This is not a code issue but a build requirement
+- CI builds may fail on this step if dependencies are not pre-built
+
+**Future Refactoring Planned:**
+- AppDelegate needs to be split into smaller view controllers
+- generatePACFile function needs to be decomposed into helper functions
+- These are tracked in SwiftLint exclusions with TODO comments
+
+### System Requirements
+
+- macOS 11.0 or later (updated from 10.12)
+- Xcode 14.0 or later (compatible with Xcode 15+)
+- CocoaPods 1.10 or later
+
+For detailed development setup instructions, see `docs/code-quality/DEVELOPMENT_SETUP.md`.
