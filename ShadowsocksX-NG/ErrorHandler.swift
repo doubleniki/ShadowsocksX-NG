@@ -9,17 +9,6 @@
 import Cocoa
 import os.log
 
-// MARK: - AppError Protocol
-
-/// Base protocol for all application errors
-protocol AppError: LocalizedError {
-    /// Context in which the error occurred
-    var context: String { get }
-
-    /// Underlying system error if any
-    var underlyingError: Error? { get }
-}
-
 // MARK: - Error Handler
 
 /// Centralized error handler for the application
