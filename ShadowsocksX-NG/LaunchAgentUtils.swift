@@ -270,7 +270,10 @@ func removeSSLocalConfFile() {
             .path
         try FileManager.default.removeItem(atPath: filepath)
     } catch {
-
+        ErrorHandler.shared.debug(
+            "Failed to remove ss-local config file: \(error.localizedDescription)",
+            context: "LaunchAgent"
+        )
     }
 }
 
@@ -326,7 +329,11 @@ func installSimpleObfs() {
 
     let bundle = Bundle.main
     guard let installerPath = bundle.path(forResource: "install_simple_obfs.sh", ofType: nil) else {
-        ErrorHandler.shared.warning("install_simple_obfs.sh script not found")
+        ErrorHandler.shared.handle(
+            ResourceError.resourceNotFound(name: "install_simple_obfs.sh", type: "script"),
+            context: "Install Simple Obfs",
+            showAlert: false
+        )
         return
     }
 
@@ -570,7 +577,11 @@ func installPrivoxy() {
         .path
     if !fileMgr.fileExists(atPath: userConfigPath) {
         guard let srcPath = Bundle.main.path(forResource: "user-privoxy", ofType: "config") else {
-            ErrorHandler.shared.warning("user-privoxy.config resource not found")
+            ErrorHandler.shared.handle(
+                ResourceError.resourceNotFound(name: "user-privoxy", type: "config"),
+                context: "Install Privoxy",
+                showAlert: true
+            )
             return
         }
 
@@ -592,7 +603,11 @@ func writePrivoxyConfFile() -> Bool {
         let bundle = Bundle.main
         guard let templatePath = bundle.path(forResource: "privoxy.template.config", ofType: nil)
         else {
-            ErrorHandler.shared.warning("privoxy.template.config not found")
+            ErrorHandler.shared.handle(
+                ResourceError.resourceNotFound(name: "privoxy.template.config", type: nil),
+                context: "Write Privoxy Config",
+                showAlert: true
+            )
             return false
         }
 
@@ -602,7 +617,11 @@ func writePrivoxyConfFile() -> Bool {
         guard let httpAddress = defaults.string(forKey: "LocalHTTP.ListenAddress"),
             let socks5Address = defaults.string(forKey: "LocalSocks5.ListenAddress")
         else {
-            ErrorHandler.shared.warning("Failed to get proxy addresses from defaults")
+            ErrorHandler.shared.handle(
+                PACError.invalidFormat(reason: "Proxy addresses not configured in defaults"),
+                context: "Write Privoxy Config",
+                showAlert: true
+            )
             return false
         }
 

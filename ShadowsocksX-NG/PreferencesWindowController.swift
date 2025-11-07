@@ -119,6 +119,9 @@ class PreferencesWindowController: NSWindowController, NSTableViewDataSource, NS
         }
         profilesTableView.endUpdates()
 
+        // Clear stale editing state so delegate logic allows reselection.
+        editingProfile = nil
+
         // Select the row before the first deleted row, or 0 if we deleted from the start
         let newSelectedIndex = max(0, firstIndex - 1)
         if !profileMgr.profiles.isEmpty {

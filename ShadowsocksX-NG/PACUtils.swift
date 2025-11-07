@@ -182,7 +182,7 @@ func generatePACFile() -> Bool {
                 if line.isEmpty {
                     return false
                 }
-                let character: Character = s[s.startIndex]
+                let character: Character = line[line.startIndex]
                 if character == "!" || character == "[" {
                     return false
                 }
@@ -204,9 +204,12 @@ func generatePACFile() -> Bool {
                     )
                     return false
                 }
-                guard let jsData = try? Data(contentsOf: jsPath) else {
+                let jsData: Data
+                do {
+                    jsData = try Data(contentsOf: jsPath)
+                } catch {
                     ErrorHandler.shared.handle(
-                        FileSystemError.readFailed(path: jsPath.path, error: nil),
+                        FileSystemError.readFailed(path: jsPath.path, error: error),
                         context: "Generate PAC File",
                         showAlert: true
                     )
