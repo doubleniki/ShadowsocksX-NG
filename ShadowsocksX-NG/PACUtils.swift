@@ -57,7 +57,8 @@ func generatePACFile() -> Bool {
                 try fileMgr.moveItem(atPath: oldErrorPACRulesDirPath, toPath: PACRulesDirPath)
             } catch {
                 ErrorHandler.shared.handle(
-                    FileSystemError.writeFailed(path: PACRulesDirPath, error: error),
+                    FileSystemError.moveFailed(
+                        source: oldErrorPACRulesDirPath, destination: PACRulesDirPath, error: error),
                     context: "Generate PAC File",
                     showAlert: true
                 )
@@ -93,7 +94,7 @@ func generatePACFile() -> Bool {
             try fileMgr.copyItem(atPath: src, toPath: GFWListFilePath)
         } catch {
             ErrorHandler.shared.handle(
-                FileSystemError.writeFailed(path: GFWListFilePath, error: error),
+                FileSystemError.copyFailed(source: src, destination: GFWListFilePath, error: error),
                 context: "Generate PAC File",
                 showAlert: true
             )
@@ -116,7 +117,8 @@ func generatePACFile() -> Bool {
             try fileMgr.copyItem(atPath: src, toPath: PACUserRuleFilePath)
         } catch {
             ErrorHandler.shared.handle(
-                FileSystemError.writeFailed(path: PACUserRuleFilePath, error: error),
+                FileSystemError.copyFailed(
+                    source: src, destination: PACUserRuleFilePath, error: error),
                 context: "Generate PAC File",
                 showAlert: true
             )
@@ -227,7 +229,12 @@ func generatePACFile() -> Bool {
 
                 return true
             } catch {
-
+                ErrorHandler.shared.handle(
+                    error,
+                    context: "Failed to generate PAC file (JSON serialization or file write)",
+                    showAlert: false
+                )
+                return false
             }
         }
 
@@ -245,6 +252,12 @@ func updatePACFromGFWList() {
             try FileManager.default.createDirectory(
                 atPath: PACRulesDirPath, withIntermediateDirectories: true, attributes: nil)
         } catch {
+            ErrorHandler.shared.handle(
+                FileSystemError.writeFailed(path: PACRulesDirPath, error: error),
+                context: "Update PAC from GFW List",
+                showAlert: true
+            )
+            return
         }
     }
 
@@ -269,7 +282,11 @@ func updatePACFromGFWList() {
                             .deliver(notification)
                     }
                 } catch {
-
+                    ErrorHandler.shared.handle(
+                        FileSystemError.writeFailed(path: GFWListFilePath, error: error),
+                        context: "Update PAC from GFW List - write file",
+                        showAlert: true
+                    )
                 }
             case .failure:
                 // Popup a user notification

@@ -55,7 +55,7 @@ class PreferencesWinController: NSWindowController {
 
     @IBAction func resetAllPreferences(sender: NSButton) {
         let alert = NSAlert.init()
-        alert.alertStyle = .warning;
+        alert.alertStyle = .warning
         alert.messageText = "Are you sure you want to reset the preferences to defaults?".localized
         alert.informativeText = "All your changes of preferences will be lost.".localized
         alert.addButton(withTitle: "OK")
@@ -68,6 +68,7 @@ class PreferencesWinController: NSWindowController {
     func resetUserDefaults() {
         guard let domain = Bundle.main.bundleIdentifier else {
             ErrorHandler.shared.warning("Failed to get bundle identifier")
+            showResetFailureAlert()
             return
         }
         let defaults = UserDefaults.standard
@@ -83,5 +84,29 @@ class PreferencesWinController: NSWindowController {
         defaults.set(profiles, forKey: "ServerProfiles")
         defaults.set(activeProfileId, forKey: "ActiveServerProfileId")
         defaults.synchronize()
+
+        showResetSuccessAlert()
+    }
+
+    private func showResetFailureAlert() {
+        let alert = NSAlert()
+        alert.alertStyle = .critical
+        alert.messageText = "Failed to Reset Preferences".localized
+        alert.informativeText =
+            "Unable to reset preferences due to a system error. Please try restarting the application."
+            .localized
+        alert.addButton(withTitle: "OK")
+        alert.runModal()
+    }
+
+    private func showResetSuccessAlert() {
+        let alert = NSAlert()
+        alert.alertStyle = .informational
+        alert.messageText = "Preferences Reset Successfully".localized
+        alert.informativeText =
+            "Your preferences have been reset to defaults. Server profiles have been preserved."
+            .localized
+        alert.addButton(withTitle: "OK")
+        alert.runModal()
     }
 }
