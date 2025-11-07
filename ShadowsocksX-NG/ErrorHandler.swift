@@ -155,7 +155,8 @@ class ErrorHandler {
     /// Open system log file
     private func openLogFile() {
         let logPath = NSHomeDirectory() + "/Library/Logs/ShadowsocksX-NG"
-        NSWorkspace.shared.selectFile(nil, inFileViewerRootedAtPath: logPath)
+        let logURL = URL(fileURLWithPath: logPath)
+        NSWorkspace.shared.activateFileViewerSelecting([logURL])
     }
 }
 
@@ -165,28 +166,16 @@ extension ErrorHandler {
 
     /// Log a warning message
     func warning(_ message: String, context: String = "General") {
-        if #available(macOS 10.14, *) {
-            os_log(.default, log: logger, "WARNING [%{public}@]: %{public}@", context, message)
-        } else {
-            NSLog("[WARNING][\(context)]: \(message)")
-        }
+        os_log(.default, log: logger, "WARNING [%{public}@]: %{public}@", context, message)
     }
 
     /// Log an info message
     func info(_ message: String, context: String = "General") {
-        if #available(macOS 10.14, *) {
-            os_log(.info, log: logger, "[%{public}@]: %{public}@", context, message)
-        } else {
-            NSLog("[INFO][\(context)]: \(message)")
-        }
+        os_log(.info, log: logger, "[%{public}@]: %{public}@", context, message)
     }
 
     /// Log a debug message
     func debug(_ message: String, context: String = "General") {
-        if #available(macOS 10.14, *) {
-            os_log(.debug, log: logger, "[%{public}@]: %{public}@", context, message)
-        } else {
-            NSLog("[DEBUG][\(context)]: \(message)")
-        }
+        os_log(.debug, log: logger, "[%{public}@]: %{public}@", context, message)
     }
 }

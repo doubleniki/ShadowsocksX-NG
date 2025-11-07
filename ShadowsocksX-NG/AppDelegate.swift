@@ -10,11 +10,12 @@ import Carbon
 import Cocoa
 import RxCocoa
 import RxSwift
+import UserNotifications
 
 // swiftlint:disable type_body_length
 // TODO: Refactor AppDelegate - split into smaller controllers (Phase 2)
 @NSApplicationMain
-class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDelegate {
+class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDelegate {
 
     var shareWinCtrl: ShareServerProfilesWindowController!
     var qrcodeWinCtrl: SWBQRCodeWindowController!
@@ -101,7 +102,17 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
 
         _ = LaunchAtLoginController()  // Ensure set when launch
 
-        NSUserNotificationCenter.default.delegate = self
+        // Request notification authorization
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { granted, error in
+            if let error = error {
+                ErrorHandler.shared.handle(
+                    error,
+                    context: "Request Notification Authorization",
+                    showAlert: false
+                )
+            }
+        }
+        UNUserNotificationCenter.current().delegate = self
 
         self.ensureLaunchAgentsDirOwner()
 
@@ -178,7 +189,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
             return
         }
         image.isTemplate = true
-        statusItem.image = image
+        statusItem.button?.image = image
         statusItem.menu = statusMenu
     }
 
@@ -487,18 +498,17 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
     @IBAction func showLogs(_ sender: NSMenuItem) {
         let ws = NSWorkspace.shared
         if let appUrl = ws.urlForApplication(withBundleIdentifier: "com.apple.Console") {
-            do {
-                try ws.launchApplication(
-                    at: appUrl, options: NSWorkspace.LaunchOptions.default,
-                    configuration: [
-                        NSWorkspace.LaunchConfigurationKey.arguments: "~/Library/Logs/ss-local.log"
-                    ])
-            } catch {
-                ErrorHandler.shared.handle(
-                    error,
-                    context: "Open Console.app",
-                    showAlert: true
-                )
+            let configuration = NSWorkspace.OpenConfiguration()
+            configuration.arguments = ["~/Library/Logs/ss-local.log"]
+            
+            ws.openApplication(at: appUrl, configuration: configuration) { app, error in
+                if let error = error {
+                    ErrorHandler.shared.handle(
+                        error,
+                        context: "Open Console.app",
+                        showAlert: true
+                    )
+                }
             }
         }
     }
@@ -535,7 +545,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
 
         savePanel.becomeKey()
         let result = savePanel.runModal()
-        if result.rawValue == NSFileHandlingPanelOKButton {
+        if result == .OK {
             if let url = savePanel.url {
                 let diagnosisText = diagnose()
                 do {
@@ -622,20 +632,20 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
             if let m = mode {
                 switch m {
                 case "auto":
-                    statusItem.image = NSImage(named: "menu_p_icon")
+                    statusItem.button?.image = NSImage(named: "menu_p_icon")
                 case "global":
-                    statusItem.image = NSImage(named: "menu_g_icon")
+                    statusItem.button?.image = NSImage(named: "menu_g_icon")
                 case "manual":
-                    statusItem.image = NSImage(named: "menu_m_icon")
+                    statusItem.button?.image = NSImage(named: "menu_m_icon")
                 case "externalPAC":
-                    statusItem.image = NSImage(named: "menu_e_icon")
+                    statusItem.button?.image = NSImage(named: "menu_e_icon")
                 default: break
                 }
-                statusItem.image?.isTemplate = true
+                statusItem.button?.image?.isTemplate = true
             }
         } else {
-            statusItem.image = NSImage(named: "menu_icon_disabled")
-            statusItem.image?.isTemplate = true
+            statusItem.button?.image = NSImage(named: "menu_icon_disabled")
+            statusItem.button?.image?.isTemplate = true
         }
     }
 
@@ -647,15 +657,15 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
             runningStatusMenuItem.image = NSImage(named: "NSStatusAvailable")
             toggleRunningMenuItem.title = "Turn Shadowsocks Off".localized
             let image = NSImage(named: "menu_icon")
-            statusItem.image = image
+            statusItem.button?.image = image
         } else {
             runningStatusMenuItem.title = "Shadowsocks: Off".localized
             toggleRunningMenuItem.title = "Turn Shadowsocks On".localized
             runningStatusMenuItem.image = NSImage(named: "NSStatusNone")
             let image = NSImage(named: "menu_icon_disabled")
-            statusItem.image = image
+            statusItem.button?.image = image
         }
-        statusItem.image?.isTemplate = true
+        statusItem.button?.image?.isTemplate = true
 
         updateStatusMenuImage()
     }
@@ -724,13 +734,27 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
 
     func handleFoundSSURL(_ note: Notification) {
         let sendNotify = { (title: String, subtitle: String, infoText: String) in
-            let userNote = NSUserNotification()
-            userNote.title = title
-            userNote.subtitle = subtitle
-            userNote.informativeText = infoText
-            userNote.soundName = NSUserNotificationDefaultSoundName
+            let content = UNMutableNotificationContent()
+            content.title = title
+            content.subtitle = subtitle
+            content.body = infoText
+            content.sound = .default
 
-            NSUserNotificationCenter.default.deliver(userNote)
+            let request = UNNotificationRequest(
+                identifier: UUID().uuidString,
+                content: content,
+                trigger: nil
+            )
+
+            UNUserNotificationCenter.current().add(request) { error in
+                if let error = error {
+                    ErrorHandler.shared.handle(
+                        error,
+                        context: "Send Notification",
+                        showAlert: false
+                    )
+                }
+            }
         }
 
         if let userInfo = (note as NSNotification).userInfo {
@@ -770,12 +794,15 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
     }
 
     //------------------------------------------------------------
-    // NSUserNotificationCenterDelegate
+    // UNUserNotificationCenterDelegate
 
     func userNotificationCenter(
-        _ center: NSUserNotificationCenter, shouldPresent notification: NSUserNotification
-    ) -> Bool {
-        return true
+        _ center: UNUserNotificationCenter,
+        willPresent notification: UNNotification,
+        withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
+    ) {
+        // Show notification even when app is in foreground
+        completionHandler([.banner, .sound])
     }
 
     func makeToast(_ message: String) {

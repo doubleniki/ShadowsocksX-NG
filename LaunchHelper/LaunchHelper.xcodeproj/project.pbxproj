@@ -108,7 +108,7 @@
 			};
 			buildConfigurationList = 9B9F13881E8A282C00DE4794 /* Build configuration list for PBXProject "LaunchHelper" */;
 			compatibilityVersion = "Xcode 3.2";
-			developmentRegion = English;
+			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				English,
