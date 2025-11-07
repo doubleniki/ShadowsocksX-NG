@@ -212,12 +212,8 @@ class MenuBarManager {
 
         let mgr = ServerProfileManager.instance
         for profile in mgr.profiles where mgr.activeProfileId == profile.uuid {
-            var profileName: String
-            if !profile.remark.isEmpty {
-                profileName = String(profile.remark.prefix(24))
-            } else {
-                profileName = profile.serverHost
-            }
+            // Use profile.title() which handles remark OR host:port correctly
+            let profileName = String(profile.title().prefix(24))
             serverMenuText = "Servers".localized + " - \(profileName)"
             break
         }
