@@ -3,10 +3,45 @@ name: Code Quality
 on:
   push:
     branches: [develop, main]
+    # SwiftLint всегда запускается, но build/test пропускаются для документации
   pull_request:
     branches: [develop]
 
 jobs:
+  # Проверка, нужно ли запускать билд и тесты
+  check-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      should_build: ${{ steps.check.outputs.should_build }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Check changed files
+        id: check
+        run: |
+          # Для push событий
+          if [ "${{ github.event_name }}" == "push" ]; then
+            CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }})
+          else
+            # Для pull request
+            CHANGED_FILES=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.sha }})
+          fi
+
+          echo "Changed files:"
+          echo "$CHANGED_FILES"
+
+          # Проверяем, есть ли изменения не в документации
+          if echo "$CHANGED_FILES" | grep -qvE '\.(md|txt)$|^docs/|^\.github/(ISSUE_TEMPLATE|PULL_REQUEST_TEMPLATE)/|^(LICENSE|\.gitignore|\.gitattributes|CLAUDE\.md)$'; then
+            echo "should_build=true" >> $GITHUB_OUTPUT
+            echo "✓ Build required (code changes detected)"
+          else
+            echo "should_build=false" >> $GITHUB_OUTPUT
+            echo "✗ Build skipped (only documentation changes)"
+          fi
+
   swiftlint:
     name: SwiftLint
     runs-on: macos-latest
@@ -31,6 +66,8 @@ jobs:
 
   build-and-test:
     name: Build and Test
+    needs: check-changes
+    if: needs.check-changes.outputs.should_build == 'true'
     runs-on: macos-latest
 
     steps:
