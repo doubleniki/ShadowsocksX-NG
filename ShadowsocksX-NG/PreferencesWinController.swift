@@ -95,7 +95,7 @@ class PreferencesWinController: NSWindowController {
         alert.informativeText =
             "Unable to reset preferences due to a system error. Please try restarting the application."
             .localized
-        alert.addButton(withTitle: "OK")
+        alert.addButton(withTitle: "OK".localized)
         alert.runModal()
     }
 
@@ -106,7 +106,7 @@ class PreferencesWinController: NSWindowController {
         alert.informativeText =
             "Your preferences have been reset to defaults. Server profiles have been preserved."
             .localized
-        alert.addButton(withTitle: "OK")
+        alert.addButton(withTitle: "OK".localized)
         alert.runModal()
     }
 }

@@ -239,7 +239,11 @@ func generatePACFile() -> Bool {
         }
 
     } catch {
-        ErrorHandler.shared.warning("Not found gfwlist.txt", context: "PAC")
+        ErrorHandler.shared.handle(
+            FileSystemError.readFailed(path: GFWListFilePath, error: error),
+            context: "Generate PAC File",
+            showAlert: true
+        )
     }
     return false
 }

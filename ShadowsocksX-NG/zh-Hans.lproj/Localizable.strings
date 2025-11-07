@@ -6,6 +6,8 @@
  * SHARED STRINGS
  */
 
+"OK" = "确定";
+
 /*
  * ./PACUtils.swift
  */
