@@ -246,6 +246,23 @@ networksetup -getsocksfirewallproxy Wi-Fi
 - ✅ Replaced all non-public error logging calls with public API
 - ✅ Renamed functions to comply with Swift naming conventions (e.g., `SyncPac` → `syncPac`)
 - ✅ Fixed shorthand operators (e.g., `addCount = addCount + 1` → `addCount += 1`)
+- ✅ Refactored `applicationDidFinishLaunching` from 128 lines to 36 lines
+  - Extracted methods: `registerDefaultSettings()`, `setupStatusBarItem()`, `setupNotificationObservers()`
+- ✅ Enhanced error handling in `LaunchAgentUtils` (plist write operations)
+- ✅ Improved localization coverage (PreferencesWindowController, error messages)
+
+**Error Handling Architecture:**
+- ✅ Consolidated error definitions into `Errors/AppError.swift`
+- ✅ Removed duplicate `AppErrors.swift` file
+- ✅ Added new error types: `FileSystemError.copyFailed`, `FileSystemError.moveFailed`
+- ✅ Comprehensive error handling in file I/O operations
+- ✅ Type-safe error propagation with context information
+
+**Security Improvements:**
+- ✅ Fixed Keychain password synchronization in `ServerProfile` duplication
+- ✅ Password stored securely in Keychain, not in UserDefaults
+- ✅ Proper cleanup of Keychain entries when profiles are deleted
+- ✅ Added `KEYCHAIN_FIX.md` documentation
 
 **Project Configuration:**
 - ✅ Updated deployment target from 10.12 to 11.0 across all components:
@@ -255,31 +272,39 @@ networksetup -getsocksfirewallproxy Wi-Fi
   - All pod targets: macOS 11.0 (via post_install hook)
 - ✅ Added TOOLCHAIN_DIR fallback for Xcode < 15 compatibility
 - ✅ Fixed RxSwift compilation errors related to Date availability
+- ✅ Disabled user script sandboxing for CocoaPods (`ENABLE_USER_SCRIPT_SANDBOXING = 'NO'`)
 
 **SwiftLint Configuration:**
 - ✅ Added exceptions for components pending future refactoring:
-  - `AppDelegate` (type_body_length: 624 lines)
   - `generatePACFile` (function_body_length: 161 lines, cyclomatic_complexity: 24)
 - ✅ All code now passes SwiftLint checks with documented exceptions
+- ✅ Removed `AppDelegate` type_body_length exception (refactored to pass)
 
 **Documentation:**
 - ✅ Restored `DEVELOPMENT_SETUP.md` with proper UTF-8 encoding
 - ✅ All corrupted placeholder characters ("???????") replaced with readable English text
+- ✅ Added `KEYCHAIN_FIX.md` for Keychain security improvements
 
 **Test Suite:**
 - ✅ All test classes renamed to comply with Swift naming conventions
 - ✅ Comprehensive guard statements with `XCTFail` for better test diagnostics
+- ✅ Updated tests for ServerProfile Keychain integration
+
+**CI/CD Improvements:**
+- ✅ Added native dependencies caching in GitHub Actions
+- ✅ Automatic placeholder binary creation for CI builds
+- ✅ Fixed project file references (removed deleted files)
 
 ### Known Limitations
 
 **Binary Dependencies:**
-- v2ray-plugin binary must be built separately via `make -C deps`
-- This is not a code issue but a build requirement
-- CI builds may fail on this step if dependencies are not pre-built
+- Native dependencies (ss-local, privoxy, v2ray-plugin, etc.) must be built via `make -C deps`
+- CI uses cached binaries or creates placeholders for compilation testing
+- Placeholder binaries are sufficient for CI but not for runtime functionality
 
 **Future Refactoring Planned:**
-- AppDelegate needs to be split into smaller view controllers
 - generatePACFile function needs to be decomposed into helper functions
+- Constants.swift visibility issues in some contexts (currently using hardcoded paths)
 - These are tracked in SwiftLint exclusions with TODO comments
 
 ### System Requirements
