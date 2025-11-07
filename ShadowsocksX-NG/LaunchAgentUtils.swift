@@ -118,10 +118,41 @@ func generateSSLocalLauchAgentPlist() -> Bool {
         "ProgramArguments": arguments,
         "EnvironmentVariables": ["DYLD_LIBRARY_PATH": dyld_library_paths.joined(separator: ":")],
     ]
-    dict.write(toFile: plistTempFilepath, atomically: true)
+
+    // Write to temporary file first to check if content changed
+    guard dict.write(toFile: plistTempFilepath, atomically: true) else {
+        let writeError = NSError(
+            domain: "com.qiuyuzhou.ShadowsocksX-NG",
+            code: -1,
+            userInfo: [NSLocalizedDescriptionKey: "Failed to write plist to temporary file"]
+        )
+        ErrorHandler.shared.handle(
+            FileSystemError.writeFailed(path: plistTempFilepath, error: writeError),
+            context: "Generate SS Local Launch Agent",
+            showAlert: true,
+            critical: true
+        )
+        return false
+    }
+
     let sha1Sum = getFileSHA1Sum(plistTempFilepath)
     if oldSha1Sum != sha1Sum {
-        dict.write(toFile: plistFilepath, atomically: true)
+        // Write to final destination
+        guard dict.write(toFile: plistFilepath, atomically: true) else {
+            let writeError = NSError(
+                domain: "com.qiuyuzhou.ShadowsocksX-NG",
+                code: -1,
+                userInfo: [NSLocalizedDescriptionKey: "Failed to write plist to final destination"]
+            )
+            ErrorHandler.shared.handle(
+                FileSystemError.writeFailed(path: plistFilepath, error: writeError),
+                context: "Generate SS Local Launch Agent",
+                showAlert: true,
+                critical: true
+            )
+            return false
+        }
+
         ErrorHandler.shared.debug(
             "generateSSLocalLauchAgentPlist - File has been changed.", context: "LaunchAgent")
         return true
@@ -465,10 +496,41 @@ func generatePrivoxyLauchAgentPlist() -> Bool {
         "StandardErrorPath": logFilePath,
         "ProgramArguments": arguments,
     ]
-    dict.write(toFile: plistTempFilePath, atomically: true)
+
+    // Write to temporary file first to check if content changed
+    guard dict.write(toFile: plistTempFilePath, atomically: true) else {
+        let writeError = NSError(
+            domain: "com.qiuyuzhou.ShadowsocksX-NG",
+            code: -1,
+            userInfo: [NSLocalizedDescriptionKey: "Failed to write plist to temporary file"]
+        )
+        ErrorHandler.shared.handle(
+            FileSystemError.writeFailed(path: plistTempFilePath, error: writeError),
+            context: "Generate Privoxy Launch Agent",
+            showAlert: true,
+            critical: true
+        )
+        return false
+    }
+
     let sha1Sum = getFileSHA1Sum(plistTempFilePath)
     if oldSha1Sum != sha1Sum {
-        dict.write(toFile: plistFilepath, atomically: true)
+        // Write to final destination
+        guard dict.write(toFile: plistFilepath, atomically: true) else {
+            let writeError = NSError(
+                domain: "com.qiuyuzhou.ShadowsocksX-NG",
+                code: -1,
+                userInfo: [NSLocalizedDescriptionKey: "Failed to write plist to final destination"]
+            )
+            ErrorHandler.shared.handle(
+                FileSystemError.writeFailed(path: plistFilepath, error: writeError),
+                context: "Generate Privoxy Launch Agent",
+                showAlert: true,
+                critical: true
+            )
+            return false
+        }
+
         return true
     } else {
         return false

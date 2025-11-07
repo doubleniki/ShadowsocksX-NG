@@ -267,6 +267,13 @@ func generatePACFile() -> Bool {
                 )
                 return false
             }
+        } else {
+            ErrorHandler.shared.handle(
+                PACError.invalidFormat(reason: "Failed to decode GFW list base64"),
+                context: "Generate PAC File",
+                showAlert: true
+            )
+            return false
         }
 
     } catch {

@@ -178,6 +178,8 @@ enum FileSystemError: AppError {
     case readFailed(path: String, error: Error)
     case writeFailed(path: String, error: Error)
     case deleteFailed(path: String, error: Error)
+    case copyFailed(source: String, destination: String, error: Error)
+    case moveFailed(source: String, destination: String, error: Error)
     case invalidPath(path: String)
 
     var context: String {
@@ -191,6 +193,10 @@ enum FileSystemError: AppError {
         case .writeFailed(_, let error):
             return error
         case .deleteFailed(_, let error):
+            return error
+        case .copyFailed(_, _, let error):
+            return error
+        case .moveFailed(_, _, let error):
             return error
         default:
             return nil
@@ -209,6 +215,12 @@ enum FileSystemError: AppError {
             return "Failed to write file to \(path): \(error.localizedDescription)"
         case .deleteFailed(let path, let error):
             return "Failed to delete file at \(path): \(error.localizedDescription)"
+        case .copyFailed(let source, let destination, let error):
+            return
+                "Failed to copy file from \(source) to \(destination): \(error.localizedDescription)"
+        case .moveFailed(let source, let destination, let error):
+            return
+                "Failed to move file from \(source) to \(destination): \(error.localizedDescription)"
         case .invalidPath(let path):
             return "Invalid file path: \(path)"
         }

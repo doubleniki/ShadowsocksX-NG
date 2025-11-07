@@ -257,8 +257,7 @@ class ServerProfileTests: XCTestCase {
             return
         }
 
-        // Simulate what duplicate() does: remove old keychain entry and set new UUID
-        copiedProfile.removePasswordFromKeychain()
+        // Simulate what duplicate() does: set new UUID and save password
         copiedProfile.uuid = UUID().uuidString
         copiedProfile.password = originalPassword
 
@@ -299,8 +298,6 @@ class ServerProfileTests: XCTestCase {
         originalProfile.method = "aes-256-gcm"
         originalProfile.password = "test-password-456"
 
-        let originalPassword = originalProfile.password
-
         // Copy the profile
         guard let copiedProfile = originalProfile.copy() as? ServerProfile else {
             XCTFail("Failed to copy profile")
@@ -309,16 +306,29 @@ class ServerProfileTests: XCTestCase {
 
         let temporaryUUID = copiedProfile.uuid
 
-        // Simulate what duplicate() does
-        copiedProfile.removePasswordFromKeychain()
-        copiedProfile.uuid = UUID().uuidString
-        copiedProfile.password = originalPassword
-
-        // Verify that the temporary UUID no longer has a password in Keychain
+        // Verify that copy() does NOT save password to Keychain under temporary UUID
         let temporaryKeychainPassword = KeychainManager.shared.getPassword(
             forAccount: temporaryUUID)
         XCTAssertNil(
-            temporaryKeychainPassword, "Temporary UUID should not have a password in Keychain")
+            temporaryKeychainPassword,
+            "Copy should not save password to Keychain - it should only cache it")
+
+        // Verify password is accessible via cache
+        XCTAssertEqual(copiedProfile.password, "test-password-456", "Password should be cached")
+
+        // Simulate what duplicate() does - set new UUID and save password
+        copiedProfile.uuid = UUID().uuidString
+        copiedProfile.password = copiedProfile.password  // Re-save under new UUID
+
+        // Verify password is now in Keychain under the new UUID
+        let newKeychainPassword = KeychainManager.shared.getPassword(forAccount: copiedProfile.uuid)
+        XCTAssertEqual(
+            newKeychainPassword, "test-password-456",
+            "Password should be saved to Keychain under new UUID")
+
+        // Verify temporary UUID still has no Keychain entry
+        let stillNoPassword = KeychainManager.shared.getPassword(forAccount: temporaryUUID)
+        XCTAssertNil(stillNoPassword, "Temporary UUID should never have had a Keychain entry")
 
         // Clean up
         originalProfile.removePasswordFromKeychain()

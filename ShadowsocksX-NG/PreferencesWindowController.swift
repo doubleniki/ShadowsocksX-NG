@@ -152,41 +152,57 @@ class PreferencesWindowController: NSWindowController, NSTableViewDataSource, NS
     }
 
     @IBAction func duplicate(_ sender: Any) {
-        var copyCount = 0
-        for (_, toDuplicateIndex) in profilesTableView.selectedRowIndexes.enumerated() {
+        // Process indices in reverse order so that insertions don't affect unprocessed indices
+        let selectedIndices = Array(profilesTableView.selectedRowIndexes).sorted(by: >)
+        var newSelectionIndices = IndexSet()
+
+        for originalIndex in selectedIndices {
             ErrorHandler.shared.debug(
-                "Duplicating profile, total profiles count: \(profileMgr.profiles.count)")
-            let profile = profileMgr.profiles[toDuplicateIndex + copyCount]
+                "Duplicating profile at index \(originalIndex), total profiles count: \(profileMgr.profiles.count)"
+            )
 
-            // Save password before copying
-            let passwordToPreserve = profile.password
+            guard originalIndex < profileMgr.profiles.count else {
+                ErrorHandler.shared.warning("Invalid profile index \(originalIndex)")
+                continue
+            }
 
+            let profile = profileMgr.profiles[originalIndex]
+
+            // Copy profile (password is cached but not saved to Keychain yet)
             guard let duplicateProfile = profile.copy() as? ServerProfile else {
                 ErrorHandler.shared.warning("Failed to copy server profile")
                 continue
             }
 
-            // Remove password stored under the temporary UUID created in copy()
-            duplicateProfile.removePasswordFromKeychain()
-
             // Set new UUID
             duplicateProfile.uuid = UUID().uuidString
 
-            // Set password which will save it under the new UUID
-            duplicateProfile.password = passwordToPreserve
+            // Password is already in cache from copy(), so when we access it via the getter,
+            // it will return the cached value. Setting it explicitly ensures it's saved to
+            // Keychain under the new UUID
+            let passwordToSave = duplicateProfile.password
+            duplicateProfile.password = passwordToSave
 
-            profileMgr.profiles.insert(duplicateProfile, at: toDuplicateIndex + copyCount)
+            // Insert immediately after the source profile
+            let insertIndex = originalIndex + 1
+            profileMgr.profiles.insert(duplicateProfile, at: insertIndex)
 
             profilesTableView.beginUpdates()
-            let index = IndexSet(integer: toDuplicateIndex + copyCount)
+            let index = IndexSet(integer: insertIndex)
             profilesTableView.insertRows(
                 at: index, withAnimation: NSTableView.AnimationOptions.effectFade)
-            self.profilesTableView.scrollRowToVisible(toDuplicateIndex + copyCount)
-            self.profilesTableView.selectRowIndexes(index, byExtendingSelection: false)
             profilesTableView.endUpdates()
 
-            copyCount += 1
+            // Collect indices for final selection
+            newSelectionIndices.insert(insertIndex)
         }
+
+        // Select all duplicated profiles and scroll to the first one
+        if let firstIndex = newSelectionIndices.min() {
+            profilesTableView.selectRowIndexes(newSelectionIndices, byExtendingSelection: false)
+            profilesTableView.scrollRowToVisible(firstIndex)
+        }
+
         updateProfileBoxVisible()
     }
 
@@ -298,6 +314,10 @@ class PreferencesWindowController: NSWindowController, NSTableViewDataSource, NS
 
             methodTextField.unbind(NSBindingName(rawValue: "value"))
             passwordTextField.unbind(NSBindingName(rawValue: "value"))
+            passwordSecureTextField.unbind(NSBindingName(rawValue: "value"))
+
+            pluginTextField.unbind(NSBindingName(rawValue: "value"))
+            pluginOptionsTextField.unbind(NSBindingName(rawValue: "value"))
 
             remarkTextField.unbind(NSBindingName(rawValue: "value"))
         }
