@@ -225,8 +225,8 @@ class MenuBarManager {
 
         let mgr = ServerProfileManager.instance
         for profile in mgr.profiles where mgr.activeProfileId == profile.uuid {
-            // Use profile.title() which handles remark OR host:port correctly
-            let profileName = String(profile.title().prefix(24))
+            // Use profile.title() directly - it already handles truncation correctly
+            let profileName = profile.title()
             serverMenuText = "Servers".localized + " - \(profileName)"
             break
         }
