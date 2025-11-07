@@ -11,6 +11,8 @@ import Cocoa
 import RxCocoa
 import RxSwift
 
+// swiftlint:disable type_body_length
+// TODO: Refactor AppDelegate - split into smaller controllers (Phase 2)
 @NSApplicationMain
 class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDelegate {
 

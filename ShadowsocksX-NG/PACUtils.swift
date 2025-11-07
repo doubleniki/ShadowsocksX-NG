@@ -46,6 +46,8 @@ func syncPac() {
     }
 }
 
+// swiftlint:disable function_body_length cyclomatic_complexity
+// TODO: Refactor generatePACFile - decompose into helper functions (Phase 2)
 func generatePACFile() -> Bool {
     let fileMgr = FileManager.default
     // Maker the dir if rulesDirPath is not exesited.
@@ -234,6 +236,7 @@ func generatePACFile() -> Bool {
     }
     return false
 }
+// swiftlint:enable function_body_length cyclomatic_complexity
 
 func updatePACFromGFWList() {
     // Make the dir if rulesDirPath is not exesited.
