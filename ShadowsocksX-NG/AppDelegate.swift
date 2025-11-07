@@ -100,7 +100,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
 
     func applicationDidFinishLaunching(_ aNotification: Notification) {
 
-        _ = LaunchAtLoginController()  // Ensure set when launch
+        _ = LaunchAtLoginController.shared()  // Initialize singleton and ensure LaunchAtLogin is set
 
         // Request notification authorization
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { granted, error in
