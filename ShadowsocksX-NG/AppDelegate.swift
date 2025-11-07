@@ -14,7 +14,7 @@ import UserNotifications
 
 // TODO: Refactor AppDelegate - split into smaller controllers (Phase 2)
 @NSApplicationMain
-class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDelegate {
+class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDelegate, MenuBarManagerDelegate {
 
     // MARK: - Coordinators
 
@@ -179,6 +179,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
             serverProfilesEndSeparatorMenuItem: serverProfilesEndSeparatorMenuItem,
             copyHttpProxyExportCmdLineMenuItem: copyHttpProxyExportCmdLineMenuItem
         )
+        menuBarManager.delegate = self
     }
 
     private func setupNotificationObservers() {
@@ -580,6 +581,21 @@ extension AppDelegate {
                 )
             }
         }
+    }
+}
+
+// MARK: - MenuBarManagerDelegate
+extension AppDelegate {
+    func menuBarManager(_ manager: MenuBarManager, didSelectServerAt index: Int) {
+        let spMgr = ServerProfileManager.instance
+        let newProfile = spMgr.profiles[index]
+        if newProfile.uuid != spMgr.activeProfileId {
+            spMgr.setActiveProfiledId(newProfile.uuid)
+            menuBarManager.updateServersMenu()
+            syncSSLocal()
+            proxyCoordinator.applyConfig()
+        }
+        menuBarManager.updateRunningModeMenu()
     }
 }
 

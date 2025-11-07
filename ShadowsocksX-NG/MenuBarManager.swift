@@ -7,6 +7,15 @@
 
 import Cocoa
 
+/// Delegate protocol for MenuBarManager to communicate menu actions
+protocol MenuBarManagerDelegate: AnyObject {
+    /// Called when user selects a server from the menu
+    /// - Parameters:
+    ///   - manager: The MenuBarManager instance
+    ///   - index: The index of selected server in profiles array
+    func menuBarManager(_ manager: MenuBarManager, didSelectServerAt index: Int)
+}
+
 /// Manages the status bar item and menu updates
 class MenuBarManager {
     // MARK: - Properties
@@ -28,6 +37,8 @@ class MenuBarManager {
 
     private let kProfileMenuItemIndexBase = 100
     static let StatusItemIconWidth: CGFloat = NSStatusItem.variableLength
+
+    weak var delegate: MenuBarManagerDelegate?
 
     // MARK: - Initialization
 
@@ -192,13 +203,19 @@ class MenuBarManager {
                 item.keyEquivalent = String(key)
                 item.keyEquivalentModifierMask = .init()
             }
-            item.action = #selector(AppDelegate.selectServer)
+            item.target = self
+            item.action = #selector(handleServerSelection(_:))
 
             menu.insertItem(item, at: beginIndex)
         }
 
         // End separator is redundant if profile section is empty
         serverProfilesEndSeparatorMenuItem.isHidden = profiles.isEmpty
+    }
+
+    @objc private func handleServerSelection(_ sender: NSMenuItem) {
+        let index = sender.tag - kProfileMenuItemIndexBase
+        delegate?.menuBarManager(self, didSelectServerAt: index)
     }
 
     // MARK: - Private Helpers
