@@ -127,23 +127,42 @@ class MenuBarManager {
 
         if isOn {
             if let currentMode = mode {
+                let iconName: String
                 switch currentMode {
                 case "auto":
-                    statusItem.button?.image = NSImage(named: "menu_p_icon")
+                    iconName = "menu_p_icon"
                 case "global":
-                    statusItem.button?.image = NSImage(named: "menu_g_icon")
+                    iconName = "menu_g_icon"
                 case "manual":
-                    statusItem.button?.image = NSImage(named: "menu_m_icon")
+                    iconName = "menu_m_icon"
                 case "externalPAC":
-                    statusItem.button?.image = NSImage(named: "menu_e_icon")
+                    iconName = "menu_e_icon"
                 default:
-                    break
+                    iconName = "menu_icon"
                 }
-                statusItem.button?.image?.isTemplate = true
+
+                if let image = loadIconWithFallback(named: iconName) {
+                    statusItem.button?.image = image
+                    statusItem.button?.image?.isTemplate = true
+                }
             }
         } else {
-            statusItem.button?.image = NSImage(named: "menu_icon_disabled")
-            statusItem.button?.image?.isTemplate = true
+            if let image = loadIconWithFallback(named: "menu_icon_disabled") {
+                statusItem.button?.image = image
+                statusItem.button?.image?.isTemplate = true
+            }
+        }
+    }
+
+    private func loadIconWithFallback(named name: String, fallback: String = "menu_icon_disabled") -> NSImage? {
+        if let image = NSImage(named: name) {
+            return image
+        } else {
+            ErrorHandler.shared.warning(
+                "Missing status bar icon asset: \(name), using fallback: \(fallback)",
+                context: "MenuBarManager"
+            )
+            return NSImage(named: fallback)
         }
     }
 
@@ -160,7 +179,6 @@ class MenuBarManager {
             toggleRunningMenuItem.title = "Turn Shadowsocks On".localized
             runningStatusMenuItem.image = NSImage(named: "NSStatusNone")
         }
-        statusItem.button?.image?.isTemplate = true
 
         updateStatusMenuImage()
     }
