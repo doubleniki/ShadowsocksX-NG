@@ -79,15 +79,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
         _ = LaunchAtLoginController.shared()  // Initialize singleton and ensure LaunchAtLogin is set
 
         // Request notification authorization
-        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { _, error in
-            if let error = error {
-                ErrorHandler.shared.handle(
-                    error,
-                    context: "Request Notification Authorization",
-                    showAlert: false
-                )
-            }
-        }
+        NotificationService.shared.requestAuthorization()
         UNUserNotificationCenter.current().delegate = self
 
         ensureLaunchAgentsDirOwner()
