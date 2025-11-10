@@ -33,9 +33,11 @@ This document provides a phased, step-by-step plan for refactoring the Shadowsoc
 
 ## 📊 Phase 1 Achievements Summary
 
-**Status:** ✅ COMPLETED (2025-11-07)
+**Status:** ✅ COMPLETED (2025-11-10)
 **Duration:** 1 week
-**Branch:** `refactor/phase1-foundation-safety` (merged to develop)
+**Branches:**
+- `refactor/phase1-foundation-safety` (merged to develop)
+- `refactor/phase1-4-constants-and-enums` (pending PR)
 
 ### Key Accomplishments
 
@@ -512,11 +514,11 @@ do {
 
 ---
 
-### 1.4 Create Constants and Enums ⏳ PARTIALLY COMPLETED
+### 1.4 Create Constants and Enums ✅ COMPLETED
 
 **Time:** 1 day
 **Priority:** 🟡 HIGH
-**Status:** ⏳ Partially completed (continued in Phase 2)
+**Status:** ✅ Completed (2025-11-10)
 
 #### Create Constants File
 
@@ -653,26 +655,35 @@ NotificationCenter.default.post(name: Constants.Notification.configChanged, obje
 #### Checklist
 
 - ✅ Create Constants.swift file (with path definitions)
-- ⏳ Define all UserDefaults keys (partially done)
-- ⏳ Define ProxyMode enum (planned for Phase 2)
-- ⏳ Define EncryptionMethod enum (planned for Phase 2)
-- ✅ Replace magic strings in AppDelegate.swift (refactored)
+- ✅ Define all UserDefaults keys
+- ✅ Define ProxyMode enum
+- ✅ Define EncryptionMethod enum (plus PluginType enum)
+- ✅ Replace magic strings in AppDelegate.swift
 - ✅ Replace magic strings in ServerProfile.swift
 - ✅ Replace magic strings in LaunchAgentUtils.swift
-- ⏳ Replace magic strings in PreferencesWindowController.swift (partially)
+- ✅ Replace magic strings in PreferencesWindowController.swift
+- ✅ Replace magic strings in ServerProfileManager.swift
+- ✅ Replace magic strings in MenuBarManager.swift
+- ✅ Replace magic strings in ProxyCoordinator.swift
+- ✅ Replace magic strings in Diagnose.swift
+- ✅ Replace magic strings in PreferencesWinController.swift
+- ✅ Fixed SwiftLint warnings in Constants.swift
 - ✅ Compile and verify no regressions
 
 **Deliverables:**
-- ⏳ Centralized constants file (partially complete, continued in Phase 2)
-- ⏳ Type-safe enums (planned for Phase 2)
-- ⏳ Reduced magic strings in codebase (ongoing improvement)
+- ✅ Centralized constants file with comprehensive definitions
+- ✅ Type-safe enums (ProxyMode, EncryptionMethod, PluginType)
+- ✅ Magic strings eliminated across 8 files
+- ✅ All SwiftLint checks passing
 
 ### Phase 1 Summary
 
 **Status:** ✅ COMPLETED
-**Completed:** 2025-11-07
+**Completed:** 2025-11-10
 **Duration:** 1 week
-**Branch:** `refactor/phase1-foundation-safety` (merged to develop)
+**Branches:**
+- `refactor/phase1-foundation-safety` (merged to develop)
+- `refactor/phase1-4-constants-and-enums` (pending PR)
 
 **Highlights:**
 - Zero force unwraps in production code
@@ -681,7 +692,9 @@ NotificationCenter.default.post(name: Constants.Notification.configChanged, obje
 - AppDelegate refactored (692→36 lines)
 - macOS 11.0 deployment target
 - SwiftLint: 0 warnings (1 documented exception)
-- 40+ files modified, 2,000+ lines changed, 20+ commits
+- Constants and enums fully implemented
+- Magic strings eliminated across codebase
+- 48+ files modified, 2,000+ lines changed, 25+ commits
 
 See detailed achievements in the "📊 Phase 1 Achievements Summary" section above.
 

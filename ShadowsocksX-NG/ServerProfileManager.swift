@@ -113,3 +113,9 @@ class ServerProfileManager: NSObject {
         return urls
     }
 }
+
+// MARK: - ServerProfileManaging Protocol Conformance
+
+extension ServerProfileManager: ServerProfileManaging {
+    // All required methods already implemented in main class
+}

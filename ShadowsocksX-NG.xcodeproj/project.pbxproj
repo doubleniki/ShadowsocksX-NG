@@ -99,7 +99,9 @@
 		C8E42A6E1D4F2CAF0074C7EA /* UserRulesController.xib in Resources */ = {isa = PBXBuildFile; fileRef = C8E42A701D4F2CAF0074C7EA /* UserRulesController.xib */; };
 		C9AD9A9DBFA84B284C9E9AC3 /* Pods_ShadowsocksX_NG.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 283ED1A8E9B711AC65670031 /* Pods_ShadowsocksX_NG.framework */; };
 		CCEBF35171293857ED8D9411 /* WindowCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB2E74F2329AD745C49148D2 /* WindowCoordinator.swift */; };
+		CFAFFA604C9F2F249BD7A83C /* ServiceProtocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3024D3A51CF0C97FCF64F4AD /* ServiceProtocols.swift */; };
 		F0809FF1595BE2966343D3C7 /* libPods-proxy_conf_helper.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1E7783AEDB4A3BDDC9FF16AC /* libPods-proxy_conf_helper.a */; };
+		FB570A48EB6E2CEBB52C0862 /* UserDefaultsPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEAD1F5E74AFCF1848AEADBC /* UserDefaultsPreferences.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -156,6 +158,7 @@
 		1E7783AEDB4A3BDDC9FF16AC /* libPods-proxy_conf_helper.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-proxy_conf_helper.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		283ED1A8E9B711AC65670031 /* Pods_ShadowsocksX_NG.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_ShadowsocksX_NG.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		297AF069022A197FD8E9D226 /* Pods-proxy_conf_helper.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-proxy_conf_helper.release.xcconfig"; path = "Pods/Target Support Files/Pods-proxy_conf_helper/Pods-proxy_conf_helper.release.xcconfig"; sourceTree = "<group>"; };
+		3024D3A51CF0C97FCF64F4AD /* ServiceProtocols.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ServiceProtocols.swift; path = Protocols/ServiceProtocols.swift; sourceTree = "<group>"; };
 		33590EDD35D8C3520FCC8A19 /* NotificationService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
 		388120F062D7EB7DD0D8DDCA /* Pods_ShadowsocksX_NGTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_ShadowsocksX_NGTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		3AC7CD9886196A997D6FC78D /* Pods-ShadowsocksX-NGTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ShadowsocksX-NGTests.release.xcconfig"; path = "Pods/Target Support Files/Pods-ShadowsocksX-NGTests/Pods-ShadowsocksX-NGTests.release.xcconfig"; sourceTree = "<group>"; };
@@ -271,6 +274,7 @@
 		C8E42A6F1D4F2CAF0074C7EA /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/UserRulesController.xib; sourceTree = "<group>"; };
 		C8E42A721D4F2CB10074C7EA /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/UserRulesController.strings"; sourceTree = "<group>"; };
 		E9E9FB3855DA55D0710EE7BD /* Pods-ShadowsocksX-NG.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ShadowsocksX-NG.release.xcconfig"; path = "Pods/Target Support Files/Pods-ShadowsocksX-NG/Pods-ShadowsocksX-NG.release.xcconfig"; sourceTree = "<group>"; };
+		EEAD1F5E74AFCF1848AEADBC /* UserDefaultsPreferences.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = UserDefaultsPreferences.swift; path = Preferences/UserDefaultsPreferences.swift; sourceTree = "<group>"; };
 		FE3237E9FB24D9B924A0E630 /* Pods-ShadowsocksX-NG.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ShadowsocksX-NG.debug.xcconfig"; path = "Pods/Target Support Files/Pods-ShadowsocksX-NG/Pods-ShadowsocksX-NG.debug.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -333,6 +337,14 @@
 				4CF8494CFCBB4AC77D5CD88A /* ProxyCoordinator.swift */,
 			);
 			name = Coordinators;
+			sourceTree = "<group>";
+		};
+		7D9FF7C980FF6616E221996B /* Preferences */ = {
+			isa = PBXGroup;
+			children = (
+				EEAD1F5E74AFCF1848AEADBC /* UserDefaultsPreferences.swift */,
+			);
+			name = Preferences;
 			sourceTree = "<group>";
 		};
 		9B07EFB01D048E900052D9DF /* Support Files */ = {
@@ -417,6 +429,8 @@
 				A249331A2EBE590D00F0C1E6 /* OSVersion.swift */,
 				49B42215A391FCC75DC219C7 /* Coordinators */,
 				33590EDD35D8C3520FCC8A19 /* NotificationService.swift */,
+				D5CA972873A7208A2EE7DBF5 /* Protocols */,
+				7D9FF7C980FF6616E221996B /* Preferences */,
 			);
 			path = "ShadowsocksX-NG";
 			sourceTree = "<group>";
@@ -568,6 +582,14 @@
 				1E7783AEDB4A3BDDC9FF16AC /* libPods-proxy_conf_helper.a */,
 			);
 			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		D5CA972873A7208A2EE7DBF5 /* Protocols */ = {
+			isa = PBXGroup;
+			children = (
+				3024D3A51CF0C97FCF64F4AD /* ServiceProtocols.swift */,
+			);
+			name = Protocols;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -889,6 +911,8 @@
 				CCEBF35171293857ED8D9411 /* WindowCoordinator.swift in Sources */,
 				8892D6FC0B54E6A26D39ABA6 /* ProxyCoordinator.swift in Sources */,
 				91D97C573E0AD00EA60AD5BE /* NotificationService.swift in Sources */,
+				CFAFFA604C9F2F249BD7A83C /* ServiceProtocols.swift in Sources */,
+				FB570A48EB6E2CEBB52C0862 /* UserDefaultsPreferences.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
