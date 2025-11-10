@@ -1,0 +1,7 @@
+## Code Style & Conventions
+- Swift & Objective-C mix with Swift preferred for new features; follow `.swiftlint.yml` (120-char warning / 150 error, func length 60/100, no more than 2 empty lines, identifier length 2-40). SwiftLint is enforced in CI with opt-in rules like `force_unwrapping`, `force_try`, `closure_spacing`, etc.
+- Prohibited patterns (docs/code-quality/DEVELOPMENT_SETUP.md): `!` (except IBOutlets), `try!`, `as!`, empty catch blocks, `NSLog`, `print` in production. Use `os.log` or the Logger wrapper, guard clauses, Codable, async/await, protocol-oriented DI, and thorough error handling.
+- Naming: camelCase for vars/functions, PascalCase for types; short 1-letter identifiers discouraged except `i/j/x/y/z/id`. Stick to descriptive `feature/xyz` branch names (GitFlow) and conventional commit-style prefixes (`feat:`, `fix:`, `refactor:`) in commit messages.
+- UI assets live in `Assets.xcassets`; localized strings in `Base.lproj`, `zh-Hans.lproj`. Keep PAC resources (`user-rule.txt`, `abp.js`) in sync when editing proxy logic.
+- When editing helper binaries or scripts, maintain POSIX shell style and ensure scripts stay executable; Objective-C bridging headers in `ShadowsocksX-NG/ShadowsocksX-NG-Bridging-Header.h` must compile warnings-free.
+- Tests are XCTest-based; place new tests in `ShadowsocksX-NGTests/` mirroring the source type they cover.
