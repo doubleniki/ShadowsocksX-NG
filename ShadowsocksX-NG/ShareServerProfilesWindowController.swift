@@ -86,7 +86,7 @@ class ShareServerProfilesWindowController: NSWindowController
 
             savePanel.becomeKey()
             let result = savePanel.runModal()
-            if (result.rawValue == NSFileHandlingPanelOKButton && (savePanel.url) != nil) {
+            if (result == .OK && (savePanel.url) != nil) {
                 guard let tiffData = img.tiffRepresentation,
                       let imgRep = NSBitmapImageRep(data: tiffData),
                       let data = imgRep.representation(using: NSBitmapImageRep.FileType.gif, properties: [:]),
@@ -130,7 +130,7 @@ class ShareServerProfilesWindowController: NSWindowController
         savePanel.nameFieldStringValue = "shadowsocks_profiles_\(date_string).txt"
         savePanel.becomeKey()
         let result = savePanel.runModal()
-        if (result.rawValue == NSFileHandlingPanelOKButton) {
+        if (result == .OK) {
             guard let url = savePanel.url else {
                 ErrorHandler.shared.warning("No URL selected for saving")
                 return

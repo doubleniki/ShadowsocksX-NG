@@ -10,9 +10,9 @@ import Cocoa
 
 class ServerProfileManager: NSObject {
 
-    static let instance:ServerProfileManager = ServerProfileManager()
+    static let instance: ServerProfileManager = ServerProfileManager()
 
-    var profiles:[ServerProfile] = [ServerProfile]()
+    var profiles: [ServerProfile] = [ServerProfile]()
     var activeProfileId: String?
 
     fileprivate override init() {
@@ -21,7 +21,8 @@ class ServerProfileManager: NSObject {
             for _profile in _profiles {
                 // Safe cast and unwrap
                 guard let profileDict = _profile as? [String: Any],
-                      let profile = ServerProfile.fromDictionary(profileDict) else {
+                    let profile = ServerProfile.fromDictionary(profileDict)
+                else {
                     ErrorHandler.shared.warning("Failed to load server profile from dictionary")
                     continue
                 }
@@ -61,7 +62,8 @@ class ServerProfileManager: NSObject {
             for _profile in _profiles {
                 // Safe cast and unwrap
                 guard let profileDict = _profile as? [String: Any],
-                      let profile = ServerProfile.fromDictionary(profileDict) else {
+                    let profile = ServerProfile.fromDictionary(profileDict)
+                else {
                     ErrorHandler.shared.warning("Failed to load server profile from dictionary")
                     continue
                 }
@@ -97,7 +99,7 @@ class ServerProfileManager: NSObject {
         if addCount > 0 {
             save()
             NotificationCenter.default
-                .post(name: NOTIFY_SERVER_PROFILES_CHANGED, object: nil)
+                .post(name: Constants.Notification.serverProfilesChanged, object: nil)
         }
 
         return addCount

@@ -1,4 +1,5 @@
 ## Before Submitting Changes
+
 1. **Sync & Branching**: Rebase or merge latest `develop`, keep work on a feature/hotfix branch following GitFlow naming (e.g., `feature/<topic>`).
 2. **Build**: Run `pod install` (if pods changed), then `make debug` to ensure the workspace compiles with bundled dependencies.
 3. **Static Analysis**: Execute `swiftlint lint --strict` (or the Xcode build phase) and resolve warnings/errors; no `NSLog`/`print`, force unwraps, or empty catches should remain.

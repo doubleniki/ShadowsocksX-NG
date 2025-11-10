@@ -322,10 +322,7 @@ func updatePACFromGFWList() {
                         toFile: GFWListFilePath, atomically: true, encoding: String.Encoding.utf8)
                     if generatePACFile() {
                         // Popup a user notification
-                        let notification = NSUserNotification()
-                        notification.title = "PAC has been updated by latest GFW List.".localized
-                        NSUserNotificationCenter.default
-                            .deliver(notification)
+                        NotificationService.shared.send(title: "PAC has been updated by latest GFW List.".localized)
                     }
                 } catch {
                     ErrorHandler.shared.handle(
@@ -336,10 +333,7 @@ func updatePACFromGFWList() {
                 }
             case .failure:
                 // Popup a user notification
-                let notification = NSUserNotification()
-                notification.title = "Failed to download latest GFW List.".localized
-                NSUserNotificationCenter.default
-                    .deliver(notification)
+                NotificationService.shared.send(title: "Failed to download latest GFW List.".localized)
             }
         }
 }

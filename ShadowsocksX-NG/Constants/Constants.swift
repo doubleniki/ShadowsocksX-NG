@@ -45,6 +45,10 @@ enum Constants {
         static let serverProfilesChanged = Foundation.Notification.Name(
             "NOTIFY_SERVER_PROFILES_CHANGED")
         static let foundSSURL = Foundation.Notification.Name("NOTIFY_FOUND_SS_URL")
+        static let toggleRunningShortcut = Foundation.Notification.Name(
+            "NOTIFY_TOGGLE_RUNNING_SHORTCUT")
+        static let switchProxyModeShortcut = Foundation.Notification.Name(
+            "NOTIFY_SWITCH_PROXY_MODE_SHORTCUT")
         static let pacGenerationFailed = Foundation.Notification.Name(
             "NOTIFY_PAC_GENERATION_FAILED")
     }

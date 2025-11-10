@@ -170,10 +170,7 @@ class UserRulesController: NSWindowController {
             return
         }
 
-        // Add domain rule
-        let rule = "||" + domain
-        addRuleToTextView(rule)
-        quickAddTextField.stringValue = ""
+        handleRuleAddition(for: domain, quickAddFieldValue: "")
     }
 
     @objc private func addFromClipboard(_ sender: Any) {
@@ -195,10 +192,7 @@ class UserRulesController: NSWindowController {
             return
         }
 
-        // Add domain rule
-        let rule = "||" + domain
-        addRuleToTextView(rule)
-        quickAddTextField.stringValue = domain
+        handleRuleAddition(for: domain, quickAddFieldValue: domain)
     }
 
     private func extractDomain(from input: String) -> String {
@@ -235,6 +229,54 @@ class UserRulesController: NSWindowController {
         }
 
         return ""
+    }
+
+    private func handleRuleAddition(for domain: String, quickAddFieldValue: String) {
+        let checker = RuleSimilarityChecker(rulesText: userRulesView.string)
+        let rule = "||" + domain
+
+        if let similarity = checker.findSimilarity(for: domain) {
+            presentSimilarityAlert(
+                for: domain,
+                rule: rule,
+                quickAddFieldValue: quickAddFieldValue,
+                similarity: similarity
+            )
+        } else {
+            finalizeRuleAddition(rule: rule, quickAddFieldValue: quickAddFieldValue)
+        }
+    }
+
+    private func finalizeRuleAddition(rule: String, quickAddFieldValue: String) {
+        quickAddTextField.stringValue = quickAddFieldValue
+        addRuleToTextView(rule)
+    }
+
+    private func presentSimilarityAlert(
+        for domain: String,
+        rule: String,
+        quickAddFieldValue: String,
+        similarity: RuleSimilarity
+    ) {
+        let alert = NSAlert()
+        alert.messageText = "Similar Rule Detected"
+        alert.informativeText = similarity.message(for: domain)
+        alert.alertStyle = .warning
+        alert.addButton(withTitle: "Add Anyway")
+        alert.addButton(withTitle: "Cancel")
+
+        guard let window = window else {
+            let response = alert.runModal()
+            if response == .alertFirstButtonReturn {
+                finalizeRuleAddition(rule: rule, quickAddFieldValue: quickAddFieldValue)
+            }
+            return
+        }
+
+        alert.beginSheetModal(for: window) { [weak self] response in
+            guard response == .alertFirstButtonReturn else { return }
+            self?.finalizeRuleAddition(rule: rule, quickAddFieldValue: quickAddFieldValue)
+        }
     }
 
     private func addRuleToTextView(_ rule: String) {
@@ -303,16 +345,10 @@ class UserRulesController: NSWindowController {
                 try data.write(to: URL(fileURLWithPath: PACUserRuleFilePath), options: .atomic)
 
                 if generatePACFile() {
-                    // Popup a user notification
-                    let notification = NSUserNotification()
-                    notification.title = "PAC has been updated by User Rules.".localized
-                    NSUserNotificationCenter.default
-                        .deliver(notification)
+                    // Send a user notification
+                    NotificationService.shared.send(title: "PAC has been updated by User Rules.".localized)
                 } else {
-                    let notification = NSUserNotification()
-                    notification.title = "It's failed to update PAC by User Rules.".localized
-                    NSUserNotificationCenter.default
-                        .deliver(notification)
+                    NotificationService.shared.send(title: "It's failed to update PAC by User Rules.".localized)
                 }
             } catch {
                 ErrorHandler.shared.handle(
@@ -326,5 +362,189 @@ class UserRulesController: NSWindowController {
             }
         }
         window?.performClose(self)
+    }
+
+}
+
+struct RuleSimilarity {
+    enum Relation {
+        case exactMatch
+        case existingRuleCoversDomain
+        case existingRuleMoreSpecific
+        case conflictsWithException
+    }
+
+    let relation: Relation
+    let existingRule: String
+
+    func message(for domain: String) -> String {
+        switch relation {
+        case .exactMatch:
+            return "Rule \"\(existingRule)\" already exists."
+        case .existingRuleCoversDomain:
+            return "Existing rule \"\(existingRule)\" already covers domain \"\(domain)\"."
+        case .existingRuleMoreSpecific:
+            return "Existing rule \"\(existingRule)\" is more specific than the domain you are adding."
+        case .conflictsWithException:
+            return "Whitelist rule \"\(existingRule)\" conflicts with blocking domain \"\(domain)\"."
+        }
+    }
+}
+
+struct RuleSimilarityChecker {
+    private let entries: [RuleEntry]
+
+    init(rulesText: String) {
+        self.entries = RuleSimilarityChecker.parseEntries(from: rulesText)
+    }
+
+    func findSimilarity(for domain: String) -> RuleSimilarity? {
+        let normalizedDomain = RuleSimilarityChecker.normalizeCandidate(domain)
+        guard !normalizedDomain.isEmpty else { return nil }
+
+        if let exception = entries.first(where: {
+            $0.isException && RuleSimilarityChecker.entry($0, matches: normalizedDomain)
+        }) {
+            return RuleSimilarity(relation: .conflictsWithException, existingRule: exception.originalRule)
+        }
+
+        if let exactRule = entries.first(where: {
+            !$0.isException && !$0.hasWildcard && $0.normalizedDomain == normalizedDomain
+        }) {
+            return RuleSimilarity(relation: .exactMatch, existingRule: exactRule.originalRule)
+        }
+
+        if let coveringRule = entries.first(where: {
+            !$0.isException && RuleSimilarityChecker.entry($0, covers: normalizedDomain)
+        }) {
+            return RuleSimilarity(
+                relation: .existingRuleCoversDomain,
+                existingRule: coveringRule.originalRule
+            )
+        }
+
+        if let specificRule = entries.first(where: {
+            !$0.isException && RuleSimilarityChecker.domain(normalizedDomain, coversEntry: $0)
+        }) {
+            return RuleSimilarity(
+                relation: .existingRuleMoreSpecific,
+                existingRule: specificRule.originalRule
+            )
+        }
+
+        return nil
+    }
+
+    private static func parseEntries(from text: String) -> [RuleEntry] {
+        return text
+            .components(separatedBy: .newlines)
+            .compactMap { normalizeStoredRule($0) }
+    }
+
+    private static func normalizeStoredRule(_ raw: String) -> RuleEntry? {
+        var line = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !line.isEmpty else { return nil }
+        guard !line.hasPrefix("!") else { return nil }
+
+        var isException = false
+        if line.hasPrefix("@@") {
+            isException = true
+            line = String(line.dropFirst(2))
+        }
+
+        line = line.trimmingCharacters(in: .whitespaces)
+
+        if line.hasPrefix("||") {
+            line = String(line.dropFirst(2))
+        } else if line.hasPrefix("|") {
+            line = String(line.dropFirst(1))
+        }
+
+        let containsWildcard = line.contains("*")
+
+        while line.hasPrefix("*.") {
+            line = String(line.dropFirst(2))
+        }
+        if line.hasPrefix(".") {
+            line = String(line.dropFirst())
+        }
+
+        if line.contains("://"), let url = URL(string: line), let host = url.host {
+            line = host
+        }
+
+        line = stripAfterDelimiters(in: line)
+        line = line.lowercased()
+
+        if line.hasPrefix("www.") {
+            line = String(line.dropFirst(4))
+        }
+
+        line = line.trimmingCharacters(in: CharacterSet(charactersIn: "."))
+        let normalized = takeDomainPrefix(from: line)
+
+        guard !normalized.isEmpty else { return nil }
+
+        return RuleEntry(
+            originalRule: raw,
+            normalizedDomain: normalized,
+            hasWildcard: containsWildcard,
+            isException: isException
+        )
+    }
+
+    private static func normalizeCandidate(_ domain: String) -> String {
+        var candidate = domain.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        if candidate.hasPrefix("www.") {
+            candidate = String(candidate.dropFirst(4))
+        }
+        candidate = candidate.trimmingCharacters(in: CharacterSet(charactersIn: "."))
+        return takeDomainPrefix(from: candidate)
+    }
+
+    private static func stripAfterDelimiters(in text: String) -> String {
+        var result = text
+        let delimiters: [Character] = ["^", "/", "?", "#", ":"]
+        for delimiter in delimiters {
+            if let index = result.firstIndex(of: delimiter) {
+                result = String(result[..<index])
+            }
+        }
+        return result
+    }
+
+    private static func takeDomainPrefix(from text: String) -> String {
+        var characters: [Character] = []
+        for character in text {
+            if character.isLetter || character.isNumber || character == "-" || character == "." {
+                characters.append(character)
+            } else {
+                break
+            }
+        }
+        return String(characters)
+    }
+
+    private static func entry(_ entry: RuleEntry, matches domain: String) -> Bool {
+        return domain == entry.normalizedDomain
+            || domain.hasSuffix("." + entry.normalizedDomain)
+    }
+
+    private static func entry(_ entry: RuleEntry, covers domain: String) -> Bool {
+        guard entry.normalizedDomain != domain else { return false }
+        return domain.hasSuffix("." + entry.normalizedDomain)
+    }
+
+    private static func domain(_ domain: String, coversEntry entry: RuleEntry) -> Bool {
+        guard entry.normalizedDomain != domain else { return false }
+        guard !entry.hasWildcard else { return false }
+        return entry.normalizedDomain.hasSuffix("." + domain)
+    }
+
+    private struct RuleEntry {
+        let originalRule: String
+        let normalizedDomain: String
+        let hasWildcard: Bool
+        let isException: Bool
     }
 }

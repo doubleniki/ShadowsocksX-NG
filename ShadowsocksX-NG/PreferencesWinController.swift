@@ -41,7 +41,7 @@ class PreferencesWinController: NSWindowController {
 
     @objc func windowWillClose(_ notification: Notification) {
         NotificationCenter.default
-            .post(name: NOTIFY_CONF_CHANGED, object: nil)
+            .post(name: Constants.Notification.configChanged, object: nil)
     }
 
     @IBAction func toolbarAction(sender: NSToolbarItem) {
