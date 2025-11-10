@@ -1,0 +1,11 @@
+## ShadowsocksX-NG Overview
+- macOS 11+ desktop client for the Shadowsocks secure proxy protocol; modernized fork of ShadowsocksX-NG with refreshed UI, helper daemons, and optimized build/test pipelines.
+- Main target languages: Swift + Objective-C for the GUI and helper glue, plus shell scripts and vendor C/C++ tooling built in `deps/` to ship binaries for ss-local, privoxy, and SIP003 plugins (kcptun, simple-obfs, v2ray-plugin).
+- High-level components:
+  - `ShadowsocksX-NG/`: primary app sources (controllers, models, assets, localized resources, helper scripts, bundled binaries).
+  - `proxy_conf_helper/`: privileged command-line helper used to flip macOS network proxy settings via AuthorizationExecuteWithPrivileges.
+  - `LaunchHelper/`: tiny login helper that reopens the menu-bar app at login.
+  - `deps/`: Make-based pipeline that builds/bundles native networking binaries (libsodium/mbedtls/etc.).
+  - `ShadowsocksX-NGTests/`: XCTest targets covering models (e.g., `ServerProfileTests.swift`, `OSVersionTests.swift`).
+- Process architecture: GUI app orchestrates launchd-managed daemons (`ss-local`, `privoxy`, optional SIP003 plugins); plist generation lives in `LaunchAgentUtils.swift`, configs stored under `~/Library/Application Support/ShadowsocksX-NG/`.
+- Documentation highlights live in `CLAUDE.md` plus `docs/` (UI modernization, testing strategy, development setup).
