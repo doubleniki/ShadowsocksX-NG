@@ -16,12 +16,34 @@ import UserNotifications
 @NSApplicationMain
 class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDelegate, MenuBarManagerDelegate {
 
-    // MARK: - Coordinators
+    // MARK: - Dependencies
 
+    private let container: DependencyContainer
+    private let preferences: PreferencesManaging
+    private let profileManager: ServerProfileManaging
+    private let windowCoordinator: WindowCoordinator
+    private let proxyCoordinator: ProxyCoordinator
     private var menuBarManager: MenuBarManager!
-    private var windowCoordinator: WindowCoordinator!
-    private var proxyCoordinator: ProxyCoordinator!
     private let disposeBag = DisposeBag()
+
+    override init() {
+        let container = DependencyContainer.shared
+        self.container = container
+        self.preferences = container.preferences
+        self.profileManager = container.profileManager
+        self.windowCoordinator = container.makeWindowCoordinator()
+        self.proxyCoordinator = container.makeProxyCoordinator()
+        super.init()
+    }
+
+    init(container: DependencyContainer) {
+        self.container = container
+        self.preferences = container.preferences
+        self.profileManager = container.profileManager
+        self.windowCoordinator = container.makeWindowCoordinator()
+        self.proxyCoordinator = container.makeProxyCoordinator()
+        super.init()
+    }
 
     // MARK: - IBOutlets
 
@@ -151,14 +173,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
     }
 
     private func setupCoordinators() {
-        // Initialize WindowCoordinator
-        windowCoordinator = WindowCoordinator()
-
-        // Initialize ProxyCoordinator
-        proxyCoordinator = ProxyCoordinator()
-
-        // Initialize MenuBarManager with all required menu items
-        menuBarManager = MenuBarManager(
+        menuBarManager = container.makeMenuBarManager(
             statusMenu: statusMenu,
             runningStatusMenuItem: runningStatusMenuItem,
             toggleRunningMenuItem: toggleRunningMenuItem,
@@ -187,11 +202,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
 
         notifyCenter.addObserver(
             forName: Notification.Name("NOTIFY_SERVER_PROFILES_CHANGED"), object: nil, queue: nil
-        ) { _ in
-            let profileMgr = ServerProfileManager.instance
-            if profileMgr.activeProfileId == nil && !profileMgr.profiles.isEmpty {
-                if profileMgr.profiles[0].isValid() {
-                    profileMgr.setActiveProfiledId(profileMgr.profiles[0].uuid)
+        ) { [weak self] _ in
+            guard let self = self else { return }
+            if self.profileManager.activeProfileId == nil && !self.profileManager.profiles.isEmpty {
+                if self.profileManager.profiles[0].isValid() {
+                    self.profileManager.setActiveProfiledId(self.profileManager.profiles[0].uuid)
                 }
             }
             self.menuBarManager.updateServersMenu()
@@ -332,7 +347,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
 
     @IBAction func selectServer(_ sender: NSMenuItem) {
         let index = sender.tag - kProfileMenuItemIndexBase
-        let spMgr = ServerProfileManager.instance
+        let spMgr = profileManager
         let newProfile = spMgr.profiles[index]
         if newProfile.uuid != spMgr.activeProfileId {
             spMgr.setActiveProfiledId(newProfile.uuid)
@@ -345,12 +360,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
 
     @IBAction func copyExportCommand(_ sender: NSMenuItem) {
         // Get the Http proxy config.
-        let defaults = UserDefaults.standard
-        guard let address = defaults.string(forKey: "LocalHTTP.ListenAddress") else {
+        guard let address = preferences.string(forKey: "LocalHTTP.ListenAddress") else {
             ErrorHandler.shared.warning("HTTP proxy address not configured")
             return
         }
-        let port = defaults.integer(forKey: "LocalHTTP.ListenPort")
+        let port = preferences.integer(forKey: "LocalHTTP.ListenPort")
 
         // Format an export string.
         let command =
@@ -452,7 +466,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
             return
         }
 
-        let addCount = ServerProfileManager.instance.addServerProfileByURL(urls: urls)
+        let addCount = profileManager.addServerProfileByURL(urls: urls)
 
         if addCount > 0 {
             sendUserNotification(
@@ -579,7 +593,7 @@ extension AppDelegate {
 // MARK: - MenuBarManagerDelegate
 extension AppDelegate {
     func menuBarManager(_ manager: MenuBarManager, didSelectServerAt index: Int) {
-        let spMgr = ServerProfileManager.instance
+        let spMgr = profileManager
         let newProfile = spMgr.profiles[index]
         if newProfile.uuid != spMgr.activeProfileId {
             spMgr.setActiveProfiledId(newProfile.uuid)

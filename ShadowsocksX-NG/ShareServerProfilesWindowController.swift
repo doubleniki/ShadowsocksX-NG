@@ -22,17 +22,34 @@ class ShareServerProfilesWindowController: NSWindowController
     @IBOutlet weak var copyQRCodeButton: NSButton!
     @IBOutlet weak var saveQRCodeAsFileButton: NSButton!
 
-    var defaults: UserDefaults!
-    var profileMgr: ServerProfileManager!
+    private var profileManager: ServerProfileManaging?
+    private var serverProfileManager: ServerProfileManaging {
+        get {
+            if let profileManager = profileManager {
+                return profileManager
+            }
+            let fallback = ServerProfileManager.instance
+            self.profileManager = fallback
+            return fallback
+        }
+        set {
+            profileManager = newValue
+        }
+    }
+
+    func configure(profileManager: ServerProfileManaging) {
+        self.profileManager = profileManager
+    }
 
     override func windowDidLoad() {
         super.windowDidLoad()
 
-        defaults = UserDefaults.standard
-        profileMgr = ServerProfileManager.instance
+        if profileManager == nil {
+            profileManager = ServerProfileManager.instance
+        }
         profilesTableView.reloadData()
 
-        if !profileMgr.profiles.isEmpty {
+        if !serverProfileManager.profiles.isEmpty {
             let index = IndexSet(integer: 0)
             profilesTableView.selectRowIndexes(index, byExtendingSelection: false)
         } else {
@@ -149,7 +166,7 @@ class ShareServerProfilesWindowController: NSWindowController
     }
 
     func getAllServerURLs() -> String {
-        let urls = profileMgr.profiles.filter({ (profile) -> Bool in
+        let urls = serverProfileManager.profiles.filter({ (profile) -> Bool in
             return profile.isValid()
         }).compactMap { (profile) -> String? in
             return profile.URL()?.absoluteString
@@ -159,11 +176,11 @@ class ShareServerProfilesWindowController: NSWindowController
 
     func getSelectedProfile() -> ServerProfile {
         let i = profilesTableView.selectedRow
-        return profileMgr.profiles[i]
+        return serverProfileManager.profiles[i]
     }
 
     func getDataAtRow(_ index:Int) -> String {
-        let profile = profileMgr.profiles[index]
+        let profile = serverProfileManager.profiles[index]
         if !profile.remark.isEmpty {
             return profile.remark
         } else {
@@ -175,10 +192,7 @@ class ShareServerProfilesWindowController: NSWindowController
     // For NSTableViewDataSource
 
     func numberOfRows(in tableView: NSTableView) -> Int {
-        if let mgr = profileMgr {
-            return mgr.profiles.count
-        }
-        return 0
+        return serverProfileManager.profiles.count
     }
 
     //--------------------------------------------------

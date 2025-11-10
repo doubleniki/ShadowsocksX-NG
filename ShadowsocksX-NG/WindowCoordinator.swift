@@ -18,6 +18,17 @@ class WindowCoordinator {
     private var allInOnePreferencesWinCtrl: PreferencesWinController?
     private var toastWindowCtrl: ToastWindowController?
     private var importWinCtrl: ImportWindowController?
+    private let profileManager: ServerProfileManaging
+
+    // MARK: - Initialization
+
+    convenience init() {
+        self.init(profileManager: ServerProfileManager.instance)
+    }
+
+    init(profileManager: ServerProfileManaging) {
+        self.profileManager = profileManager
+    }
 
     // MARK: - Public Methods
 
@@ -27,6 +38,7 @@ class WindowCoordinator {
         }
         shareWinCtrl = ShareServerProfilesWindowController(
             windowNibName: "ShareServerProfilesWindowController")
+        shareWinCtrl?.configure(profileManager: profileManager)
         shareWinCtrl?.showWindow(nil)
         NSApp.activate(ignoringOtherApps: true)
         shareWinCtrl?.window?.makeKeyAndOrderFront(nil)
@@ -37,6 +49,7 @@ class WindowCoordinator {
             importWinCtrl?.close()
         }
         importWinCtrl = ImportWindowController(windowNibName: "ImportWindowController")
+        importWinCtrl?.configure(profileManager: profileManager)
         importWinCtrl?.showWindow(nil)
         NSApp.activate(ignoringOtherApps: true)
         importWinCtrl?.window?.makeKeyAndOrderFront(nil)
@@ -60,6 +73,7 @@ class WindowCoordinator {
         }
         preferencesWinCtrl = PreferencesWindowController(
             windowNibName: "PreferencesWindowController")
+        preferencesWinCtrl?.configure(profileManager: profileManager)
 
         preferencesWinCtrl?.showWindow(nil)
         NSApp.activate(ignoringOtherApps: true)

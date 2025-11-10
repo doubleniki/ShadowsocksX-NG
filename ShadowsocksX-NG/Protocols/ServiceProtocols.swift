@@ -54,9 +54,9 @@ protocol KeychainManaging {
 
 /// Protocol for managing Launch Agent services
 protocol LaunchAgentManaging {
-    func generateSSLocalLauchAgentPlist() -> Bool
-    func generatePrivoxyLauchAgentPlist() -> Bool
-    func generateKcptunLauchAgentPlist() -> Bool
+    func generateSSLocalLaunchAgentPlist() -> Bool
+    func generatePrivoxyLaunchAgentPlist() -> Bool
+    func generateKcptunLaunchAgentPlist() -> Bool
     func isRunning() -> Bool
     func startSSLocal()
     func stopSSLocal()

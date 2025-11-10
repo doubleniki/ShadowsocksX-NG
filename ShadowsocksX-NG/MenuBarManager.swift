@@ -22,6 +22,8 @@ class MenuBarManager {
 
     private(set) var statusItem: NSStatusItem
     private let statusMenu: NSMenu
+    private let preferences: PreferencesManaging
+    private let profileManager: ServerProfileManaging
 
     // Menu items
     private let runningStatusMenuItem: NSMenuItem
@@ -53,7 +55,9 @@ class MenuBarManager {
         serversMenuItem: NSMenuItem,
         serverProfilesBeginSeparatorMenuItem: NSMenuItem,
         serverProfilesEndSeparatorMenuItem: NSMenuItem,
-        copyHttpProxyExportCmdLineMenuItem: NSMenuItem
+        copyHttpProxyExportCmdLineMenuItem: NSMenuItem,
+        preferences: PreferencesManaging,
+        profileManager: ServerProfileManaging
     ) {
         self.statusMenu = statusMenu
         self.runningStatusMenuItem = runningStatusMenuItem
@@ -66,6 +70,8 @@ class MenuBarManager {
         self.serverProfilesBeginSeparatorMenuItem = serverProfilesBeginSeparatorMenuItem
         self.serverProfilesEndSeparatorMenuItem = serverProfilesEndSeparatorMenuItem
         self.copyHttpProxyExportCmdLineMenuItem = copyHttpProxyExportCmdLineMenuItem
+        self.preferences = preferences
+        self.profileManager = profileManager
 
         // Create status item
         self.statusItem = NSStatusBar.system.statusItem(withLength: MenuBarManager.StatusItemIconWidth)
@@ -88,10 +94,8 @@ class MenuBarManager {
     // MARK: - Menu Updates
 
     func updateRunningModeMenu() {
-        let defaults = UserDefaults.standard
-
         // Update external PAC menu item availability
-        if let pacURL = defaults.string(forKey: "ExternalPACURL") {
+        if let pacURL = preferences.string(forKey: "ExternalPACURL") {
             externalPACModeMenuItem.isEnabled = !pacURL.isEmpty
         }
 
@@ -102,7 +106,7 @@ class MenuBarManager {
         externalPACModeMenuItem.state = .off
 
         // Set current mode
-        let mode = defaults.string(forKey: "ShadowsocksRunningMode")
+        let mode = preferences.string(forKey: "ShadowsocksRunningMode")
         switch mode {
         case "auto":
             autoModeMenuItem.state = .on
@@ -121,9 +125,8 @@ class MenuBarManager {
     }
 
     func updateStatusMenuImage() {
-        let defaults = UserDefaults.standard
-        let mode = defaults.string(forKey: "ShadowsocksRunningMode")
-        let isOn = defaults.bool(forKey: Constants.UserDefaults.shadowsocksOn)
+        let mode = preferences.string(forKey: "ShadowsocksRunningMode")
+        let isOn = preferences.bool(forKey: Constants.UserDefaults.shadowsocksOn)
 
         if isOn {
             if let currentMode = mode {
@@ -167,8 +170,7 @@ class MenuBarManager {
     }
 
     func updateMainMenu() {
-        let defaults = UserDefaults.standard
-        let isOn = defaults.bool(forKey: Constants.UserDefaults.shadowsocksOn)
+        let isOn = preferences.bool(forKey: Constants.UserDefaults.shadowsocksOn)
 
         if isOn {
             runningStatusMenuItem.title = "Shadowsocks: On".localized
@@ -184,16 +186,14 @@ class MenuBarManager {
     }
 
     func updateCopyHttpProxyExportMenu() {
-        let defaults = UserDefaults.standard
-        let isOn = defaults.bool(forKey: "LocalHTTPOn")
+        let isOn = preferences.bool(forKey: "LocalHTTPOn")
         copyHttpProxyExportCmdLineMenuItem.isHidden = !isOn
     }
 
     func updateServersMenu() {
         guard let menu = serversMenuItem.submenu else { return }
 
-        let mgr = ServerProfileManager.instance
-        let profiles = mgr.profiles
+        let profiles = profileManager.profiles
 
         // Remove all profile menu items
         let beginIndex = menu.index(of: serverProfilesBeginSeparatorMenuItem) + 1
@@ -209,7 +209,7 @@ class MenuBarManager {
             let item = NSMenuItem()
             item.tag = i + kProfileMenuItemIndexBase
             item.title = profile.title()
-            item.state = (mgr.activeProfileId == profile.uuid) ? .on : .off
+            item.state = (profileManager.activeProfileId == profile.uuid) ? .on : .off
             item.isEnabled = profile.isValid()
 
             // Use number keys for faster switch between the first 10 servers from main menu
@@ -241,8 +241,7 @@ class MenuBarManager {
     private func updateSelectedServerName() {
         var serverMenuText = "Servers - (No Selected)".localized
 
-        let mgr = ServerProfileManager.instance
-        for profile in mgr.profiles where mgr.activeProfileId == profile.uuid {
+        for profile in profileManager.profiles where profileManager.activeProfileId == profile.uuid {
             // Use profile.title() directly - it already handles truncation correctly
             let profileName = profile.title()
             serverMenuText = "Servers".localized + " - \(profileName)"

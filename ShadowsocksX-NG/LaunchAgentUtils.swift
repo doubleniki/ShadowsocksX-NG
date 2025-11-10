@@ -47,12 +47,30 @@ func getFileSHA1Sum(_ filepath: String) -> String {
     return ""
 }
 
+private func isLaunchAgentRunning(label: String) -> Bool {
+    let task = Process()
+    task.launchPath = "/bin/launchctl"
+    task.arguments = ["list", label]
+
+    do {
+        try task.run()
+        task.waitUntilExit()
+        return task.terminationStatus == 0
+    } catch {
+        ErrorHandler.shared.warning(
+            "Failed to query launch agent status for \(label): \(error)",
+            context: "LaunchAgent"
+        )
+        return false
+    }
+}
+
 // Ref: https://developer.apple.com/library/mac/documentation/MacOSX/Conceptual/BPSystemStartup/Chapters/CreatingLaunchdJobs.html
 // Genarate the mac launch agent service plist
 
 //  MARK: sslocal
 
-func generateSSLocalLauchAgentPlist() -> Bool {
+func generateSSLocalLaunchAgentPlist() -> Bool {
     let sslocalPath = homeDirectory()
         .appendingPathComponent(APP_SUPPORT_DIR)
         .appendingPathComponent("ss-local/ss-local")
@@ -154,11 +172,11 @@ func generateSSLocalLauchAgentPlist() -> Bool {
         }
 
         ErrorHandler.shared.debug(
-            "generateSSLocalLauchAgentPlist - File has been changed.", context: "LaunchAgent")
+            "generateSSLocalLaunchAgentPlist - File has been changed.", context: "LaunchAgent")
         return true
     } else {
         ErrorHandler.shared.debug(
-            "generateSSLocalLauchAgentPlist - File has not been changed.", context: "LaunchAgent")
+            "generateSSLocalLaunchAgentPlist - File has not been changed.", context: "LaunchAgent")
         return false
     }
 }
@@ -310,7 +328,7 @@ func removeSSLocalConfFile() {
 
 func syncSSLocal() {
     var changed: Bool = false
-    changed = changed || generateSSLocalLauchAgentPlist()
+    changed = changed || generateSSLocalLaunchAgentPlist()
     let mgr = ServerProfileManager.instance
     if mgr.activeProfileId != nil {
         if let profile = mgr.getActiveProfile() {
@@ -413,6 +431,62 @@ func installKcptun() {
     }
 }
 
+func startKcptun() {
+    let plistPath = URL(fileURLWithPath: launchAgentDirectory())
+        .appendingPathComponent(LAUNCH_AGENT_CONF_KCPTUN_NAME)
+        .path
+    let task = Process()
+    task.launchPath = "/bin/launchctl"
+    task.arguments = ["load", plistPath]
+
+    do {
+        try task.run()
+        task.waitUntilExit()
+        if task.terminationStatus == 0 {
+            ErrorHandler.shared.info("Start kcptun succeeded.", context: "LaunchAgent")
+        } else {
+            ErrorHandler.shared.warning(
+                "Start kcptun failed with exit code: \(task.terminationStatus)",
+                context: "LaunchAgent"
+            )
+        }
+    } catch {
+        ErrorHandler.shared.handle(
+            error,
+            context: "Start kcptun",
+            showAlert: true
+        )
+    }
+}
+
+func stopKcptun() {
+    let plistPath = URL(fileURLWithPath: launchAgentDirectory())
+        .appendingPathComponent(LAUNCH_AGENT_CONF_KCPTUN_NAME)
+        .path
+    let task = Process()
+    task.launchPath = "/bin/launchctl"
+    task.arguments = ["unload", plistPath]
+
+    do {
+        try task.run()
+        task.waitUntilExit()
+        if task.terminationStatus == 0 {
+            ErrorHandler.shared.info("Stop kcptun succeeded.", context: "LaunchAgent")
+        } else {
+            ErrorHandler.shared.warning(
+                "Stop kcptun failed with exit code: \(task.terminationStatus)",
+                context: "LaunchAgent"
+            )
+        }
+    } catch {
+        ErrorHandler.shared.handle(
+            error,
+            context: "Stop kcptun",
+            showAlert: true
+        )
+    }
+}
+
 // --------------------------------------------------------------------------------
 //  MARK: v2ray-plugin
 
@@ -449,7 +523,7 @@ func installV2rayPlugin() {
 // --------------------------------------------------------------------------------
 //  MARK: privoxy
 
-func generatePrivoxyLauchAgentPlist() -> Bool {
+func generatePrivoxyLaunchAgentPlist() -> Bool {
     let privoxyPath = homeDirectory()
         .appendingPathComponent(APP_SUPPORT_DIR)
         .appendingPathComponent("privoxy/privoxy")
@@ -535,6 +609,118 @@ func generatePrivoxyLauchAgentPlist() -> Bool {
     } else {
         return false
     }
+}
+
+func generateKcptunLaunchAgentPlist() -> Bool {
+    let scriptPath = homeDirectory()
+        .appendingPathComponent(APP_SUPPORT_DIR)
+        .appendingPathComponent("plugins/kcptun/kcptun.sh")
+        .path
+
+    let fileMgr = FileManager.default
+    guard fileMgr.fileExists(atPath: scriptPath) else {
+        ErrorHandler.shared.warning("kcptun.sh script not found", context: "LaunchAgent")
+        return false
+    }
+
+    let profileManager = ServerProfileManager.instance
+    guard let profile = profileManager.getActiveProfile(),
+          profile.plugin.lowercased() == "kcptun" else {
+        ErrorHandler.shared.debug(
+            "generateKcptunLaunchAgentPlist skipped - no active kcptun plugin",
+            context: "LaunchAgent"
+        )
+        return false
+    }
+
+    let launchAgentDirPath = launchAgentDirectory()
+    let plistTempFilePath = homeDirectory()
+        .appendingPathComponent(APP_SUPPORT_DIR)
+        .appendingPathComponent(LAUNCH_AGENT_CONF_KCPTUN_NAME)
+        .path
+    let plistFilepath = URL(fileURLWithPath: launchAgentDirPath)
+        .appendingPathComponent(LAUNCH_AGENT_CONF_KCPTUN_NAME)
+        .path
+
+    if !fileMgr.fileExists(atPath: launchAgentDirPath) {
+        do {
+            try fileMgr.createDirectory(
+                atPath: launchAgentDirPath, withIntermediateDirectories: true, attributes: nil)
+        } catch {
+            ErrorHandler.shared.handle(
+                LaunchAgentError.directoryCreationFailed(path: launchAgentDirPath, error: error),
+                context: "Generate Kcptun Launch Agent",
+                showAlert: true,
+                critical: true
+            )
+            return false
+        }
+    }
+
+    let defaults = UserDefaults.standard
+    let localHost = defaults.string(forKey: "LocalSocks5.ListenAddress") ?? "127.0.0.1"
+    let localPort = defaults.integer(forKey: "LocalSocks5.ListenPort")
+
+    var environment: [String: String] = [
+        "SS_REMOTE_HOST": profile.serverHost,
+        "SS_REMOTE_PORT": "\(profile.serverPort)",
+        "SS_LOCAL_HOST": localHost,
+        "SS_LOCAL_PORT": "\(localPort)",
+    ]
+
+    if !profile.pluginOptions.isEmpty {
+        environment["SS_PLUGIN_OPTIONS"] = profile.pluginOptions
+    }
+
+    let logFilePath = URL(fileURLWithPath: Constants.Log.directory)
+        .appendingPathComponent(Constants.Log.kcptunLog)
+        .path
+
+    let dict: NSMutableDictionary = [
+        "Label": "com.qiuyuzhou.shadowsocksX-NG.kcptun",
+        "WorkingDirectory": appSupportDirectory(),
+        "StandardOutPath": logFilePath,
+        "StandardErrorPath": logFilePath,
+        "ProgramArguments": [scriptPath],
+        "EnvironmentVariables": environment,
+    ]
+
+    guard dict.write(toFile: plistTempFilePath, atomically: true) else {
+        let writeError = NSError(
+            domain: "com.qiuyuzhou.ShadowsocksX-NG",
+            code: -1,
+            userInfo: [NSLocalizedDescriptionKey: "Failed to write kcptun plist to temporary file"]
+        )
+        ErrorHandler.shared.handle(
+            FileSystemError.writeFailed(path: plistTempFilePath, error: writeError),
+            context: "Generate Kcptun Launch Agent",
+            showAlert: true,
+            critical: true
+        )
+        return false
+    }
+
+    let oldSha1Sum = getFileSHA1Sum(plistFilepath)
+    let newSha1Sum = getFileSHA1Sum(plistTempFilePath)
+    if oldSha1Sum != newSha1Sum {
+        guard dict.write(toFile: plistFilepath, atomically: true) else {
+            let writeError = NSError(
+                domain: "com.qiuyuzhou.ShadowsocksX-NG",
+                code: -1,
+                userInfo: [NSLocalizedDescriptionKey: "Failed to write kcptun plist to destination"]
+            )
+            ErrorHandler.shared.handle(
+                FileSystemError.writeFailed(path: plistFilepath, error: writeError),
+                context: "Generate Kcptun Launch Agent",
+                showAlert: true,
+                critical: true
+            )
+            return false
+        }
+        return true
+    }
+
+    return false
 }
 
 func startPrivoxy() {
@@ -738,7 +924,7 @@ func removePrivoxyConfFile() {
 
 func syncPrivoxy() {
     var changed: Bool = false
-    changed = changed || generatePrivoxyLauchAgentPlist()
+    changed = changed || generatePrivoxyLaunchAgentPlist()
     let mgr = ServerProfileManager.instance
     if mgr.activeProfileId != nil {
         changed = changed || writePrivoxyConfFile()
@@ -762,5 +948,53 @@ func syncPrivoxy() {
     } else {
         removePrivoxyConfFile()
         stopPrivoxy()
+    }
+}
+
+// MARK: - LaunchAgentManaging Concrete Implementation
+
+final class LaunchAgentManager: LaunchAgentManaging {
+    static let shared = LaunchAgentManager()
+
+    private init() {}
+
+    func generateSSLocalLaunchAgentPlist() -> Bool {
+        return ShadowsocksX_NG.generateSSLocalLaunchAgentPlist()
+    }
+
+    func generatePrivoxyLaunchAgentPlist() -> Bool {
+        return ShadowsocksX_NG.generatePrivoxyLaunchAgentPlist()
+    }
+
+    func generateKcptunLaunchAgentPlist() -> Bool {
+        return ShadowsocksX_NG.generateKcptunLaunchAgentPlist()
+    }
+
+    func isRunning() -> Bool {
+        return isLaunchAgentRunning(label: "com.qiuyuzhou.shadowsocksX-NG.local")
+    }
+
+    func startSSLocal() {
+        ShadowsocksX_NG.startSSLocal()
+    }
+
+    func stopSSLocal() {
+        ShadowsocksX_NG.stopSSLocal()
+    }
+
+    func startPrivoxy() {
+        ShadowsocksX_NG.startPrivoxy()
+    }
+
+    func stopPrivoxy() {
+        ShadowsocksX_NG.stopPrivoxy()
+    }
+
+    func stopKcptun() {
+        ShadowsocksX_NG.stopKcptun()
+    }
+
+    func startKcptun() {
+        ShadowsocksX_NG.startKcptun()
     }
 }

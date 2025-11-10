@@ -11,8 +11,12 @@
 		1C82DBA81FA96C7500B32551 /* obfs-local in Resources */ = {isa = PBXBuildFile; fileRef = 1C82DBA51FA96C7400B32551 /* obfs-local */; };
 		1C82DBAA1FA96FB600B32551 /* install_simple_obfs.sh in Resources */ = {isa = PBXBuildFile; fileRef = 1C82DBA91FA96F0300B32551 /* install_simple_obfs.sh */; };
 		2A48570421CF60D17B2DBE57 /* Pods_ShadowsocksX_NGTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 388120F062D7EB7DD0D8DDCA /* Pods_ShadowsocksX_NGTests.framework */; };
+		5ACA8AA086DB4BCB8D46851F /* FileSystemManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 068AF474021D4DE2B044A065 /* FileSystemManager.swift */; };
 		34A2672278B35D7D67A5B4B2 /* MenuBarManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05BE23A5FEBFFE4232ED74D4 /* MenuBarManager.swift */; };
 		8892D6FC0B54E6A26D39ABA6 /* ProxyCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CF8494CFCBB4AC77D5CD88A /* ProxyCoordinator.swift */; };
+		84CB2686C3824245B63759C4 /* DependencyContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 698C49C1D46242F2B917ED29 /* DependencyContainer.swift */; };
+		0DEBD8B7AA4D4E23ADBB9F21 /* MockDependencies.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EADB8916B4E44E6A9888B77 /* MockDependencies.swift */; };
+		3938AD523E0F42D78E7B785B /* DependencyContainerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C248BE9A8CE40C2BE242E0C /* DependencyContainerTests.swift */; };
 		91D97C573E0AD00EA60AD5BE /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33590EDD35D8C3520FCC8A19 /* NotificationService.swift */; };
 		9B07EFA71D048BBB0052D9DF /* ss-local in Resources */ = {isa = PBXBuildFile; fileRef = 9B07EFA61D048BBB0052D9DF /* ss-local */; };
 		9B0BFFE91D0460A70040E62B /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B0BFFE81D0460A70040E62B /* AppDelegate.swift */; };
@@ -152,6 +156,10 @@
 
 /* Begin PBXFileReference section */
 		05BE23A5FEBFFE4232ED74D4 /* MenuBarManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MenuBarManager.swift; sourceTree = "<group>"; };
+		068AF474021D4DE2B044A065 /* FileSystemManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FileSystemManager.swift; sourceTree = "<group>"; };
+		698C49C1D46242F2B917ED29 /* DependencyContainer.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DependencyContainer.swift; sourceTree = "<group>"; };
+		5EADB8916B4E44E6A9888B77 /* MockDependencies.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MockDependencies.swift; sourceTree = "<group>"; };
+		1C248BE9A8CE40C2BE242E0C /* DependencyContainerTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DependencyContainerTests.swift; sourceTree = "<group>"; };
 		19083CFCED87354F006967FF /* Pods_ShadowsocksX_NGUITests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_ShadowsocksX_NGUITests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		1C82DBA51FA96C7400B32551 /* obfs-local */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = "obfs-local"; sourceTree = "<group>"; };
 		1C82DBA91FA96F0300B32551 /* install_simple_obfs.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = install_simple_obfs.sh; sourceTree = "<group>"; };
@@ -428,6 +436,8 @@
 				9B84DAEC2163A72F00DFF068 /* Diagnose.swift */,
 				A249331A2EBE590D00F0C1E6 /* OSVersion.swift */,
 				49B42215A391FCC75DC219C7 /* Coordinators */,
+				04DDCD41F5824E5CA6400305 /* Core */,
+				A1938D3DDA8F4F729FFA24D8 /* Services */,
 				33590EDD35D8C3520FCC8A19 /* NotificationService.swift */,
 				D5CA972873A7208A2EE7DBF5 /* Protocols */,
 				7D9FF7C980FF6616E221996B /* Preferences */,
@@ -457,6 +467,30 @@
 				05BE23A5FEBFFE4232ED74D4 /* MenuBarManager.swift */,
 			);
 			name = UI;
+			sourceTree = "<group>";
+		};
+		04DDCD41F5824E5CA6400305 /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				698C49C1D46242F2B917ED29 /* DependencyContainer.swift */,
+			);
+			path = Core;
+			sourceTree = "<group>";
+		};
+		A1938D3DDA8F4F729FFA24D8 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				068AF474021D4DE2B044A065 /* FileSystemManager.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		A544855945F24E8382776AF2 /* Mocks */ = {
+			isa = PBXGroup;
+			children = (
+				5EADB8916B4E44E6A9888B77 /* MockDependencies.swift */,
+			);
+			path = Mocks;
 			sourceTree = "<group>";
 		};
 		9B3FFF451D09CD3B0019A709 /* proxy_conf_helper */ = {
@@ -506,6 +540,8 @@
 			children = (
 				A249331D2EBE594200F0C1E6 /* OSVersionTests.swift */,
 				9B5DD7B72683A369005EFEF7 /* ServerProfileTests.swift */,
+				A544855945F24E8382776AF2 /* Mocks */,
+				1C248BE9A8CE40C2BE242E0C /* DependencyContainerTests.swift */,
 				9B5DD7AF2683A354005EFEF7 /* ShadowsocksX_NGTests.swift */,
 				9B5DD7B12683A354005EFEF7 /* Info.plist */,
 			);
@@ -913,6 +949,8 @@
 				91D97C573E0AD00EA60AD5BE /* NotificationService.swift in Sources */,
 				CFAFFA604C9F2F249BD7A83C /* ServiceProtocols.swift in Sources */,
 				FB570A48EB6E2CEBB52C0862 /* UserDefaultsPreferences.swift in Sources */,
+				84CB2686C3824245B63759C4 /* DependencyContainer.swift in Sources */,
+				5ACA8AA086DB4BCB8D46851F /* FileSystemManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -929,6 +967,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				9B5DD7B82683A369005EFEF7 /* ServerProfileTests.swift in Sources */,
+				0DEBD8B7AA4D4E23ADBB9F21 /* MockDependencies.swift in Sources */,
+				3938AD523E0F42D78E7B785B /* DependencyContainerTests.swift in Sources */,
 				A249331E2EBE594200F0C1E6 /* OSVersionTests.swift in Sources */,
 				9B5DD7B02683A354005EFEF7 /* ShadowsocksX_NGTests.swift in Sources */,
 			);
