@@ -98,7 +98,7 @@ enum Constants {
 
     // MARK: - UI Constants
 
-    enum UI {
+    enum UIConstants {
         static let menuItemIndexBase = 100
         static let maxServersInMenu = 10
         static let toastFadeDuration: TimeInterval = 0.35
@@ -142,7 +142,7 @@ enum ProxyMode: String, Codable, CaseIterable {
     case auto
     case global
     case manual
-    case externalPAC = "externalPAC"
+    case externalPAC
 
     var displayName: String {
         switch self {
@@ -248,7 +248,7 @@ enum EncryptionMethod: String, Codable, CaseIterable {
             .chacha20ietfpoly1305,
             .xchacha20ietfpoly1305,
             .aes192gcm,
-            .aes128gcm,
+            .aes128gcm
         ]
     }
 
@@ -256,7 +256,7 @@ enum EncryptionMethod: String, Codable, CaseIterable {
     static var categorized: [(category: String, methods: [EncryptionMethod])] {
         return [
             ("AEAD Ciphers (Recommended)", recommended),
-            ("Stream Ciphers (Legacy)", allCases.filter { $0.isLegacy }),
+            ("Stream Ciphers (Legacy)", allCases.filter { $0.isLegacy })
         ]
     }
 }

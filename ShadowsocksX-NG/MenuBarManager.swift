@@ -123,7 +123,7 @@ class MenuBarManager {
     func updateStatusMenuImage() {
         let defaults = UserDefaults.standard
         let mode = defaults.string(forKey: "ShadowsocksRunningMode")
-        let isOn = defaults.bool(forKey: "ShadowsocksOn")
+        let isOn = defaults.bool(forKey: Constants.UserDefaults.shadowsocksOn)
 
         if isOn {
             if let currentMode = mode {
@@ -168,7 +168,7 @@ class MenuBarManager {
 
     func updateMainMenu() {
         let defaults = UserDefaults.standard
-        let isOn = defaults.bool(forKey: "ShadowsocksOn")
+        let isOn = defaults.bool(forKey: Constants.UserDefaults.shadowsocksOn)
 
         if isOn {
             runningStatusMenuItem.title = "Shadowsocks: On".localized

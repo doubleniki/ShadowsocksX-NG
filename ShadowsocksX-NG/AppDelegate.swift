@@ -125,7 +125,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
     private func registerDefaultSettings() {
         let defaults = UserDefaults.standard
         defaults.register(defaults: [
-            "ShadowsocksOn": true,
+            Constants.UserDefaults.shadowsocksOn: true,
             "ShadowsocksRunningMode": "auto",
             "LocalSocks5.ListenPort": NSNumber(value: 1086 as UInt16),
             "LocalSocks5.ListenAddress": "127.0.0.1",

@@ -37,7 +37,7 @@ class ProxyCoordinator {
         syncSSLocal()
 
         let defaults = UserDefaults.standard
-        let isOn = defaults.bool(forKey: "ShadowsocksOn")
+        let isOn = defaults.bool(forKey: Constants.UserDefaults.shadowsocksOn)
         let mode = defaults.string(forKey: "ShadowsocksRunningMode")
 
         if isOn {
@@ -120,9 +120,9 @@ class ProxyCoordinator {
 
     func toggleShadowsocks() -> Bool {
         let defaults = UserDefaults.standard
-        var isOn = defaults.bool(forKey: "ShadowsocksOn")
+        var isOn = defaults.bool(forKey: Constants.UserDefaults.shadowsocksOn)
         isOn.toggle()
-        defaults.set(isOn, forKey: "ShadowsocksOn")
+        defaults.set(isOn, forKey: Constants.UserDefaults.shadowsocksOn)
         return isOn
     }
 
