@@ -410,3 +410,4 @@ networksetup -getsocksfirewallproxy Wi-Fi
 - CocoaPods 1.10 or later
 
 For detailed development setup instructions, see `docs/code-quality/DEVELOPMENT_SETUP.md`.
+- for files processing always use serena mcp server
