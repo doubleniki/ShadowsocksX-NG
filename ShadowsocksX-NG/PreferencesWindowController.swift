@@ -143,7 +143,7 @@ class PreferencesWindowController: NSWindowController, NSTableViewDataSource, NS
         window?.performClose(nil)
 
         NotificationCenter.default
-            .post(name: NOTIFY_SERVER_PROFILES_CHANGED, object: nil)
+            .post(name: Constants.Notification.serverProfilesChanged, object: nil)
     }
 
     @IBAction func cancel(_ sender: NSButton) {
@@ -195,7 +195,8 @@ class PreferencesWindowController: NSWindowController, NSTableViewDataSource, NS
 
             // Adjust previously collected indices that were shifted by this insertion
             // When inserting at insertIndex, all indices >= insertIndex shift up by 1
-            newSelectionIndices = IndexSet(newSelectionIndices.map { $0 >= insertIndex ? $0 + 1 : $0 })
+            newSelectionIndices = IndexSet(
+                newSelectionIndices.map { $0 >= insertIndex ? $0 + 1 : $0 })
             newSelectionIndices.insert(insertIndex)
         }
 

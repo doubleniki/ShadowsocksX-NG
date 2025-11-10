@@ -177,7 +177,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
     private func setupNotificationObservers() {
         let notifyCenter = NotificationCenter.default
 
-        notifyCenter.rx.notification(NOTIFY_CONF_CHANGED)
+        notifyCenter.rx.notification(Notification.Name("NOTIFY_CONF_CHANGED"))
             .subscribe(onNext: { _ in
                 self.proxyCoordinator.applyConfig()
                 self.menuBarManager.updateRunningModeMenu()
@@ -186,7 +186,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
             .disposed(by: disposeBag)
 
         notifyCenter.addObserver(
-            forName: NOTIFY_SERVER_PROFILES_CHANGED, object: nil, queue: nil
+            forName: Notification.Name("NOTIFY_SERVER_PROFILES_CHANGED"), object: nil, queue: nil
         ) { _ in
             let profileMgr = ServerProfileManager.instance
             if profileMgr.activeProfileId == nil && !profileMgr.profiles.isEmpty {
@@ -199,19 +199,19 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
             syncSSLocal()
         }
 
-        notifyCenter.rx.notification(NOTIFY_TOGGLE_RUNNING_SHORTCUT)
+        notifyCenter.rx.notification(Notification.Name("NOTIFY_TOGGLE_RUNNING_SHORTCUT"))
             .subscribe(onNext: { _ in
                 self.doToggleRunning(showToast: true)
             })
             .disposed(by: disposeBag)
 
-        notifyCenter.rx.notification(NOTIFY_SWITCH_PROXY_MODE_SHORTCUT)
+        notifyCenter.rx.notification(Notification.Name("NOTIFY_SWITCH_PROXY_MODE_SHORTCUT"))
             .subscribe(onNext: { _ in
                 self.handleSwitchProxyModeShortcut()
             })
             .disposed(by: disposeBag)
 
-        notifyCenter.rx.notification(NOTIFY_FOUND_SS_URL)
+        notifyCenter.rx.notification(Notification.Name("NOTIFY_FOUND_SS_URL"))
             .subscribe(onNext: { notification in
                 self.handleFoundSSURL(notification)
             })
@@ -274,7 +274,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
         if let text = pb.string(forType: NSPasteboard.PasteboardType.URL) {
             if let url = URL(string: text) {
                 NotificationCenter.default.post(
-                    name: NOTIFY_FOUND_SS_URL, object: nil,
+                    name: Notification.Name("NOTIFY_FOUND_SS_URL"), object: nil,
                     userInfo: [
                         "urls": [url],
                         "source": "pasteboard"
@@ -290,7 +290,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
             urls = urls.filter { $0.scheme == "ss" }
 
             NotificationCenter.default.post(
-                name: NOTIFY_FOUND_SS_URL, object: nil,
+                name: Notification.Name("NOTIFY_FOUND_SS_URL"), object: nil,
                 userInfo: [
                     "urls": urls,
                     "source": "pasteboard"
@@ -423,7 +423,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
         if let urlString = event.paramDescriptor(forKeyword: AEKeyword(keyDirectObject))?.stringValue {
             if let url = URL(string: urlString) {
                 NotificationCenter.default.post(
-                    name: NOTIFY_FOUND_SS_URL, object: nil,
+                    name: Notification.Name("NOTIFY_FOUND_SS_URL"), object: nil,
                     userInfo: [
                         "urls": [url],
                         "source": "url"

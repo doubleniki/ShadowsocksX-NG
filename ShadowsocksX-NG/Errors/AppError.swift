@@ -254,3 +254,27 @@ enum ResourceError: AppError {
         }
     }
 }
+
+// MARK: - Notification Errors
+
+/// Errors related to notification operations
+enum NotificationError: AppError {
+    case rateLimited(title: String, body: String?, timeSinceLastSent: TimeInterval)
+
+    var context: String {
+        return "Notification Service"
+    }
+
+    var underlyingError: Error? {
+        return nil
+    }
+
+    var errorDescription: String? {
+        switch self {
+        case .rateLimited(let title, let body, let timeSinceLastSent):
+            let notification = body.map { "\(title): \($0)" } ?? title
+            return
+                "Notification rate limited: '\(notification)' (sent \(String(format: "%.1f", timeSinceLastSent))s ago)"
+        }
+    }
+}

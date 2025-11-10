@@ -15,7 +15,7 @@ class NotificationService {
     // Rate limiting properties
     private var recentNotifications: [String: Date] = [:]
     private let minimumInterval: TimeInterval
-    private let queue = DispatchQueue(label: "com.shadowsocksx-ng.notifications", qos: .utility)
+    private let queue = DispatchQueue(label: "com.shadowsocksX-NG.notifications", qos: .utility)
 
     private init(minimumInterval: TimeInterval = 1.0) {
         self.minimumInterval = minimumInterval
@@ -23,7 +23,8 @@ class NotificationService {
 
     /// Request notification permissions from the user
     func requestAuthorization(completion: ((Bool) -> Void)? = nil) {
-        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { granted, error in
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) {
+            granted, error in
             if let error = error {
                 ErrorHandler.shared.handle(
                     error,
@@ -31,7 +32,9 @@ class NotificationService {
                     showAlert: false
                 )
             }
-            completion?(granted)
+            DispatchQueue.main.async {
+                completion?(granted)
+            }
         }
     }
 
@@ -40,7 +43,8 @@ class NotificationService {
     ///   - title: The notification title
     ///   - body: Optional notification body text
     ///   - completion: Optional completion handler with error if failed
-    /// - Note: Rate limited to prevent notification spam. Duplicate notifications within the minimum interval will be silently dropped.
+    /// - Note: Rate limited to prevent notification spam. Duplicate notifications within the minimum interval
+    ///         will result in a `NotificationError.rateLimited` error passed to the completion handler.
     func send(title: String, body: String? = nil, completion: ((Error?) -> Void)? = nil) {
         queue.async { [weak self] in
             guard let self = self else { return }
@@ -54,12 +58,17 @@ class NotificationService {
                 let timeSinceLastSent = now.timeIntervalSince(lastSent)
                 if timeSinceLastSent < self.minimumInterval {
                     // Too soon, skip this notification
+                    let error = NotificationError.rateLimited(
+                        title: title,
+                        body: body,
+                        timeSinceLastSent: timeSinceLastSent
+                    )
                     ErrorHandler.shared.debug(
-                        "Notification rate limited: '\(title)' (sent \(String(format: "%.1f", timeSinceLastSent))s ago)",
+                        error.localizedDescription,
                         context: "NotificationService"
                     )
                     DispatchQueue.main.async {
-                        completion?(nil)
+                        completion?(error)
                     }
                     return
                 }
