@@ -2,15 +2,52 @@
 
 This document outlines planned features and enhancements for future releases of ShadowsocksX-NG.
 
-## Version 0.2.0 (Next Minor Release)
+## Roadmap Highlights
+
+- **v0.3.0** (Current): Phase 1 & 2 refactoring complete, rule similarity detection, enhanced notifications
+- **v0.4.0** (Next): UI/UX improvements, traffic statistics, server latency indicators
+- **v0.5.0**: Advanced PAC features with rule categories and domain testing
+- **v0.6.0**: **Multi-Server Routing** (major feature) - simultaneous connections to multiple servers with intelligent routing
+- **v0.7.0+**: Advanced server management, security features, statistics, and developer tools
+
+## Recently Completed (Version 0.3.0)
+
+### Code Quality & Architecture
+- [x] **Phase 1 Refactoring** - Foundation & safety improvements
+  - Eliminated all force unwrapping in test files
+  - Centralized error handling through ErrorHandler singleton
+  - Enhanced Keychain security for server passwords
+  - Updated deployment target to macOS 11.0
+  - SwiftLint integration with documented exceptions
+
+- [x] **Phase 2 Refactoring** - AppDelegate architecture improvements
+  - Extracted coordinators from AppDelegate (MenuBarManager, ProxyCoordinator, WindowCoordinator)
+  - Implemented delegate pattern for menu actions
+  - Fixed RxSwift subscription lifecycle issues
+  - MenuBarManager improvements and bug fixes
 
 ### User Rules Enhancement
+- [x] **Rule Similarity Detection** - Prevent duplicate rules
+  - Compare new rules against existing PAC rules before adding
+  - Show warnings when adding similar/duplicate rules
+  - Improved user feedback during rule addition
+
+### Notifications
+- [x] **Enhanced Notification System** - Improved user feedback
+  - Refactored in-app notification system
+  - Updated user notification service
+  - Better error and status messages
+
+## Version 0.4.0 (Next Minor Release)
+
+### UI/UX Improvements
+
 - [ ] **Copy PAC User Rules List** - Add ability to copy all user rules to clipboard for backup or sharing
   - Add "Copy All Rules" button to User Rules window
   - Support copying in ABP format (compatible with other tools)
   - Status indicator showing number of rules copied
+  - Paste rules from clipboard (bulk import)
 
-### UI/UX Improvements
 - [ ] **Traffic Statistics Display** - Real-time bandwidth monitoring
   - Show current upload/download speed in menu bar (optional)
   - Display total data usage for current session
@@ -28,9 +65,10 @@ This document outlines planned features and enhancements for future releases of 
   - Batch QR code scanning (multiple servers at once)
   - QR code history (recently scanned codes)
 
-## Version 0.3.0
+## Version 0.5.0
 
 ### Advanced PAC Features
+
 - [ ] **Rule Categories** - Organize rules into logical groups
   - Predefined categories (Streaming, Social Media, Development, etc.)
   - Custom category creation
@@ -50,6 +88,7 @@ This document outlines planned features and enhancements for future releases of 
   - Bulk domain testing from file
 
 ### Smart Features
+
 - [ ] **Intelligent Mode Switching** - Context-aware proxy configuration
   - Auto-detect network type (Home/Work/Public)
   - Network-specific proxy mode profiles
@@ -62,9 +101,54 @@ This document outlines planned features and enhancements for future releases of 
   - Weekend/weekday schedules
   - Holiday schedule support
 
-## Version 0.4.0
+## Version 0.6.0 (Major Feature Release)
+
+### Multi-Server Routing
+
+**Status**: Design & feasibility complete ([see detailed specification](docs/features/multi-server-routing.md))
+**Estimated Effort**: 12-17 weeks (full implementation) or 3-4 weeks (simplified MVP)
+**Approach**: Research-first with GO/NO-GO decision point after Phase 0
+
+> **Note**: This is a complex feature requiring significant architectural changes. Implementation will begin with a 2-week research phase to validate the technical approach before committing to full development.
+
+- [ ] **Phase 0: Research & Validation** (2 weeks)
+  - Technology spike for multiplexer solutions (v2ray-core, xray-core, custom)
+  - PAC metadata encoding prototype
+  - 2-server proof-of-concept with performance benchmarks
+  - GO/NO-GO decision point
+
+- [ ] **Option A: Full Multi-Server Routing** (12-17 weeks after Phase 0)
+  - Data model extensions (ServerRoutingRule, RuleSetManager)
+  - Multiplexer service implementation or integration
+  - Per-server rule management with conflict detection
+  - Enhanced PAC generation with routing metadata
+  - UI redesign for multi-server rule management
+  - Migration utility for existing user-rule.txt
+  - Comprehensive testing and documentation
+
+- [ ] **Option B: Simplified MVP - Intelligent Quick Switching** (3-4 weeks after Phase 0)
+  - Per-server rule management without multiplexer
+  - Rule-based automatic server selection
+  - Quick switching (< 2 seconds) between servers
+  - Auto-switch on domain change (optional)
+  - Can upgrade to full version in future release
+
+**Key Benefits**:
+- Route different domains through different servers simultaneously (Option A)
+- Per-server routing rules with global fallback bucket
+- Preserve all existing functionality and compatibility
+- Built on existing ServerProfile.uuid infrastructure
+
+**Technical Highlights**:
+- Multiplexer on single port (127.0.0.1:1086) routing to multiple ss-local upstreams
+- Health monitoring and failover support
+- Migration path from legacy user-rule.txt format
+- Full backward compatibility
+
+## Version 0.7.0
 
 ### Advanced Server Management
+
 - [ ] **Server Groups** - Organize servers into categories
   - Create custom server groups (e.g., US Servers, Fast Servers)
   - Nested groups support
@@ -84,6 +168,7 @@ This document outlines planned features and enhancements for future releases of 
   - Subscription conflict resolution
 
 ### Security & Privacy
+
 - [ ] **Connection Logging Controls** - Enhanced privacy options
   - Configurable log levels
   - Auto-purge old logs
@@ -96,9 +181,10 @@ This document outlines planned features and enhancements for future releases of 
   - IPv6 leak protection
   - WebRTC leak protection warnings
 
-## Version 0.5.0
+## Version 0.8.0
 
 ### Advanced Statistics & Analytics
+
 - [ ] **Connection History** - Detailed activity logs
   - Domain access history
   - Connection timeline view
@@ -112,6 +198,7 @@ This document outlines planned features and enhancements for future releases of 
   - Data usage alerts and limits
 
 ### Developer Features
+
 - [ ] **Debug Dashboard** - Advanced troubleshooting tools
   - Real-time ss-local log viewer
   - Network request inspector
@@ -124,23 +211,29 @@ This document outlines planned features and enhancements for future releases of 
   - REST API for local control
   - Shortcuts.app integration
 
-## Future Considerations (Version 1.0+)
+## Future Considerations (Version 0.9.0+)
 
 ### Cloud & Sync
+
 - [ ] **Profile Cloud Sync** - Cross-device synchronization
   - iCloud sync for server profiles
   - Sync user rules across devices
   - Sync preferences and settings
   - Conflict resolution
 
-### Advanced Routing
-- [ ] **Custom Routing Rules** - Fine-grained control
+### Advanced Routing (Post Multi-Server Routing)
+
+**Note**: These features build upon the Multi-Server Routing foundation (v0.6.0)
+
+- [ ] **Enhanced Custom Routing Rules** - Fine-grained control
   - IP-based routing rules
   - Process-based routing (route specific apps)
   - Advanced rule syntax (regex, wildcards)
-  - Rule priority system
+  - Chained server fallbacks (server A → server B)
+  - QoS/latency-based automatic server selection
 
 ### Integration
+
 - [ ] **Browser Extensions** - Direct browser control
   - Safari extension for quick mode switching
   - Chrome/Firefox extension support
@@ -156,6 +249,7 @@ This document outlines planned features and enhancements for future releases of 
 ## Community Features
 
 ### Documentation & Support
+
 - [ ] **In-App Help System** - Contextual documentation
   - Interactive tutorials for first-time users
   - Tooltips and help hints
@@ -169,6 +263,7 @@ This document outlines planned features and enhancements for future releases of 
   - Beta testing program
 
 ### Localization
+
 - [ ] **Multi-language Support** - Internationalization
   - Chinese (Simplified & Traditional)
   - Russian
@@ -180,6 +275,7 @@ This document outlines planned features and enhancements for future releases of 
 ## Performance & Stability
 
 ### Optimization
+
 - [ ] **Memory Optimization** - Reduce resource usage
   - Optimize menu bar memory footprint
   - Reduce Launch Agent overhead
@@ -193,6 +289,7 @@ This document outlines planned features and enhancements for future releases of 
   - Reduced I/O operations
 
 ### Reliability
+
 - [ ] **Error Recovery** - Improved stability
   - Auto-restart failed services
   - Better error messages
@@ -211,6 +308,7 @@ We welcome community contributions! If you'd like to work on any of these featur
 ## Feedback
 
 Have ideas for new features? Please:
+
 - Open an issue with the `enhancement` label
 - Describe your use case and proposed solution
 - Vote on existing feature requests
@@ -219,5 +317,5 @@ Have ideas for new features? Please:
 
 **Note:** This roadmap is subject to change based on community feedback, technical constraints, and development priorities. Features may be moved between versions or postponed as needed.
 
-**Last Updated:** 2025-11-03
-**Current Version:** 0.1.0
+**Last Updated:** 2025-11-10
+**Current Version:** 0.3.0
