@@ -81,14 +81,14 @@ class UserRulesController: NSWindowController {
         contentView.addSubview(quickAddContainer)
 
         // Quick add label
-        let quickAddLabel = NSTextField(labelWithString: "Quick Add Domain:")
+        let quickAddLabel = NSTextField(labelWithString: "Quick Add Domain or Zone:")
         quickAddLabel.translatesAutoresizingMaskIntoConstraints = false
         quickAddContainer.addSubview(quickAddLabel)
 
         // Text field for domain input
         quickAddTextField = NSTextField()
         quickAddTextField.translatesAutoresizingMaskIntoConstraints = false
-        quickAddTextField.placeholderString = "example.com"
+        quickAddTextField.placeholderString = "example.com or .cz"
         quickAddContainer.addSubview(quickAddTextField)
 
         // Add button
@@ -107,7 +107,7 @@ class UserRulesController: NSWindowController {
         // Examples label
         examplesLabel = NSTextField(
             labelWithString:
-                "Examples: ||domain.com  |http://domain.com  @@||domain.com (whitelist)")
+                "Examples: ||domain.com  |http://domain.com  @@||domain.com (whitelist)  ||.cz (zone)")
         examplesLabel.translatesAutoresizingMaskIntoConstraints = false
         examplesLabel.font = NSFont.systemFont(ofSize: NSFont.smallSystemFontSize)
         examplesLabel.textColor = .secondaryLabelColor
@@ -160,13 +160,13 @@ class UserRulesController: NSWindowController {
     // MARK: - Quick Add Actions
 
     @objc private func addDomain(_ sender: Any) {
-        let input = quickAddTextField.stringValue.trimmingCharacters(in: .whitespaces)
+        let input = quickAddTextField.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !input.isEmpty else { return }
 
         // Extract domain if it's a URL
         let domain = extractDomain(from: input)
         guard !domain.isEmpty else {
-            showAlert(message: "Invalid domain or URL")
+            showAlert(message: "Invalid domain, zone, or URL")
             return
         }
 
@@ -179,7 +179,7 @@ class UserRulesController: NSWindowController {
             return
         }
 
-        let input = pasteboard.trimmingCharacters(in: .whitespaces)
+        let input = pasteboard.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !input.isEmpty else {
             showAlert(message: "Clipboard is empty")
             return
@@ -188,7 +188,7 @@ class UserRulesController: NSWindowController {
         // Extract domain from clipboard content (could be URL)
         let domain = extractDomain(from: input)
         guard !domain.isEmpty else {
-            showAlert(message: "Could not extract domain from clipboard content")
+            showAlert(message: "Could not extract domain or zone from clipboard content")
             return
         }
 
@@ -196,7 +196,25 @@ class UserRulesController: NSWindowController {
     }
 
     private func extractDomain(from input: String) -> String {
-        var domain = input.trimmingCharacters(in: .whitespaces)
+        var domain = input.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !domain.isEmpty else { return "" }
+
+        var shouldReapplyZonePrefix = false
+
+        if domain.hasPrefix("*.") {
+            shouldReapplyZonePrefix = true
+            domain = String(domain.dropFirst(2))
+            while domain.hasPrefix(".") {
+                domain = String(domain.dropFirst())
+            }
+        } else {
+            while domain.hasPrefix(".") {
+                shouldReapplyZonePrefix = true
+                domain = String(domain.dropFirst())
+            }
+        }
+
+        guard !domain.isEmpty else { return "" }
 
         // If it starts with http:// or https://, parse as URL
         if domain.hasPrefix("http://") || domain.hasPrefix("https://") {
@@ -225,7 +243,7 @@ class UserRulesController: NSWindowController {
         )
         let range = NSRange(domain.startIndex..<domain.endIndex, in: domain)
         if domainRegex?.firstMatch(in: domain, range: range) != nil {
-            return domain
+            return shouldReapplyZonePrefix ? "." + domain : domain
         }
 
         return ""
@@ -305,7 +323,7 @@ class UserRulesController: NSWindowController {
 
     private func showAlert(message: String) {
         let alert = NSAlert()
-        alert.messageText = "Quick Add Domain"
+        alert.messageText = "Quick Add Domain or Zone"
         alert.informativeText = message
         alert.alertStyle = .warning
         alert.addButton(withTitle: "OK")
