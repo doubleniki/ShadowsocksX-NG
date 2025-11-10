@@ -52,7 +52,7 @@ func diagnose() -> String {
     
     let defaults = UserDefaults.standard
     let keys = [
-        "ShadowsocksOn",
+        Constants.UserDefaults.shadowsocksOn,
         "ShadowsocksRunningMode",
         "LocalSocks5.ListenPort",
         "LocalSocks5.ListenAddress",

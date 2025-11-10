@@ -17,7 +17,7 @@ class ServerProfileManager: NSObject {
 
     fileprivate override init() {
         let defaults = UserDefaults.standard
-        if let _profiles = defaults.array(forKey: "ServerProfiles") {
+        if let _profiles = defaults.array(forKey: Constants.UserDefaults.serverProfiles) {
             for _profile in _profiles {
                 // Safe cast and unwrap
                 guard let profileDict = _profile as? [String: Any],
@@ -29,13 +29,13 @@ class ServerProfileManager: NSObject {
                 profiles.append(profile)
             }
         }
-        activeProfileId = defaults.string(forKey: "ActiveServerProfileId")
+        activeProfileId = defaults.string(forKey: Constants.UserDefaults.activeServerProfileId)
     }
 
     func setActiveProfiledId(_ id: String) {
         activeProfileId = id
         let defaults = UserDefaults.standard
-        defaults.set(id, forKey: "ActiveServerProfileId")
+        defaults.set(id, forKey: Constants.UserDefaults.activeServerProfileId)
     }
 
     func save() {
@@ -47,7 +47,7 @@ class ServerProfileManager: NSObject {
                 _profiles.append(_profile as AnyObject)
             }
         }
-        defaults.set(_profiles, forKey: "ServerProfiles")
+        defaults.set(_profiles, forKey: Constants.UserDefaults.serverProfiles)
 
         if getActiveProfile() == nil {
             activeProfileId = nil
@@ -58,7 +58,7 @@ class ServerProfileManager: NSObject {
         profiles.removeAll()
 
         let defaults = UserDefaults.standard
-        if let _profiles = defaults.array(forKey: "ServerProfiles") {
+        if let _profiles = defaults.array(forKey: Constants.UserDefaults.serverProfiles) {
             for _profile in _profiles {
                 // Safe cast and unwrap
                 guard let profileDict = _profile as? [String: Any],
@@ -70,7 +70,7 @@ class ServerProfileManager: NSObject {
                 profiles.append(profile)
             }
         }
-        activeProfileId = defaults.string(forKey: "ActiveServerProfileId")
+        activeProfileId = defaults.string(forKey: Constants.UserDefaults.activeServerProfileId)
     }
 
     func getActiveProfile() -> ServerProfile? {

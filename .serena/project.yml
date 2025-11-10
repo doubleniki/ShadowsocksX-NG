@@ -38,9 +38,6 @@ ignored_paths:
   - deps/
   - Pods/
 
-  # Documentation
-  - docs/
-
   # Build and utility scripts
   - scripts/
 

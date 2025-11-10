@@ -317,7 +317,7 @@ func syncSSLocal() {
             changed = changed || writeSSLocalConfFile((profile.toJsonConfig()))
         }
 
-        let on = UserDefaults.standard.bool(forKey: "ShadowsocksOn")
+        let on = UserDefaults.standard.bool(forKey: Constants.UserDefaults.shadowsocksOn)
         if on {
             if changed {
                 stopSSLocal()

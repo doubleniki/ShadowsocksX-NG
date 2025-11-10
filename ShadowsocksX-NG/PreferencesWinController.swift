@@ -74,14 +74,14 @@ class PreferencesWinController: NSWindowController {
         let defaults = UserDefaults.standard
 
         // Don't reset server profiles, restore them later.
-        let profiles = defaults.array(forKey: "ServerProfiles")
-        let activeProfileId = defaults.string(forKey: "ActiveServerProfileId")
+        let profiles = defaults.array(forKey: Constants.UserDefaults.serverProfiles)
+        let activeProfileId = defaults.string(forKey: Constants.UserDefaults.activeServerProfileId)
 
         defaults.removePersistentDomain(forName: domain)
 
         // Restore server profiles.
-        defaults.set(profiles, forKey: "ServerProfiles")
-        defaults.set(activeProfileId, forKey: "ActiveServerProfileId")
+        defaults.set(profiles, forKey: Constants.UserDefaults.serverProfiles)
+        defaults.set(activeProfileId, forKey: Constants.UserDefaults.activeServerProfileId)
 
         showResetSuccessAlert()
     }
