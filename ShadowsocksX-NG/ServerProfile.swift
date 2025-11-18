@@ -8,7 +8,7 @@
 
 import Cocoa
 
-class ServerProfile: NSObject, NSCopying {
+class ServerProfile: NSObject, NSCopying, Codable {
 
     @objc var uuid: String
 
@@ -183,6 +183,51 @@ class ServerProfile: NSObject, NSCopying {
         }
     }
 
+    // MARK: - Codable
+
+    enum CodingKeys: String, CodingKey {
+        case uuid = "Id"
+        case serverHost = "ServerHost"
+        case serverPort = "ServerPort"
+        case method = "Method"
+        case remark = "Remark"
+        case plugin = "Plugin"
+        case pluginOptions = "PluginOptions"
+        // Note: password is NOT included - it's stored in Keychain
+    }
+
+    required init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+
+        uuid = try container.decode(String.self, forKey: .uuid)
+        serverHost = try container.decode(String.self, forKey: .serverHost)
+        serverPort = try container.decode(UInt16.self, forKey: .serverPort)
+        method = try container.decode(String.self, forKey: .method)
+        remark = try container.decodeIfPresent(String.self, forKey: .remark) ?? ""
+        plugin = try container.decodeIfPresent(String.self, forKey: .plugin) ?? ""
+        pluginOptions = try container.decodeIfPresent(String.self, forKey: .pluginOptions) ?? ""
+
+        super.init()
+
+        // Password will be loaded from Keychain on first access via the computed property
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+
+        try container.encode(uuid, forKey: .uuid)
+        try container.encode(serverHost, forKey: .serverHost)
+        try container.encode(serverPort, forKey: .serverPort)
+        try container.encode(method, forKey: .method)
+        try container.encode(remark, forKey: .remark)
+        try container.encode(plugin, forKey: .plugin)
+        try container.encode(pluginOptions, forKey: .pluginOptions)
+
+        // Note: password is NOT encoded - it's stored in Keychain
+    }
+
+    // MARK: - NSCopying
+
     public func copy(with zone: NSZone? = nil) -> Any {
         let copy = ServerProfile()
         copy.serverHost = self.serverHost
@@ -198,6 +243,7 @@ class ServerProfile: NSObject, NSCopying {
         return copy
     }
 
+    @available(*, deprecated, message: "Use Codable (JSONDecoder) instead")
     static func fromDictionary(_ data: [String: Any?]) -> ServerProfile? {
         let cp = {
             (profile: ServerProfile) -> Bool in
@@ -257,6 +303,7 @@ class ServerProfile: NSObject, NSCopying {
         }
     }
 
+    @available(*, deprecated, message: "Use Codable (JSONEncoder) instead")
     func toDictionary() -> [String: AnyObject] {
         var d = [String: AnyObject]()
         d["Id"] = uuid as AnyObject?
