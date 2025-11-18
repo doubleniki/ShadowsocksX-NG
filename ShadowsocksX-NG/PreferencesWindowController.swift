@@ -65,8 +65,22 @@ class PreferencesWindowController: NSWindowController, NSTableViewDataSource, NS
         // Populate encryption methods from enum
         methodTextField.addItems(withObjectValues: EncryptionMethod.allCases.map { $0.rawValue })
 
+        // Configure modern table view style (macOS 11.0+)
+        profilesTableView.applyModernStyle()
+
+        // Configure text field placeholders
+        configureTextFieldPlaceholders()
+
         profilesTableView.reloadData()
         updateProfileBoxVisible()
+
+        // Select first row if profiles exist to display server details
+        if !serverProfileManager.profiles.isEmpty {
+            let firstIndex = IndexSet(integer: 0)
+            profilesTableView.selectRowIndexes(firstIndex, byExtendingSelection: false)
+            // Manually trigger binding since selection change may not fire during window load
+            bindProfile(0)
+        }
     }
 
     override func awakeFromNib() {
@@ -75,6 +89,22 @@ class PreferencesWindowController: NSWindowController, NSTableViewDataSource, NS
         ])
         profilesTableView.allowsMultipleSelection = true
     }
+
+    // MARK: - Table View Configuration
+
+
+
+    private func configureTextFieldPlaceholders() {
+        hostTextField.placeholderString = NSLocalizedString("Server IP or domain", comment: "")
+        portTextField.placeholderString = NSLocalizedString("Port (e.g., 8388)", comment: "")
+        passwordTextField.placeholderString = NSLocalizedString("Password", comment: "")
+        passwordSecureTextField.placeholderString = NSLocalizedString("Password", comment: "")
+        pluginTextField.placeholderString = NSLocalizedString("Plugin (optional)", comment: "")
+        pluginOptionsTextField.placeholderString = NSLocalizedString("Plugin options (optional)", comment: "")
+        remarkTextField.placeholderString = NSLocalizedString("Description (optional)", comment: "")
+    }
+
+    // MARK: - Actions
 
     @IBAction func addProfile(_ sender: NSButton) {
         if let profile = editingProfile, !profile.isValid() {
@@ -215,17 +245,19 @@ class PreferencesWindowController: NSWindowController, NSTableViewDataSource, NS
 
         if identifier == "secure" {
             passwordTabView.selectTabViewItem(withIdentifier: "insecure")
-            togglePasswordVisibleButton.image = NSImage(named: "icons8-Eye Filled-50")
+            // Password is now visible, show eye.fill icon
+            togglePasswordVisibleButton.image = StatusBarIcon.passwordVisibility(visible: true)
         } else {
             passwordTabView.selectTabViewItem(withIdentifier: "secure")
-            togglePasswordVisibleButton.image = NSImage(named: "icons8-Blind Filled-50")
+            // Password is now hidden, show eye.slash.fill icon
+            togglePasswordVisibleButton.image = StatusBarIcon.passwordVisibility(visible: false)
         }
     }
 
     @IBAction func openPluginHelp(_ sender: Any) {
         guard
             let url = URL(
-                string: "https://github.com/shadowsocks/ShadowsocksX-NG/wiki/SIP003-Plugin")
+                string: "https://github.com/doubleniki/ShadowsocksX-NG/wiki/SIP003-Plugin")
         else {
             ErrorHandler.shared.warning("Invalid plugin help URL")
             return
@@ -481,5 +513,19 @@ class PreferencesWindowController: NSWindowController, NSTableViewDataSource, NS
         if let windowFrame = window?.frame {
             window?.animator().setFrameOrigin(windowFrame.origin)
         }
+    }
+}
+
+// MARK: - NSTableView Extension
+
+extension NSTableView {
+    /// Applies modern macOS 11.0+ table view styling
+    func applyModernStyle() {
+        self.style = .fullWidth
+        self.floatsGroupRows = false
+        self.rowSizeStyle = .default
+        self.intercellSpacing = NSSize(width: 0, height: 2)
+        self.selectionHighlightStyle = .regular
+        // Note: usesAutomaticRowHeights removed - requires proper Auto Layout constraints in XIB
     }
 }

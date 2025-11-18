@@ -32,7 +32,7 @@ class ToastWindowController: NSWindowController {
 
         self.shouldCascadeWindows = false
 
-        // Implement this method to handle any initialization after your window controller's window has been loaded from its nib file.
+        // Configure window for modern HUD appearance
         if let win = self.window {
             win.isOpaque = false
             win.backgroundColor = .clear
@@ -43,16 +43,41 @@ class ToastWindowController: NSWindowController {
             win.orderFrontRegardless()
         }
 
-        let viewLayer: CALayer = CALayer()
-        viewLayer.backgroundColor = CGColor.init(red: 0.05, green: 0.05, blue: 0.05, alpha: kHudAlphaValue)
-        viewLayer.cornerRadius = kHudCornerRadius
-        panelView.wantsLayer = true
-        panelView.layer = viewLayer
-        panelView.layer?.opacity = 0.0
+        // Create modern vibrancy effect view (macOS 10.14+)
+        setupVibrancyEffect()
 
         self.titleTextField.stringValue = self.message
 
         setupHud()
+    }
+
+    /// Setup modern vibrancy effect for HUD window
+    /// Uses NSVisualEffectView for blur and material effects
+    private func setupVibrancyEffect() {
+        // Create visual effect view with HUD material
+        let visualEffectView = NSVisualEffectView()
+        visualEffectView.translatesAutoresizingMaskIntoConstraints = false
+        visualEffectView.material = .hudWindow  // HUD material for toast notifications
+        visualEffectView.blendingMode = .behindWindow
+        visualEffectView.state = .active
+        visualEffectView.wantsLayer = true
+        visualEffectView.layer?.cornerRadius = kHudCornerRadius
+        visualEffectView.layer?.masksToBounds = true
+
+        // Insert visual effect view as background
+        panelView.addSubview(visualEffectView, positioned: .below, relativeTo: titleTextField)
+
+        // Pin visual effect view to panel view edges
+        NSLayoutConstraint.activate([
+            visualEffectView.topAnchor.constraint(equalTo: panelView.topAnchor),
+            visualEffectView.bottomAnchor.constraint(equalTo: panelView.bottomAnchor),
+            visualEffectView.leadingAnchor.constraint(equalTo: panelView.leadingAnchor),
+            visualEffectView.trailingAnchor.constraint(equalTo: panelView.trailingAnchor)
+        ])
+
+        // Configure panel view layer for animation
+        panelView.wantsLayer = true
+        panelView.layer?.opacity = 0.0
     }
 
     func setupHud() -> Void {

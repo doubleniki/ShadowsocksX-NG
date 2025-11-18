@@ -48,6 +48,10 @@ class ShareServerProfilesWindowController: NSWindowController, NSTableViewDataSo
         if profileManager == nil {
             profileManager = ServerProfileManager.instance
         }
+
+        // Configure modern table view style (macOS 11.0+)
+        profilesTableView.applyModernStyle()
+
         profilesTableView.reloadData()
 
         if !serverProfileManager.profiles.isEmpty {
@@ -61,6 +65,10 @@ class ShareServerProfilesWindowController: NSWindowController, NSTableViewDataSo
             saveQRCodeAsFileButton.isEnabled = false
         }
     }
+
+
+
+    // MARK: - Actions
 
     @IBAction func copyURL(_ sender: NSButton) {
         let profile = getSelectedProfile()

@@ -50,4 +50,39 @@ post_install do |installer|
     )
     File.write(frameworks_script_path, frameworks_script)
   end
+
+  # Patch MASShortcut to fix NSKeyedUnarchiveFromData deprecation warning
+  # MASShortcut is archived (2023-03-05) and no longer maintained
+  # This patches the deprecated API to use modern NSSecureUnarchiveFromDataTransformerName
+  puts "Patching MASShortcut for NSKeyedUnarchiveFromData deprecation..."
+
+  # Patch MASShortcutBinder.m
+  binder_file = 'Pods/MASShortcut/Framework/User Defaults Storage/MASShortcutBinder.m'
+  if File.exist?(binder_file)
+    content = File.read(binder_file)
+    patched_content = content.gsub(
+      'NSKeyedUnarchiveFromDataTransformerName',
+      'NSSecureUnarchiveFromDataTransformerName'
+    )
+    if content != patched_content
+      File.write(binder_file, patched_content)
+      puts "  ✅ Patched MASShortcutBinder.m"
+    end
+  end
+
+  # Patch MASShortcutView+Bindings.m
+  bindings_file = 'Pods/MASShortcut/Framework/UI/MASShortcutView+Bindings.m'
+  if File.exist?(bindings_file)
+    content = File.read(bindings_file)
+    patched_content = content.gsub(
+      'NSKeyedUnarchiveFromDataTransformerName',
+      'NSSecureUnarchiveFromDataTransformerName'
+    )
+    if content != patched_content
+      File.write(bindings_file, patched_content)
+      puts "  ✅ Patched MASShortcutView+Bindings.m"
+    end
+  end
+
+  puts "MASShortcut patching complete!"
 end

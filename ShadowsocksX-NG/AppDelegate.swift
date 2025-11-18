@@ -115,6 +115,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
 
         registerDefaultSettings()
         setupCoordinators()
+        setupMenuIcons()
         setupNotificationObservers()
 
         // Handle ss url scheme
@@ -231,6 +232,63 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
                 self.handleFoundSSURL(notification)
             })
             .disposed(by: disposeBag)
+    }
+
+    private func setupMenuIcons() {
+        // Set SF Symbol icons for menu items (Phase 2 UI modernization)
+        // Locale-independent matching by action selector instead of title
+
+        // Toggle power icon for on/off
+        toggleRunningMenuItem.image = StatusBarIcon.togglePowerIcon()
+
+        // Proxy mode icons (use same icons as status bar for consistency)
+        autoModeMenuItem.image = StatusBarIcon.icon(for: .auto)
+        globalModeMenuItem.image = StatusBarIcon.icon(for: .global)
+        manualModeMenuItem.image = StatusBarIcon.icon(for: .manual)
+        externalPACModeMenuItem.image = StatusBarIcon.icon(for: .externalPAC)
+
+        // Servers submenu icon
+        serversMenuItem.image = StatusBarIcon.serversIcon()
+
+        // Use existing outlet for Scan QR Code
+        scanQRCodeMenuItem.image = StatusBarIcon.scanQRCodeIcon()
+
+        // Find and set icons for items by action selector (locale-independent)
+        if let menu = statusMenu {
+            // Map action selectors to icons
+            let iconsByAction: [(Selector, NSImage?)] = [
+                (#selector(showImportWindow(_:)), StatusBarIcon.importServersIcon()),
+                (#selector(showAllInOnePreferences(_:)), StatusBarIcon.preferencesIcon()),
+                (#selector(updateGFWList(_:)), StatusBarIcon.updatePACIcon()),
+                (#selector(editUserRulesForPAC(_:)), StatusBarIcon.editRulesIcon()),
+                (#selector(showLogs(_:)), StatusBarIcon.showLogsIcon()),
+                (#selector(exportDiagnosis(_:)), StatusBarIcon.exportDiagnosisIcon()),
+                (#selector(checkForUpdates(_:)), StatusBarIcon.checkUpdatesIcon()),
+                (#selector(feedback(_:)), StatusBarIcon.helpIcon()),
+                (#selector(showAbout(_:)), StatusBarIcon.aboutIcon()),
+                (#selector(NSApplication.terminate(_:)), StatusBarIcon.quitIcon())
+            ]
+
+            for item in menu.items {
+                guard let action = item.action else { continue }
+                for (selector, icon) in iconsByAction {
+                    if action == selector {
+                        item.image = icon
+                        break
+                    }
+                }
+            }
+
+            // Set icon for Server Preferences in submenu (also by action)
+            if let serversSubmenu = serversMenuItem.submenu {
+                for item in serversSubmenu.items {
+                    if item.action == #selector(editServerPreferences(_:)) {
+                        item.image = StatusBarIcon.serverPreferencesIcon()
+                        break
+                    }
+                }
+            }
+        }
     }
 
     private func handleSwitchProxyModeShortcut() {
@@ -405,7 +463,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
     }
 
     @IBAction func checkForUpdates(_ sender: NSMenuItem) {
-        guard let url = URL(string: "https://github.com/shadowsocks/ShadowsocksX-NG/releases")
+        guard let url = URL(string: "https://github.com/doubleniki/ShadowsocksX-NG/releases")
         else {
             ErrorHandler.shared.warning("Invalid update URL")
             return
@@ -418,7 +476,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
     }
 
     @IBAction func showHelp(_ sender: NSMenuItem) {
-        guard let url = URL(string: "https://github.com/shadowsocks/ShadowsocksX-NG/wiki") else {
+        guard let url = URL(string: "https://github.com/doubleniki/ShadowsocksX-NG/wiki") else {
             ErrorHandler.shared.warning("Invalid help URL")
             return
         }

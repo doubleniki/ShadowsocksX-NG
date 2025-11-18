@@ -28,9 +28,14 @@ class ProxyInterfacesViewCtrl: NSViewController, NSTableViewDataSource, NSTableV
             selectedNetworkServices = NSMutableSet()
         }
 
+        // Configure modern table view style (macOS 11.0+)
+        tableView?.applyModernStyle()
+
         networkServices = ProxyConfTool.networkServicesList() as NSArray?
         tableView?.reloadData()
     }
+
+
 
     //--------------------------------------------------
     // For NSTableViewDataSource

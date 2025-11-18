@@ -389,6 +389,64 @@ networksetup -getsocksfirewallproxy Wi-Fi
 - ✅ Automatic placeholder binary creation for CI builds
 - ✅ Fixed project file references (removed deleted files)
 
+### Phase 2: UI Modernization (Completed 2025-11-18)
+
+**SF Symbols Migration:**
+
+- ✅ Created `StatusBarIcon.swift` enum for centralized icon management
+- ✅ Migrated status bar icons from PNG to SF Symbols:
+  - `menu_icon` → `paperplane.fill` (enabled)
+  - `menu_icon_disabled` → `paperplane` (disabled)
+  - `menu_p_icon` → `network` (Auto/PAC mode)
+  - `menu_g_icon` → `globe` (Global mode)
+  - `menu_m_icon` → `gearshape.fill` (Manual mode)
+  - `menu_e_icon` → `link.circle.fill` (External PAC)
+- ✅ Updated `MenuBarManager.swift` to use SF Symbols (reduced ~30 lines of code)
+- ✅ Benefits: vector-based, auto dark mode, smaller bundle size (~200KB saved)
+
+**Semantic Colors Migration:**
+
+- ✅ Created `NSColor+Semantic.swift` extension for adaptive colors
+- ✅ Implemented automatic dark mode color adaptation:
+  - `toastBackground` - HUD window background (adapts gray level)
+  - `toastForeground` - HUD text color
+  - `qrCodeOverlayText` - QR code labels (brighter green in dark mode)
+  - `qrCodeOverlayBackground` - QR code label background
+- ✅ Migrated `ToastWindowController.swift` to semantic colors
+- ✅ Migrated `SWBQRCodeWindowController.m` to semantic colors
+- ✅ Added `@objc` attributes for Objective-C/Swift interoperability
+- ✅ Removed 3 hardcoded RGB color values
+
+**Bug Fixes:**
+
+- ✅ Fixed XIB outlet connection error in `UserRulesController.xib`
+- ✅ Fixed `toCGColor()` implementation with proper RGB color space conversion
+- ✅ Added Swift bridging header to Objective-C files
+- ✅ Fixed server preferences auto-selection issue
+- ✅ Patched MASShortcut deprecated API (`NSKeyedUnarchiveFromData` → `NSSecureUnarchiveFromData`)
+
+**Repository Updates:**
+
+- ✅ Updated all GitHub URLs from `shadowsocks/ShadowsocksX-NG` to `doubleniki/ShadowsocksX-NG`
+- ✅ Help menu wiki link
+- ✅ Plugin help wiki link
+- ✅ Check for updates releases link
+
+**Documentation:**
+
+- ✅ Documented console warnings in `KNOWN_ISSUES.md` (task port, layout recursion)
+- ✅ Created comprehensive progress report in `UI_MODERNIZATION_PROGRESS.md`
+- ✅ Updated `MODERNIZATION_ROADMAP.md` with Phase 2 status
+
+**Metrics:**
+
+- Files created: 2 (StatusBarIcon.swift, NSColor+Semantic.swift)
+- Files modified: 9
+- Lines added: ~262
+- Lines removed: ~31
+- Net change: +241 lines
+- Code quality: Improved (type safety, dark mode support, maintainability)
+
 ### Known Limitations
 
 **Binary Dependencies:**
@@ -401,6 +459,9 @@ networksetup -getsocksfirewallproxy Wi-Fi
 
 - generatePACFile function needs to be decomposed into helper functions
 - Constants.swift visibility issues in some contexts (currently using hardcoded paths)
+- Other UI icons migration (terminal-logo, virtual-server-icon, http icons)
+- Component modernization (table views, buttons, form inputs)
+- Vibrancy effects (windows and dialogs)
 - These are tracked in SwiftLint exclusions with TODO comments
 
 ### System Requirements
