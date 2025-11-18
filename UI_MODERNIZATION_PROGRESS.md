@@ -180,6 +180,34 @@ Before merging, please verify:
 
 ---
 
+## Known Issues
+
+### NSToolbarItem Deprecation Warning (Documented)
+
+**Issue:** Runtime warning in Xcode console:
+```
+NSToolbarItem.minSize and NSToolbarItem.maxSize methods are deprecated.
+```
+
+**Root Cause:** `PreferencesWinController.xib` created with Xcode 11 (toolsVersion=15400)
+
+**Documentation Added:**
+- `docs/KNOWN_ISSUES.md` - Problem description and 3 solution options
+- `docs/XCODE_XIB_UPDATE_GUIDE.md` - Step-by-step XIB update guide
+
+**Recommended Fix:** Update XIB file to Xcode 14+ format (5 minutes in Xcode)
+
+**Impact:**
+- ⚠️ Warning only - no functional issues
+- No crashes or data loss
+- May cause minor toolbar item clipping on some macOS versions
+
+**Priority:** Low (cosmetic)
+
+See `docs/KNOWN_ISSUES.md` for detailed solutions.
+
+---
+
 ## Notes for Reviewers
 
 ### Design Decisions
