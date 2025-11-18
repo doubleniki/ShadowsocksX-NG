@@ -32,7 +32,7 @@ class ServerProfileManager: NSObject {
         activeProfileId = defaults.string(forKey: Constants.UserDefaults.activeServerProfileId)
     }
 
-    func setActiveProfiledId(_ id: String) {
+    func setActiveProfileId(_ id: String) {
         activeProfileId = id
         let defaults = UserDefaults.standard
         defaults.set(id, forKey: Constants.UserDefaults.activeServerProfileId)

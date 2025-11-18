@@ -206,7 +206,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
             guard let self = self else { return }
             if self.profileManager.activeProfileId == nil && !self.profileManager.profiles.isEmpty {
                 if self.profileManager.profiles[0].isValid() {
-                    self.profileManager.setActiveProfiledId(self.profileManager.profiles[0].uuid)
+                    self.profileManager.setActiveProfileId(self.profileManager.profiles[0].uuid)
                 }
             }
             self.menuBarManager.updateServersMenu()
@@ -350,7 +350,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
         let spMgr = profileManager
         let newProfile = spMgr.profiles[index]
         if newProfile.uuid != spMgr.activeProfileId {
-            spMgr.setActiveProfiledId(newProfile.uuid)
+            spMgr.setActiveProfileId(newProfile.uuid)
             menuBarManager.updateServersMenu()
             syncSSLocal()
             proxyCoordinator.applyConfig()
@@ -596,7 +596,7 @@ extension AppDelegate {
         let spMgr = profileManager
         let newProfile = spMgr.profiles[index]
         if newProfile.uuid != spMgr.activeProfileId {
-            spMgr.setActiveProfiledId(newProfile.uuid)
+            spMgr.setActiveProfileId(newProfile.uuid)
             menuBarManager.updateServersMenu()
             syncSSLocal()
             proxyCoordinator.applyConfig()
