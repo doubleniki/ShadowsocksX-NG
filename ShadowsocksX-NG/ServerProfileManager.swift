@@ -32,7 +32,7 @@ class ServerProfileManager: NSObject {
         activeProfileId = defaults.string(forKey: Constants.UserDefaults.activeServerProfileId)
     }
 
-    func setActiveProfiledId(_ id: String) {
+    func setActiveProfileId(_ id: String) {
         activeProfileId = id
         let defaults = UserDefaults.standard
         defaults.set(id, forKey: Constants.UserDefaults.activeServerProfileId)
@@ -112,4 +112,10 @@ class ServerProfileManager: NSObject {
         urls = urls.filter { $0.scheme == "ss" }
         return urls
     }
+}
+
+// MARK: - ServerProfileManaging Protocol Conformance
+
+extension ServerProfileManager: ServerProfileManaging {
+    // All required methods already implemented in main class
 }

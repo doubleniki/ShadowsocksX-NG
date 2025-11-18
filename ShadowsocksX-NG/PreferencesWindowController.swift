@@ -32,8 +32,24 @@ class PreferencesWindowController: NSWindowController, NSTableViewDataSource, NS
 
     let tableViewDragType: String = "ss.server.profile.data"
 
-    var defaults: UserDefaults!
-    var profileMgr: ServerProfileManager!
+    private var profileManager: ServerProfileManaging?
+    private var serverProfileManager: ServerProfileManaging {
+        get {
+            if let profileManager = profileManager {
+                return profileManager
+            }
+            let fallback = ServerProfileManager.instance
+            self.profileManager = fallback
+            return fallback
+        }
+        set {
+            profileManager = newValue
+        }
+    }
+
+    func configure(profileManager: ServerProfileManaging) {
+        self.profileManager = profileManager
+    }
 
     var editingProfile: ServerProfile?
 
@@ -42,8 +58,9 @@ class PreferencesWindowController: NSWindowController, NSTableViewDataSource, NS
 
         // Implement this method to handle any initialization after your window controller's window has been loaded from its nib file.
 
-        defaults = UserDefaults.standard
-        profileMgr = ServerProfileManager.instance
+        if profileManager == nil {
+            profileManager = ServerProfileManager.instance
+        }
 
         // Populate encryption methods from enum
         methodTextField.addItems(withObjectValues: EncryptionMethod.allCases.map { $0.rawValue })
@@ -67,13 +84,13 @@ class PreferencesWindowController: NSWindowController, NSTableViewDataSource, NS
         profilesTableView.beginUpdates()
         let profile = ServerProfile()
         profile.remark = "New Server".localized
-        profileMgr.profiles.append(profile)
+        serverProfileManager.profiles.append(profile)
 
-        let index = IndexSet(integer: profileMgr.profiles.count - 1)
+        let index = IndexSet(integer: serverProfileManager.profiles.count - 1)
         profilesTableView.insertRows(
             at: index, withAnimation: NSTableView.AnimationOptions.effectFade)
 
-        self.profilesTableView.scrollRowToVisible(self.profileMgr.profiles.count - 1)
+        self.profilesTableView.scrollRowToVisible(self.serverProfileManager.profiles.count - 1)
         self.profilesTableView.selectRowIndexes(index, byExtendingSelection: false)
         profilesTableView.endUpdates()
         updateProfileBoxVisible()
@@ -87,12 +104,12 @@ class PreferencesWindowController: NSWindowController, NSTableViewDataSource, NS
         profilesTableView.beginUpdates()
         for (_, toDeleteIndex) in profilesTableView.selectedRowIndexes.enumerated() {
             ErrorHandler.shared.debug(
-                "Profile count before deletion: \(profileMgr.profiles.count)",
+                "Profile count before deletion: \(serverProfileManager.profiles.count)",
                 context: "PreferencesWindowController.removeProfile")
-            let profile = profileMgr.profiles[toDeleteIndex - deleteCount]
+            let profile = serverProfileManager.profiles[toDeleteIndex - deleteCount]
             // Remove password from Keychain before deleting profile
             profile.removePasswordFromKeychain()
-            profileMgr.profiles.remove(at: toDeleteIndex - deleteCount)
+            serverProfileManager.profiles.remove(at: toDeleteIndex - deleteCount)
             profilesTableView.removeRows(
                 at: IndexSet(integer: toDeleteIndex - deleteCount),
                 withAnimation: NSTableView.AnimationOptions.effectFade
@@ -106,7 +123,7 @@ class PreferencesWindowController: NSWindowController, NSTableViewDataSource, NS
 
         // Select the row before the first deleted row, or 0 if we deleted from the start
         let newSelectedIndex = max(0, firstIndex - 1)
-        if !profileMgr.profiles.isEmpty {
+        if !serverProfileManager.profiles.isEmpty {
             self.profilesTableView.scrollRowToVisible(newSelectedIndex)
             self.profilesTableView.selectRowIndexes(
                 IndexSet(integer: newSelectedIndex), byExtendingSelection: false)
@@ -120,7 +137,7 @@ class PreferencesWindowController: NSWindowController, NSTableViewDataSource, NS
             shakeWindows()
             return
         }
-        profileMgr.save()
+        serverProfileManager.save()
         window?.performClose(nil)
 
         NotificationCenter.default
@@ -128,7 +145,7 @@ class PreferencesWindowController: NSWindowController, NSTableViewDataSource, NS
     }
 
     @IBAction func cancel(_ sender: NSButton) {
-        profileMgr.reload()
+        serverProfileManager.reload()
         window?.performClose(self)
     }
 
@@ -139,15 +156,15 @@ class PreferencesWindowController: NSWindowController, NSTableViewDataSource, NS
 
         for originalIndex in selectedIndices {
             ErrorHandler.shared.debug(
-                "Duplicating profile at index \(originalIndex), total profiles count: \(profileMgr.profiles.count)"
+                "Duplicating profile at index \(originalIndex), total profiles count: \(serverProfileManager.profiles.count)"
             )
 
-            guard originalIndex < profileMgr.profiles.count else {
+            guard originalIndex < serverProfileManager.profiles.count else {
                 ErrorHandler.shared.warning("Invalid profile index \(originalIndex)")
                 continue
             }
 
-            let profile = profileMgr.profiles[originalIndex]
+            let profile = serverProfileManager.profiles[originalIndex]
 
             // Copy profile (password is cached but not saved to Keychain yet)
             guard let duplicateProfile = profile.copy() as? ServerProfile else {
@@ -166,7 +183,7 @@ class PreferencesWindowController: NSWindowController, NSTableViewDataSource, NS
 
             // Insert immediately after the source profile
             let insertIndex = originalIndex + 1
-            profileMgr.profiles.insert(duplicateProfile, at: insertIndex)
+            serverProfileManager.profiles.insert(duplicateProfile, at: insertIndex)
 
             profilesTableView.beginUpdates()
             let index = IndexSet(integer: insertIndex)
@@ -226,7 +243,7 @@ class PreferencesWindowController: NSWindowController, NSTableViewDataSource, NS
     @IBAction func copyCurrentProfileURL2Pasteboard(_ sender: NSButton) {
         let index = profilesTableView.selectedRow
         if index >= 0 {
-            let profile = profileMgr.profiles[index]
+            let profile = serverProfileManager.profiles[index]
             let ssURL = profile.URL()
             if let url = ssURL {
                 // Then copy url to pasteboard
@@ -244,13 +261,13 @@ class PreferencesWindowController: NSWindowController, NSTableViewDataSource, NS
     }
 
     func updateProfileBoxVisible() {
-        if profileMgr.profiles.isEmpty {
+        if serverProfileManager.profiles.isEmpty {
             removeButton.isEnabled = false
         } else {
             removeButton.isEnabled = true
         }
 
-        if profileMgr.profiles.isEmpty {
+        if serverProfileManager.profiles.isEmpty {
             profileBox.isHidden = true
         } else {
             profileBox.isHidden = false
@@ -260,8 +277,8 @@ class PreferencesWindowController: NSWindowController, NSTableViewDataSource, NS
     func bindProfile(_ index: Int) {
         ErrorHandler.shared.debug("bind profile \(index)", context: "Preferences")
 
-        if index >= 0 && index < profileMgr.profiles.count {
-            let selectedProfile = profileMgr.profiles[index]
+        if index >= 0 && index < serverProfileManager.profiles.count {
+            let selectedProfile = serverProfileManager.profiles[index]
             self.editingProfile = selectedProfile
 
             hostTextField.bind(
@@ -308,8 +325,8 @@ class PreferencesWindowController: NSWindowController, NSTableViewDataSource, NS
     }
 
     func getDataAtRow(_ index: Int) -> (String, Bool) {
-        let profile = profileMgr.profiles[index]
-        let isActive = (profileMgr.activeProfileId == profile.uuid)
+        let profile = serverProfileManager.profiles[index]
+        let isActive = (serverProfileManager.activeProfileId == profile.uuid)
         if !profile.remark.isEmpty {
             return (String(profile.remark.prefix(24)), isActive)
         } else {
@@ -321,10 +338,7 @@ class PreferencesWindowController: NSWindowController, NSTableViewDataSource, NS
     // For NSTableViewDataSource
 
     func numberOfRows(in tableView: NSTableView) -> Int {
-        if let mgr = profileMgr {
-            return mgr.profiles.count
-        }
-        return 0
+        return serverProfileManager.profiles.count
     }
 
     func tableView(_ tableView: NSTableView, objectValueFor tableColumn: NSTableColumn?, row: Int)
@@ -370,47 +384,42 @@ class PreferencesWindowController: NSWindowController, NSTableViewDataSource, NS
         _ tableView: NSTableView, acceptDrop info: NSDraggingInfo, row: Int,
         dropOperation: NSTableView.DropOperation
     ) -> Bool {
-        if let mgr = profileMgr {
-            var oldIndexes = [Int]()
-            info.enumerateDraggingItems(
-                options: [], for: tableView, classes: [NSPasteboardItem.self], searchOptions: [:],
-                using: {
-                    (draggingItem: NSDraggingItem, idx: Int, stop: UnsafeMutablePointer<ObjCBool>)
-                    in
-                    guard let pasteboardItem = draggingItem.item as? NSPasteboardItem,
-                        let str = pasteboardItem.string(
-                            forType: NSPasteboard.PasteboardType(rawValue: self.tableViewDragType)),
-                        let index = Int(str)
-                    else {
-                        return
-                    }
-                    oldIndexes.append(index)
-                })
-
-            var oldIndexOffset = 0
-            var newIndexOffset = 0
-
-            // For simplicity, the code below uses `tableView.moveRowAtIndex` to move rows around directly.
-            // You may want to move rows in your content array and then call `tableView.reloadData()` instead.
-            tableView.beginUpdates()
-            for oldIndex in oldIndexes {
-                if oldIndex < row {
-                    let o = mgr.profiles.remove(at: oldIndex + oldIndexOffset)
-                    mgr.profiles.insert(o, at: row - 1)
-                    tableView.moveRow(at: oldIndex + oldIndexOffset, to: row - 1)
-                    oldIndexOffset -= 1
-                } else {
-                    let o = mgr.profiles.remove(at: oldIndex)
-                    mgr.profiles.insert(o, at: row + newIndexOffset)
-                    tableView.moveRow(at: oldIndex, to: row + newIndexOffset)
-                    newIndexOffset += 1
+        var mgr = serverProfileManager
+        var oldIndexes = [Int]()
+        info.enumerateDraggingItems(
+            options: [], for: tableView, classes: [NSPasteboardItem.self], searchOptions: [:],
+            using: {
+                (draggingItem: NSDraggingItem, _, _) in
+                guard let pasteboardItem = draggingItem.item as? NSPasteboardItem,
+                    let str = pasteboardItem.string(
+                        forType: NSPasteboard.PasteboardType(rawValue: self.tableViewDragType)),
+                    let index = Int(str)
+                else {
+                    return
                 }
-            }
-            tableView.endUpdates()
+                oldIndexes.append(index)
+            })
 
-            return true
+        var oldIndexOffset = 0
+        var newIndexOffset = 0
+
+        tableView.beginUpdates()
+        for oldIndex in oldIndexes {
+            if oldIndex < row {
+                let o = mgr.profiles.remove(at: oldIndex + oldIndexOffset)
+                mgr.profiles.insert(o, at: row - 1)
+                tableView.moveRow(at: oldIndex + oldIndexOffset, to: row - 1)
+                oldIndexOffset -= 1
+            } else {
+                let o = mgr.profiles.remove(at: oldIndex)
+                mgr.profiles.insert(o, at: row + newIndexOffset)
+                tableView.moveRow(at: oldIndex, to: row + newIndexOffset)
+                newIndexOffset += 1
+            }
         }
-        return false
+        tableView.endUpdates()
+
+        return true
     }
 
     //--------------------------------------------------
@@ -437,11 +446,9 @@ class PreferencesWindowController: NSWindowController, NSTableViewDataSource, NS
     func tableViewSelectionDidChange(_ notification: Notification) {
         if profilesTableView.selectedRow >= 0 {
             bindProfile(profilesTableView.selectedRow)
-        } else {
-            if !profileMgr.profiles.isEmpty {
-                let index = IndexSet(integer: profileMgr.profiles.count - 1)
-                profilesTableView.selectRowIndexes(index, byExtendingSelection: false)
-            }
+        } else if !serverProfileManager.profiles.isEmpty {
+            let index = IndexSet(integer: serverProfileManager.profiles.count - 1)
+            profilesTableView.selectRowIndexes(index, byExtendingSelection: false)
         }
     }
 

@@ -214,3 +214,9 @@ class KeychainManager {
         return true
     }
 }
+
+// MARK: - KeychainManaging Protocol Conformance
+
+extension KeychainManager: KeychainManaging {
+    // All required methods already implemented in main class
+}

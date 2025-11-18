@@ -132,7 +132,7 @@ The current ShadowsocksX-NG build allows only one active proxy profile at a time
 
 - **LaunchAgentUtils.swift** (ShadowsocksX-NG/LaunchAgentUtils.swift)
   - Well-structured with separate functions for each service
-  - `generateSSLocalLauchAgentPlist()` (line 54-163)
+  - `generateSSLocalLaunchAgentPlist()` (line 54-163)
   - `startSSLocal()`, `stopSSLocal()`, `syncSSLocal()`
   - **Extension needed**: Support multiple ss-local instances on different ports
 

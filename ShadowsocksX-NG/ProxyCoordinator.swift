@@ -9,6 +9,19 @@ import Foundation
 
 /// Manages proxy configuration and mode switching
 class ProxyCoordinator {
+    private let preferences: PreferencesManaging
+    private let launchAgent: LaunchAgentManaging
+    private let profileManager: ServerProfileManaging
+
+    init(
+        preferences: PreferencesManaging,
+        launchAgent: LaunchAgentManaging,
+        profileManager: ServerProfileManaging
+    ) {
+        self.preferences = preferences
+        self.launchAgent = launchAgent
+        self.profileManager = profileManager
+    }
     // MARK: - Proxy Modes
 
     enum ProxyMode: String {
@@ -36,9 +49,8 @@ class ProxyCoordinator {
     func applyConfig() {
         syncSSLocal()
 
-        let defaults = UserDefaults.standard
-        let isOn = defaults.bool(forKey: Constants.UserDefaults.shadowsocksOn)
-        let mode = defaults.string(forKey: "ShadowsocksRunningMode")
+        let isOn = preferences.bool(forKey: Constants.UserDefaults.shadowsocksOn)
+        let mode = preferences.string(forKey: "ShadowsocksRunningMode")
 
         if isOn {
             switch mode {
@@ -59,17 +71,15 @@ class ProxyCoordinator {
     }
 
     func switchMode(to mode: ProxyMode) {
-        let defaults = UserDefaults.standard
-        defaults.setValue(mode.rawValue, forKey: "ShadowsocksRunningMode")
+        preferences.set(mode.rawValue, forKey: "ShadowsocksRunningMode")
     }
 
     func switchToNextEnabledMode() -> ProxyMode? {
-        let defaults = UserDefaults.standard
-        guard let currentMode = defaults.string(forKey: "ShadowsocksRunningMode") else {
+        guard let currentMode = preferences.string(forKey: "ShadowsocksRunningMode") else {
             return nil
         }
 
-        let enabledModeList = buildEnabledModeList(from: defaults)
+        let enabledModeList = buildEnabledModeList()
 
         guard !enabledModeList.isEmpty else {
             return nil
@@ -80,27 +90,27 @@ class ProxyCoordinator {
             from: enabledModeList
         )
 
-        defaults.setValue(nextModeString, forKey: "ShadowsocksRunningMode")
+        preferences.set(nextModeString, forKey: "ShadowsocksRunningMode")
 
         return ProxyMode(rawValue: nextModeString)
     }
 
     // MARK: - Private Helpers
 
-    private func buildEnabledModeList(from defaults: UserDefaults) -> [String] {
+    private func buildEnabledModeList() -> [String] {
         var enabledModeList: [String] = []
 
-        if defaults.bool(forKey: "EnableSwitchMode.PAC") {
+        if preferences.bool(forKey: "EnableSwitchMode.PAC") {
             enabledModeList.append("auto")
         }
-        if defaults.bool(forKey: "EnableSwitchMode.Global") {
+        if preferences.bool(forKey: "EnableSwitchMode.Global") {
             enabledModeList.append("global")
         }
-        if defaults.bool(forKey: "EnableSwitchMode.Manual") {
+        if preferences.bool(forKey: "EnableSwitchMode.Manual") {
             enabledModeList.append("manual")
         }
-        if defaults.bool(forKey: "EnableSwitchMode.ExternalPAC"),
-           let externalPACURL = defaults.string(forKey: "ExternalPACURL"),
+        if preferences.bool(forKey: "EnableSwitchMode.ExternalPAC"),
+           let externalPACURL = preferences.string(forKey: "ExternalPACURL"),
            !externalPACURL.isEmpty {
             enabledModeList.append("externalPAC")
         }
@@ -119,10 +129,9 @@ class ProxyCoordinator {
     }
 
     func toggleShadowsocks() -> Bool {
-        let defaults = UserDefaults.standard
-        var isOn = defaults.bool(forKey: Constants.UserDefaults.shadowsocksOn)
+        var isOn = preferences.bool(forKey: Constants.UserDefaults.shadowsocksOn)
         isOn.toggle()
-        defaults.set(isOn, forKey: Constants.UserDefaults.shadowsocksOn)
+        preferences.set(isOn, forKey: Constants.UserDefaults.shadowsocksOn)
         return isOn
     }
 

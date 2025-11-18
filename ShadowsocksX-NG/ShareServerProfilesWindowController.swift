@@ -8,8 +8,9 @@
 
 import Cocoa
 
-class ShareServerProfilesWindowController: NSWindowController
-    , NSTableViewDataSource, NSTableViewDelegate {
+class ShareServerProfilesWindowController: NSWindowController, NSTableViewDataSource,
+    NSTableViewDelegate
+{
 
     @IBOutlet weak var profilesTableView: NSTableView!
 
@@ -22,17 +23,34 @@ class ShareServerProfilesWindowController: NSWindowController
     @IBOutlet weak var copyQRCodeButton: NSButton!
     @IBOutlet weak var saveQRCodeAsFileButton: NSButton!
 
-    var defaults: UserDefaults!
-    var profileMgr: ServerProfileManager!
+    private var profileManager: ServerProfileManaging?
+    private var serverProfileManager: ServerProfileManaging {
+        get {
+            if let profileManager = profileManager {
+                return profileManager
+            }
+            let fallback = ServerProfileManager.instance
+            self.profileManager = fallback
+            return fallback
+        }
+        set {
+            profileManager = newValue
+        }
+    }
+
+    func configure(profileManager: ServerProfileManaging) {
+        self.profileManager = profileManager
+    }
 
     override func windowDidLoad() {
         super.windowDidLoad()
 
-        defaults = UserDefaults.standard
-        profileMgr = ServerProfileManager.instance
+        if profileManager == nil {
+            profileManager = ServerProfileManager.instance
+        }
         profilesTableView.reloadData()
 
-        if !profileMgr.profiles.isEmpty {
+        if !serverProfileManager.profiles.isEmpty {
             let index = IndexSet(integer: 0)
             profilesTableView.selectRowIndexes(index, byExtendingSelection: false)
         } else {
@@ -52,7 +70,8 @@ class ShareServerProfilesWindowController: NSWindowController
             if pb.writeObjects([url.absoluteString as NSPasteboardWriting]) {
                 ErrorHandler.shared.debug("Copy URL to clipboard", context: "ShareProfiles")
             } else {
-                ErrorHandler.shared.warning("Failed to copy URL to clipboard", context: "ShareProfiles")
+                ErrorHandler.shared.warning(
+                    "Failed to copy URL to clipboard", context: "ShareProfiles")
             }
         }
     }
@@ -64,7 +83,8 @@ class ShareServerProfilesWindowController: NSWindowController
             if pb.writeObjects([img as NSPasteboardWriting]) {
                 ErrorHandler.shared.debug("Copy QRCode to clipboard", context: "ShareProfiles")
             } else {
-                ErrorHandler.shared.warning("Failed to copy QRCode to clipboard", context: "ShareProfiles")
+                ErrorHandler.shared.warning(
+                    "Failed to copy QRCode to clipboard", context: "ShareProfiles")
             }
         }
     }
@@ -86,11 +106,13 @@ class ShareServerProfilesWindowController: NSWindowController
 
             savePanel.becomeKey()
             let result = savePanel.runModal()
-            if (result == .OK && (savePanel.url) != nil) {
+            if result == .OK && (savePanel.url) != nil {
                 guard let tiffData = img.tiffRepresentation,
-                      let imgRep = NSBitmapImageRep(data: tiffData),
-                      let data = imgRep.representation(using: NSBitmapImageRep.FileType.gif, properties: [:]),
-                      let url = savePanel.url else {
+                    let imgRep = NSBitmapImageRep(data: tiffData),
+                    let data = imgRep.representation(
+                        using: NSBitmapImageRep.FileType.gif, properties: [:]),
+                    let url = savePanel.url
+                else {
                     ErrorHandler.shared.warning("Failed to prepare QR code image for saving")
                     return
                 }
@@ -113,7 +135,8 @@ class ShareServerProfilesWindowController: NSWindowController
         if pb.writeObjects([getAllServerURLs() as NSPasteboardWriting]) {
             ErrorHandler.shared.debug("Copy all server URLs to clipboard", context: "ShareProfiles")
         } else {
-            ErrorHandler.shared.warning("Failed to all server URLs to clipboard", context: "ShareProfiles")
+            ErrorHandler.shared.warning(
+                "Failed to all server URLs to clipboard", context: "ShareProfiles")
         }
     }
 
@@ -130,7 +153,7 @@ class ShareServerProfilesWindowController: NSWindowController
         savePanel.nameFieldStringValue = "shadowsocks_profiles_\(date_string).txt"
         savePanel.becomeKey()
         let result = savePanel.runModal()
-        if (result == .OK) {
+        if result == .OK {
             guard let url = savePanel.url else {
                 ErrorHandler.shared.warning("No URL selected for saving")
                 return
@@ -149,7 +172,7 @@ class ShareServerProfilesWindowController: NSWindowController
     }
 
     func getAllServerURLs() -> String {
-        let urls = profileMgr.profiles.filter({ (profile) -> Bool in
+        let urls = serverProfileManager.profiles.filter({ (profile) -> Bool in
             return profile.isValid()
         }).compactMap { (profile) -> String? in
             return profile.URL()?.absoluteString
@@ -159,11 +182,11 @@ class ShareServerProfilesWindowController: NSWindowController
 
     func getSelectedProfile() -> ServerProfile {
         let i = profilesTableView.selectedRow
-        return profileMgr.profiles[i]
+        return serverProfileManager.profiles[i]
     }
 
-    func getDataAtRow(_ index:Int) -> String {
-        let profile = profileMgr.profiles[index]
+    func getDataAtRow(_ index: Int) -> String {
+        let profile = serverProfileManager.profiles[index]
         if !profile.remark.isEmpty {
             return profile.remark
         } else {
@@ -175,16 +198,15 @@ class ShareServerProfilesWindowController: NSWindowController
     // For NSTableViewDataSource
 
     func numberOfRows(in tableView: NSTableView) -> Int {
-        if let mgr = profileMgr {
-            return mgr.profiles.count
-        }
-        return 0
+        return serverProfileManager.profiles.count
     }
 
     //--------------------------------------------------
     // For NSTableViewDelegate
 
-    func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView? {
+    func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int)
+        -> NSView?
+    {
         let colId = NSUserInterfaceItemIdentifier(rawValue: "cellTitle")
         if let cell = tableView.makeView(withIdentifier: colId, owner: self) as? NSTableCellView {
             cell.textField?.stringValue = getDataAtRow(row)
