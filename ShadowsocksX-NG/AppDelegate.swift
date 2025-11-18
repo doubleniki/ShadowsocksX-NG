@@ -405,7 +405,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
     }
 
     @IBAction func checkForUpdates(_ sender: NSMenuItem) {
-        guard let url = URL(string: "https://github.com/shadowsocks/ShadowsocksX-NG/releases")
+        guard let url = URL(string: "https://github.com/doubleniki/ShadowsocksX-NG/releases")
         else {
             ErrorHandler.shared.warning("Invalid update URL")
             return
@@ -418,7 +418,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
     }
 
     @IBAction func showHelp(_ sender: NSMenuItem) {
-        guard let url = URL(string: "https://github.com/shadowsocks/ShadowsocksX-NG/wiki") else {
+        guard let url = URL(string: "https://github.com/doubleniki/ShadowsocksX-NG/wiki") else {
             ErrorHandler.shared.warning("Invalid help URL")
             return
         }

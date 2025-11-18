@@ -233,7 +233,7 @@ class PreferencesWindowController: NSWindowController, NSTableViewDataSource, NS
     @IBAction func openPluginHelp(_ sender: Any) {
         guard
             let url = URL(
-                string: "https://github.com/shadowsocks/ShadowsocksX-NG/wiki/SIP003-Plugin")
+                string: "https://github.com/doubleniki/ShadowsocksX-NG/wiki/SIP003-Plugin")
         else {
             ErrorHandler.shared.warning("Invalid plugin help URL")
             return
