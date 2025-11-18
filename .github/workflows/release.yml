@@ -81,7 +81,21 @@ jobs:
             pods-
 
       - name: Install CocoaPods dependencies
-        run: pod install
+        run: |
+          # Retry pod install up to 3 times with 10 second delay
+          for i in 1 2 3; do
+            echo "Attempt $i: Running pod install..."
+            pod install && break || {
+              echo "pod install failed on attempt $i"
+              if [ $i -lt 3 ]; then
+                echo "Waiting 10 seconds before retry..."
+                sleep 10
+              else
+                echo "All attempts failed"
+                exit 1
+              fi
+            }
+          done
 
       - name: Build application
         run: |
