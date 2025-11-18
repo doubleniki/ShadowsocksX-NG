@@ -67,6 +67,14 @@ class PreferencesWindowController: NSWindowController, NSTableViewDataSource, NS
 
         profilesTableView.reloadData()
         updateProfileBoxVisible()
+
+        // Select first row if profiles exist to display server details
+        if !serverProfileManager.profiles.isEmpty {
+            let firstIndex = IndexSet(integer: 0)
+            profilesTableView.selectRowIndexes(firstIndex, byExtendingSelection: false)
+            // Manually trigger binding since selection change may not fire during window load
+            bindProfile(0)
+        }
     }
 
     override func awakeFromNib() {
