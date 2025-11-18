@@ -86,14 +86,14 @@ jobs:
           gem install bundler
           bundle config set --local path 'vendor/bundle'
           bundle install
-          # Setup CocoaPods to skip trunk repo cloning
-          mkdir -p ~/.cocoapods/repos
-          # Use CDN-only mode by removing any existing trunk repo
-          rm -rf ~/.cocoapods/repos/trunk
+          # Remove all CocoaPods repos to force CDN-only mode
+          rm -rf ~/.cocoapods/repos
+          # Remove Pods directory to start fresh
+          rm -rf Pods Podfile.lock
           # Retry pod install up to 3 times with 10 second delay
           for i in 1 2 3; do
             echo "Attempt $i: Running pod install..."
-            bundle exec pod install && break || {
+            bundle exec pod install --repo-update && break || {
               echo "pod install failed on attempt $i"
               if [ $i -lt 3 ]; then
                 echo "Waiting 10 seconds before retry..."
