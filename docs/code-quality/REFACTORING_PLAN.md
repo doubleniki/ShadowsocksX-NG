@@ -2012,46 +2012,23 @@ class PerformanceTests: XCTestCase {
 
 ## Progress Tracking
 
-### Metrics to Track
-
-```markdown
-## Weekly Progress Report
-
-### Week X
-
-**Completed:**
-- [ ] Task 1
-- [ ] Task 2
-
-**In Progress:**
-- [ ] Task 3 (50% complete)
-
-**Blockers:**
-- Issue #123: Dependency conflict
-
-**Metrics:**
-- Lines of code: X → Y (reduced by Z%)
-- Test coverage: X% → Y%
-- Force unwraps: X → 0
-- SwiftLint warnings: X → 0
-
-**Next Week:**
-- [ ] Start Phase 2.2
-- [ ] Complete testing for Phase 1
-```
-
 ### Code Quality Metrics
 
-| Metric | Baseline | Target | Current (Phase 2) |
-|--------|----------|--------|-------------------|
-| Lines of code | 3,445 | 3,000 | ~3,500 (refactored) |
-| Force unwraps (!) | 20+ | 0 | ✅ 0 (production) |
-| SwiftLint warnings | Many | 0 | ✅ 0 (1 exception) |
-| Test coverage | 0% | 70%+ | ⏳ Enhanced (Phase 4) |
-| Cyclomatic complexity | High | Medium | ✅ Improved |
-| God classes (>500 lines) | 2 | 0 | ✅ 1 (AppDelegate 692→36) |
-| Deployment target | 10.12 | 11.0+ | ✅ 11.0 |
-| Files modified | 0 | All | ✅ 40+ files |
+| Metric | Baseline | Current | Status |
+|--------|----------|---------|--------|
+| Force unwraps (!) | 20+ | 0 | ✅ Eliminated |
+| SwiftLint warnings | Many | 0 | ✅ Clean (1 documented exception) |
+| Deployment target | 10.12 | 11.0 | ✅ Updated |
+| AppDelegate lines | 845 | 463 | ✅ Reduced 45% (Phase 2.2) |
+| Codable adoption | 0% | 100% | ✅ ServerProfile (Phase 3.2) |
+| Async/await | 0% | Partial | ✅ PAC operations (Phase 3.1) |
+| Type-safe preferences | 0% | ~80% | ✅ AppPreferences (Phase 3.3-3.4) |
+
+### Completed Phases
+
+- ✅ **Phase 1** (2025-11-07): Foundation & Safety
+- ✅ **Phase 2** (2025-11-18): Architecture
+- ✅ **Phase 3** (2025-11-18): Modernization
 
 ---
 
@@ -2079,68 +2056,67 @@ If major issues arise:
 
 ## Success Criteria
 
-### Phase Completion Checklist
+### Phase Completion Status
 
-**Phase 1:** ✅ COMPLETED (2025-11-07)
-- ✅ Zero force unwraps in production code
-- ✅ All errors handled with ErrorHandler
-- ✅ SwiftLint integrated and passing (0 warnings, 1 exception)
-- ✅ Constants.swift created (partial)
-- ✅ Keychain integration for passwords
-- ✅ AppDelegate refactored (692→36 lines)
-- ✅ Deployment target updated to macOS 11.0
-- ✅ CI/CD improvements with caching
-- ✅ Documentation updated (KEYCHAIN_FIX.md, etc.)
+**Phase 1: Foundation & Safety** ✅ COMPLETED (2025-11-07)
+- Zero force unwraps in production code
+- Comprehensive error handling with ErrorHandler
+- SwiftLint integrated (0 warnings, 1 documented exception)
+- Keychain integration for passwords
+- Deployment target updated to macOS 11.0
+- AppDelegate refactored (845→463 lines, 45% reduction)
 
-**Phase 2:** ✅ COMPLETED (2025-11-18)
-- ✅ Protocols defined (ServiceProtocols.swift)
-- ✅ AppDelegate reduced to 619 lines (from 845, down 45%)
-- ✅ Dependency injection working (DependencyContainer.swift)
-- ✅ Architecture documented
-- ✅ Coordinators created (MenuBarManager, WindowCoordinator, ProxyCoordinator)
+**Phase 2: Architecture** ✅ COMPLETED (2025-11-18)
+- Service protocols defined (ServiceProtocols.swift)
+- Dependency injection implemented (DependencyContainer)
+- Coordinators created (MenuBarManager, WindowCoordinator, ProxyCoordinator)
+- AppDelegate reduced from 845 to 463 lines
 
-**Phase 3:** ⏳ PLANNED
-- [ ] Async/await implemented
-- [ ] Codable adopted
-- [ ] Property wrappers created
-- [ ] No main thread blocking
+**Phase 3: Modernization** ✅ COMPLETED (2025-11-18)
+- Async/await support for PAC operations (Phase 3.1)
+- Codable implementation for ServerProfile (Phase 3.2)
+- Property wrappers for type-safe preferences (Phase 3.3)
+- UserDefaults migration to AppPreferences (Phase 3.4)
 
-**Phase 4:** ⏳ PLANNED
-- [ ] Test coverage > 70%
-- [ ] All tests passing
-- [ ] CI configured (partially done)
-- [ ] Mocks created
+**Phase 4: Testing** ⏳ PLANNED
+- Comprehensive unit tests
+- Integration tests
+- Test coverage > 70%
+- CI/CD pipeline enhancements
 
-**Phase 5:** ⏳ PLANNED
-- [ ] Performance targets met
-- [ ] Documentation complete
-- [ ] Code review passed
-- [ ] Ready for release
+**Phase 5: Performance** ⏳ PLANNED
+- Performance profiling
+- Optimization of hot paths
+- Documentation completion
+- Release preparation
 
 ---
 
 ## Conclusion
 
-This refactoring plan provides a structured, incremental approach to modernizing the ShadowsocksX-NG codebase. By following these phases, the code will become:
+This refactoring plan provides a structured, incremental approach to modernizing the ShadowsocksX-NG codebase.
 
-- ✅ **Safer** - No force unwraps, comprehensive error handling (Phase 1 ✅)
-- ⏳ **Testable** - Protocol-based architecture, dependency injection (Phase 2-4)
-- ⏳ **Modern** - Async/await, Codable, property wrappers (Phase 3)
-- ✅ **Maintainable** - Clear responsibilities, good documentation (Phase 1 ✅)
-- ⏳ **Performant** - Optimized hot paths, async I/O (Phase 5)
+**Achievements (Phase 1-3):**
+- ✅ **Safer** - Zero force unwraps, comprehensive error handling
+- ✅ **Modern** - Async/await, Codable, type-safe preferences
+- ✅ **Maintainable** - Clear architecture, good documentation
+- ✅ **Testable** - Protocol-based design, dependency injection
+- ⏳ **Performant** - Async I/O implemented, optimization planned (Phase 5)
 
 **Progress:**
 - Phase 1: ✅ Completed (2025-11-07) - 1 week
-- Phase 2-5: ⏳ Planned - 6-8 weeks remaining
+- Phase 2: ✅ Completed (2025-11-18) - 2 weeks
+- Phase 3: ✅ Completed (2025-11-18) - 1 day
+- Phase 4-5: ⏳ Planned
 
-**Estimated Total Time:** 8-10 weeks
-**Estimated Effort:** 1 developer, full-time
+**Actual Time:** 3+ weeks (Phase 1-3)
+**Remaining:** Phase 4-5 (Testing & Performance)
 
 ---
 
-**Document Version:** 1.2
-**Last Updated:** 2025-11-07
-**Next Review:** Before starting Phase 2
+**Document Version:** 2.0
+**Last Updated:** 2025-11-18
+**Next Review:** Before starting Phase 4
 
 See also:
 - [CODE_QUALITY_REPORT.md](./CODE_QUALITY_REPORT.md) - Detailed analysis
