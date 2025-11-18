@@ -89,6 +89,7 @@ jobs:
 
       - name: Install dependencies
         run: |
+          pod repo update || true
           pod install
 
       - name: Restore dependencies cache
