@@ -6,6 +6,7 @@
 //
 
 import Foundation
+
 @testable import ShadowsocksX_NG
 
 final class MockPreferences: PreferencesManaging {
@@ -65,11 +66,17 @@ final class MockProfileManager: ServerProfileManaging {
         return profiles.first { $0.uuid == activeProfileId }
     }
 
-    func setActiveProfiledId(_ id: String) {
+    func setActiveProfileId(_ id: String) {
         activeProfileId = id
     }
 
     func addServerProfileByURL(urls: [URL]) -> Int {
+        // Add stub profiles for each URL
+        urls.forEach { url in
+            let profile = ServerProfile()
+            profile.uuid = UUID().uuidString
+            profiles.append(profile)
+        }
         return urls.count
     }
 }
@@ -122,9 +129,22 @@ final class MockFileSystem: FileSystemManaging {
         paths.insert(path)
     }
 
-    func copyItem(at srcURL: URL, to dstURL: URL) throws {}
+    func copyItem(at srcURL: URL, to dstURL: URL) throws {
+        if paths.contains(srcURL.path) {
+            paths.insert(dstURL.path)
+        } else {
+            throw NSError(domain: NSCocoaErrorDomain, code: NSFileNoSuchFileError)
+        }
+    }
 
-    func moveItem(at srcURL: URL, to dstURL: URL) throws {}
+    func moveItem(at srcURL: URL, to dstURL: URL) throws {
+        if paths.contains(srcURL.path) {
+            paths.remove(srcURL.path)
+            paths.insert(dstURL.path)
+        } else {
+            throw NSError(domain: NSCocoaErrorDomain, code: NSFileNoSuchFileError)
+        }
+    }
 
     func removeItem(at URL: URL) throws {
         paths.remove(URL.path)

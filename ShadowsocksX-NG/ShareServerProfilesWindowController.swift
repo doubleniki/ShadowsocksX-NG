@@ -8,8 +8,9 @@
 
 import Cocoa
 
-class ShareServerProfilesWindowController: NSWindowController
-    , NSTableViewDataSource, NSTableViewDelegate {
+class ShareServerProfilesWindowController: NSWindowController, NSTableViewDataSource,
+    NSTableViewDelegate
+{
 
     @IBOutlet weak var profilesTableView: NSTableView!
 
@@ -69,7 +70,8 @@ class ShareServerProfilesWindowController: NSWindowController
             if pb.writeObjects([url.absoluteString as NSPasteboardWriting]) {
                 ErrorHandler.shared.debug("Copy URL to clipboard", context: "ShareProfiles")
             } else {
-                ErrorHandler.shared.warning("Failed to copy URL to clipboard", context: "ShareProfiles")
+                ErrorHandler.shared.warning(
+                    "Failed to copy URL to clipboard", context: "ShareProfiles")
             }
         }
     }
@@ -81,7 +83,8 @@ class ShareServerProfilesWindowController: NSWindowController
             if pb.writeObjects([img as NSPasteboardWriting]) {
                 ErrorHandler.shared.debug("Copy QRCode to clipboard", context: "ShareProfiles")
             } else {
-                ErrorHandler.shared.warning("Failed to copy QRCode to clipboard", context: "ShareProfiles")
+                ErrorHandler.shared.warning(
+                    "Failed to copy QRCode to clipboard", context: "ShareProfiles")
             }
         }
     }
@@ -103,11 +106,13 @@ class ShareServerProfilesWindowController: NSWindowController
 
             savePanel.becomeKey()
             let result = savePanel.runModal()
-            if (result == .OK && (savePanel.url) != nil) {
+            if result == .OK && (savePanel.url) != nil {
                 guard let tiffData = img.tiffRepresentation,
-                      let imgRep = NSBitmapImageRep(data: tiffData),
-                      let data = imgRep.representation(using: NSBitmapImageRep.FileType.gif, properties: [:]),
-                      let url = savePanel.url else {
+                    let imgRep = NSBitmapImageRep(data: tiffData),
+                    let data = imgRep.representation(
+                        using: NSBitmapImageRep.FileType.gif, properties: [:]),
+                    let url = savePanel.url
+                else {
                     ErrorHandler.shared.warning("Failed to prepare QR code image for saving")
                     return
                 }
@@ -130,7 +135,8 @@ class ShareServerProfilesWindowController: NSWindowController
         if pb.writeObjects([getAllServerURLs() as NSPasteboardWriting]) {
             ErrorHandler.shared.debug("Copy all server URLs to clipboard", context: "ShareProfiles")
         } else {
-            ErrorHandler.shared.warning("Failed to all server URLs to clipboard", context: "ShareProfiles")
+            ErrorHandler.shared.warning(
+                "Failed to all server URLs to clipboard", context: "ShareProfiles")
         }
     }
 
@@ -147,7 +153,7 @@ class ShareServerProfilesWindowController: NSWindowController
         savePanel.nameFieldStringValue = "shadowsocks_profiles_\(date_string).txt"
         savePanel.becomeKey()
         let result = savePanel.runModal()
-        if (result == .OK) {
+        if result == .OK {
             guard let url = savePanel.url else {
                 ErrorHandler.shared.warning("No URL selected for saving")
                 return
@@ -179,7 +185,7 @@ class ShareServerProfilesWindowController: NSWindowController
         return serverProfileManager.profiles[i]
     }
 
-    func getDataAtRow(_ index:Int) -> String {
+    func getDataAtRow(_ index: Int) -> String {
         let profile = serverProfileManager.profiles[index]
         if !profile.remark.isEmpty {
             return profile.remark
@@ -198,7 +204,9 @@ class ShareServerProfilesWindowController: NSWindowController
     //--------------------------------------------------
     // For NSTableViewDelegate
 
-    func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView? {
+    func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int)
+        -> NSView?
+    {
         let colId = NSUserInterfaceItemIdentifier(rawValue: "cellTitle")
         if let cell = tableView.makeView(withIdentifier: colId, owner: self) as? NSTableCellView {
             cell.textField?.stringValue = getDataAtRow(row)

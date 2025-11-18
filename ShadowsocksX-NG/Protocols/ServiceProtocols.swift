@@ -18,7 +18,7 @@ protocol ServerProfileManaging {
     func save()
     func reload()
     func getActiveProfile() -> ServerProfile?
-    func setActiveProfiledId(_ id: String)
+    func setActiveProfileId(_ id: String)
     func addServerProfileByURL(urls: [URL]) -> Int
 }
 
