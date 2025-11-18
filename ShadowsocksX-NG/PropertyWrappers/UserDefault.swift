@@ -81,8 +81,8 @@ struct UserDefaultCodable<T: Codable> {
                     "Failed to encode \(T.self) for key '\(key)': \(error.localizedDescription)",
                     context: "UserDefaultCodable"
                 )
-                // Optionally could remove the key instead of leaving stale data
-                // defaults.removeObject(forKey: key)
+                // Remove stale data to prevent inconsistent state
+                defaults.removeObject(forKey: key)
             }
         }
     }

@@ -59,7 +59,7 @@ enum AppPreferences {
     @UserDefault(wrappedValue: true, Constants.UserDefaults.pacServerEnabled)
     static var pacServerEnabled: Bool
 
-    @UserDefault(wrappedValue: 1088, Constants.UserDefaults.pacServerPort)
+    @UserDefault(wrappedValue: 1089, Constants.UserDefaults.pacServerPort)
     static var pacServerPort: Int
 
     // MARK: - Application Settings
