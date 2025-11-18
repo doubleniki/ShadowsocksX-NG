@@ -695,18 +695,37 @@ func writeXrayConfFile(_ profile: ServerProfile) -> Bool {
 }
 
 func syncXray() {
-    var changed = false
-    changed = changed || generateXrayLaunchAgentPlist()
+    var plistChanged = false
+    var configChanged = false
+
+    plistChanged = generateXrayLaunchAgentPlist()
 
     if let profile = ServerProfileManager.instance.getActiveProfile() {
-        changed = changed || writeXrayConfFile(profile)
+        // CRITICAL: Config write must succeed before starting Xray
+        do {
+            configChanged = try writeXrayConfFileValidated(profile)
+        } catch {
+            ErrorHandler.shared.error(
+                "Failed to write Xray configuration: \(error.localizedDescription)",
+                context: "syncXray"
+            )
+            // ABORT: Do not start Xray with invalid/missing config
+            stopXray()
+            // Surface error to user
+            NotificationCenter.default.post(
+                name: NSNotification.Name("ProxyConfigurationFailed"),
+                object: nil,
+                userInfo: ["error": error.localizedDescription, "protocol": "xray"]
+            )
+            return
+        }
     }
 
     if UserDefaults.standard.bool(forKey: Constants.UserDefaults.shadowsocksOn) {
-        if changed {
+        if plistChanged || configChanged {
             stopXray()
             DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                startXray()
+                self.startXray()
             }
         } else {
             startXray()
@@ -714,6 +733,63 @@ func syncXray() {
     } else {
         stopXray()
     }
+}
+
+func writeXrayConfFileValidated(_ profile: ServerProfile) throws -> Bool {
+    let configPath = NSHomeDirectory() + "/Library/Application Support/ShadowsocksX-NG/xray-config.json"
+
+    var config: [String: Any]
+
+    switch profile.config {
+    case .vless(let vless):
+        config = profile.toXrayVLESSConfig(vless)
+    case .vmess(let vmess):
+        config = profile.toXrayVMessConfig(vmess)
+    case .trojan(let trojan):
+        config = profile.toXrayTrojanConfig(trojan)
+    default:
+        throw NSError(
+            domain: "XrayConfig",
+            code: 1,
+            userInfo: [NSLocalizedDescriptionKey: "Unsupported protocol for Xray"]
+        )
+    }
+
+    // Validate JSON can be serialized
+    let jsonData: Data
+    do {
+        jsonData = try JSONSerialization.data(withJSONObject: config, options: .prettyPrinted)
+    } catch {
+        throw NSError(
+            domain: "XrayConfig",
+            code: 2,
+            userInfo: [NSLocalizedDescriptionKey: "Invalid JSON structure: \(error.localizedDescription)"]
+        )
+    }
+
+    // Validate JSON can be deserialized (round-trip test)
+    do {
+        _ = try JSONSerialization.jsonObject(with: jsonData, options: [])
+    } catch {
+        throw NSError(
+            domain: "XrayConfig",
+            code: 3,
+            userInfo: [NSLocalizedDescriptionKey: "JSON validation failed: \(error.localizedDescription)"]
+        )
+    }
+
+    // Write atomically
+    do {
+        try jsonData.write(to: URL(fileURLWithPath: configPath), options: .atomic)
+    } catch {
+        throw NSError(
+            domain: "XrayConfig",
+            code: 4,
+            userInfo: [NSLocalizedDescriptionKey: "Failed to write config file: \(error.localizedDescription)"]
+        )
+    }
+
+    return true
 }
 
 func startXray() {
@@ -811,14 +887,176 @@ extension ServerProfile {
         ]
     }
 
-    func toXrayVMessConfig() -> [String: Any] {
-        // Similar structure to VLESS
-        // ...
+    func toXrayVMessConfig(_ vmess: VMessConfig) -> [String: Any] {
+        var streamSettings: [String: Any] = [
+            "network": vmess.transport.network.rawValue
+        ]
+
+        // Security settings
+        if vmess.security.type == .tls, let tls = vmess.security.tlsSettings {
+            streamSettings["security"] = "tls"
+            streamSettings["tlsSettings"] = [
+                "serverName": tls.serverName,
+                "alpn": tls.alpn,
+                "fingerprint": tls.fingerprint,
+                "allowInsecure": tls.allowInsecure
+            ]
+        }
+
+        // Transport settings
+        if vmess.transport.network == .ws, let ws = vmess.transport.wsSettings {
+            streamSettings["wsSettings"] = [
+                "path": ws.path,
+                "headers": ws.headers
+            ]
+        } else if vmess.transport.network == .h2, let h2 = vmess.transport.h2Settings {
+            streamSettings["httpSettings"] = [
+                "path": h2.path,
+                "host": h2.host
+            ]
+        } else if vmess.transport.network == .grpc, let grpc = vmess.transport.grpcSettings {
+            streamSettings["grpcSettings"] = [
+                "serviceName": grpc.serviceName
+            ]
+        }
+
+        return [
+            "log": [
+                "loglevel": "info"
+            ],
+            "inbounds": [
+                [
+                    "port": 1080,
+                    "listen": "127.0.0.1",
+                    "protocol": "socks",
+                    "tag": "socks-in",
+                    "settings": [
+                        "auth": "noauth",
+                        "udp": true
+                    ]
+                ]
+            ],
+            "outbounds": [
+                [
+                    "protocol": "vmess",
+                    "tag": "proxy",
+                    "settings": [
+                        "vnext": [
+                            [
+                                "address": serverHost,
+                                "port": serverPort,
+                                "users": [
+                                    [
+                                        "id": vmess.userId,
+                                        "alterId": vmess.alterId,
+                                        "security": vmess.encryption,
+                                        "level": 0
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ],
+                    "streamSettings": streamSettings
+                ],
+                [
+                    "protocol": "freedom",
+                    "tag": "direct"
+                ]
+            ],
+            "routing": [
+                "rules": [
+                    [
+                        "type": "field",
+                        "ip": ["geoip:private"],
+                        "outboundTag": "direct"
+                    ]
+                ]
+            ]
+        ]
     }
 
-    func toXrayTrojanConfig() -> [String: Any] {
-        // Trojan protocol config
-        // ...
+    func toXrayTrojanConfig(_ trojan: TrojanConfig) -> [String: Any] {
+        var streamSettings: [String: Any] = [
+            "network": trojan.transport.network.rawValue
+        ]
+
+        // TLS is mandatory for Trojan
+        if let tls = trojan.security.tlsSettings {
+            streamSettings["security"] = "tls"
+            streamSettings["tlsSettings"] = [
+                "serverName": tls.serverName,
+                "alpn": tls.alpn,
+                "fingerprint": tls.fingerprint,
+                "allowInsecure": tls.allowInsecure
+            ]
+        } else {
+            // Trojan requires TLS
+            streamSettings["security"] = "tls"
+            streamSettings["tlsSettings"] = [
+                "serverName": serverHost,
+                "alpn": ["h2", "http/1.1"]
+            ]
+        }
+
+        // Transport settings
+        if trojan.transport.network == .ws, let ws = trojan.transport.wsSettings {
+            streamSettings["wsSettings"] = [
+                "path": ws.path,
+                "headers": ws.headers
+            ]
+        } else if trojan.transport.network == .grpc, let grpc = trojan.transport.grpcSettings {
+            streamSettings["grpcSettings"] = [
+                "serviceName": grpc.serviceName
+            ]
+        }
+
+        return [
+            "log": [
+                "loglevel": "info"
+            ],
+            "inbounds": [
+                [
+                    "port": 1080,
+                    "listen": "127.0.0.1",
+                    "protocol": "socks",
+                    "tag": "socks-in",
+                    "settings": [
+                        "auth": "noauth",
+                        "udp": true
+                    ]
+                ]
+            ],
+            "outbounds": [
+                [
+                    "protocol": "trojan",
+                    "tag": "proxy",
+                    "settings": [
+                        "servers": [
+                            [
+                                "address": serverHost,
+                                "port": serverPort,
+                                "password": trojan.password,
+                                "level": 0
+                            ]
+                        ]
+                    ],
+                    "streamSettings": streamSettings
+                ],
+                [
+                    "protocol": "freedom",
+                    "tag": "direct"
+                ]
+            ],
+            "routing": [
+                "rules": [
+                    [
+                        "type": "field",
+                        "ip": ["geoip:private"],
+                        "outboundTag": "direct"
+                    ]
+                ]
+            ]
+        ]
     }
 }
 ```
@@ -854,39 +1092,109 @@ hysteria2:
 
 ```swift
 extension ServerProfile {
-    func toHysteria2Config() -> String {
-        // Hysteria2 uses YAML format
-        var config = """
-        server: \(serverHost):\(serverPort)
-        auth: \(password ?? "")
+    func toHysteria2Config(_ hysteria: Hysteria2Config) throws -> String {
+        // Build config dictionary for type-safe YAML generation
+        var configDict: [String: Any] = [
+            "server": "\(serverHost):\(serverPort)",
+            "auth": hysteria.password,
+            "socks5": [
+                "listen": "127.0.0.1:1080"
+            ]
+        ]
 
-        socks5:
-          listen: 127.0.0.1:1080
-
-        """
-
-        if let obfs = obfuscation, !obfs.isEmpty {
-            config += """
-            obfs:
-              type: salamander
-              salamander:
-                password: \(obfs)
-
-            """
+        // Validate and add obfuscation
+        if let obfs = hysteria.obfuscation, !obfs.isEmpty {
+            // Validate obfuscation type
+            let supportedObfuscationTypes = ["salamander"]
+            // Future: Make obfuscation type configurable
+            configDict["obfs"] = [
+                "type": "salamander",
+                "salamander": [
+                    "password": obfs
+                ]
+            ]
         }
 
-        if let up = upBandwidth, let down = downBandwidth {
-            config += """
-            bandwidth:
-              up: \(up) mbps
-              down: \(down) mbps
-
-            """
+        // Validate and add bandwidth settings
+        guard hysteria.upBandwidth > 0 && hysteria.downBandwidth > 0 else {
+            throw NSError(
+                domain: "Hysteria2Config",
+                code: 1,
+                userInfo: [NSLocalizedDescriptionKey: "Invalid bandwidth: up=\(hysteria.upBandwidth), down=\(hysteria.downBandwidth). Both must be > 0."]
+            )
         }
 
-        return config
+        configDict["bandwidth"] = [
+            "up": "\(hysteria.upBandwidth) mbps",
+            "down": "\(hysteria.downBandwidth) mbps"
+        ]
+
+        // Use Yams library for safe YAML encoding
+        // Add to Podfile: pod 'Yams', '~> 5.0'
+        do {
+            let yamlString = try Yams.dump(object: configDict, allowUnicode: true)
+            return yamlString
+        } catch {
+            throw NSError(
+                domain: "Hysteria2Config",
+                code: 2,
+                userInfo: [NSLocalizedDescriptionKey: "YAML encoding failed: \(error.localizedDescription)"]
+            )
+        }
     }
 }
+
+// MARK: - Unit Tests Required
+
+/*
+Test cases for toHysteria2Config:
+
+1. Test password with special characters:
+   - Colons: "pass:word:123"
+   - Quotes: "pass\"word'123"
+   - Newlines: "pass
+word"
+   - Unicode: "пароль123"
+   - YAML special chars: "pass@word#123"
+
+2. Test obfuscation with special characters:
+   - Same edge cases as password
+
+3. Test bandwidth validation:
+   - Zero bandwidth: upBandwidth=0 (should throw)
+   - Negative bandwidth: downBandwidth=-1 (should throw)
+   - Large values: upBandwidth=10000 (should work)
+
+4. Test hostname edge cases:
+   - IPv6: "[2001:db8::1]:443"
+   - IDN: "例え.jp"
+   - Localhost: "127.0.0.1:1080"
+
+Example test:
+```swift
+func testHysteria2ConfigWithSpecialCharacters() throws {
+    let profile = ServerProfile(
+        host: "example.com",
+        port: 443,
+        config: .hysteria2(Hysteria2Config(
+            password: "pass:word\"123'",
+            obfuscation: "obfs@#$%",
+            upBandwidth: 100,
+            downBandwidth: 500
+        ))
+    )
+
+    let yaml = try profile.toHysteria2Config(
+        profile.config.hysteria2! // Force unwrap for test
+    )
+
+    // Verify YAML is valid
+    let parsed = try Yams.load(yaml: yaml) as? [String: Any]
+    XCTAssertEqual(parsed?["auth"] as? String, "pass:word\"123'")
+    XCTAssertNotNil(parsed?["obfs"])
+}
+```
+*/
 ```
 
 ---
@@ -938,6 +1246,160 @@ func stopAllCores() {
     stopPrivoxy()
 }
 ```
+
+---
+
+## Port Management and Conflict Resolution
+
+### Reserved Ports
+
+**System-wide reserved ports** (never use for proxy cores):
+
+| Port | Service | Purpose |
+|------|---------|---------|
+| 1080 | SOCKS5 proxy | Primary SOCKS5 listen port for active core |
+| 8118 | HTTP proxy | Privoxy HTTP proxy port |
+| 8090 | PAC server | GCDWebServer serving PAC file |
+
+**Important**: Only ONE core can bind to port 1080 at a time. All proxy cores (ss-local, xray, hysteria2) listen on this port.
+
+### Port Allocation Strategy
+
+**Single Active Core Pattern:**
+
+Since only one protocol/profile is active at a time, all cores can share the same ports:
+
+```swift
+// Constants.swift
+struct ProxyPorts {
+    static let socks5 = 1080      // Shared by all cores
+    static let http = 8118         // Privoxy
+    static let pac = 8090          // PAC server
+
+    // Alternative ports for testing/development only
+    static let alternateSocks5 = 1081
+}
+```
+
+**Binding Order:**
+
+1. Stop all cores before starting new one
+2. Wait 1 second for port release (kernel TIME_WAIT)
+3. Start new core
+4. Verify bind success via log check
+
+**Implementation:**
+
+```swift
+func syncProxy() {
+    // CRITICAL: Stop all cores first to release ports
+    stopSSLocal()
+    stopXray()
+    stopHysteria()
+
+    // Wait for ports to be released
+    DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+        // Start appropriate core based on protocol
+        switch profile.protocolType.coreType {
+        case .sslocal:
+            self.startSSLocal()
+        case .xray:
+            self.startXray()
+        case .hysteria:
+            self.startHysteria()
+        }
+
+        // Verify core started successfully
+        self.verifyProxyCoreBound()
+    }
+}
+
+func verifyProxyCoreBound() -> Bool {
+    // Check if port 1080 is listening
+    let task = Process()
+    task.launchPath = "/usr/sbin/lsof"
+    task.arguments = ["-i", ":1080", "-sTCP:LISTEN"]
+
+    let pipe = Pipe()
+    task.standardOutput = pipe
+    task.launch()
+    task.waitUntilExit()
+
+    let data = pipe.fileHandleForReading.readDataToEndOfFile()
+    let output = String(data: data, encoding: .utf8) ?? ""
+
+    if task.terminationStatus == 0 && !output.isEmpty {
+        return true
+    } else {
+        ErrorHandler.shared.error(
+            "Proxy core failed to bind to port 1080",
+            context: "verifyProxyCoreBound"
+        )
+        return false
+    }
+}
+```
+
+### Conflict Resolution
+
+**Scenario 1: Port already in use**
+
+```swift
+// In Launch Agent plist, add retry logic
+func generateLaunchAgentPlist(for core: ProxyCoreType) -> [String: Any] {
+    return [
+        "Label": launchAgentLabel(for: core),
+        "ProgramArguments": arguments(for: core),
+        "KeepAlive": false,  // Don't auto-restart on port conflict
+        "RunAtLoad": true,
+        "StandardErrorPath": logPath(for: core),
+        "StandardOutPath": logPath(for: core),
+        // IMPORTANT: Exit on port bind failure
+        "AbandonProcessGroup": true
+    ]
+}
+```
+
+**Scenario 2: Multiple cores running (error state)**
+
+Detect and clean up:
+
+```swift
+func cleanupStaleProxyCores() {
+    let cores = ["ss-local", "xray", "hysteria2"]
+    for coreName in cores {
+        let task = Process()
+        task.launchPath = "/usr/bin/pgrep"
+        task.arguments = [coreName]
+
+        let pipe = Pipe()
+        task.standardOutput = pipe
+        task.launch()
+        task.waitUntilExit()
+
+        if task.terminationStatus == 0 {
+            let data = pipe.fileHandleForReading.readDataToEndOfFile()
+            if let pidString = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines),
+               let pid = Int32(pidString) {
+                // Kill stale process
+                kill(pid, SIGTERM)
+                usleep(100000) // 100ms
+                kill(pid, SIGKILL)
+            }
+        }
+    }
+}
+```
+
+### Multi-Instance Considerations
+
+**NOT SUPPORTED**: Running multiple profiles simultaneously is explicitly not supported in the current architecture.
+
+**Future Enhancement**: To support multi-instance:
+1. Allocate dynamic port range (1081-1090)
+2. Store active port in profile
+3. Configure system proxy to primary instance only
+4. Use port multiplexer or load balancer
 
 ---
 
@@ -1150,29 +1612,278 @@ func testVLESSProfile() {
 
 ## Security Considerations
 
-### Password Storage
+### 1. Password Storage (Keychain Integration)
 
-- All passwords stored in macOS Keychain (existing implementation)
-- UUID/keys also stored in Keychain for consistency
-- Never log passwords or keys to files
+**Requirement**: All sensitive credentials MUST be stored in macOS Keychain, never in UserDefaults or plain files.
 
-### Binary Verification
+**Implementation**:
 
-- Download binaries from official GitHub releases only
-- Verify checksums (SHA256) before use
-- Consider code signing binaries for added security
+```swift
+// File: ShadowsocksX-NG/KeychainHelper.swift
 
-### Privilege Management
+protocol KeychainManaging: AnyObject {
+    func getPassword(forAccount account: String) -> String?
+    func savePassword(_ password: String, forAccount account: String) -> Bool
+    func deletePassword(forAccount account: String) -> Bool
 
-- Proxy cores run as user processes (no root required)
-- System proxy modification still requires admin (existing ProxyConfHelper)
-- Launch Agents run in user context (~/Library/LaunchAgents)
+    // NEW: Support for UUIDs and keys
+    func getSecret(forKey key: String) -> String?
+    func saveSecret(_ secret: String, forKey key: String) -> Bool
+    func deleteSecret(forKey key: String) -> Bool
+}
 
-### TLS/REALITY Settings
+class KeychainHelper: KeychainManaging {
+    private let serviceName = "com.qiuyuzhou.ShadowsocksX-NG"
 
-- Default to secure fingerprints (chrome, firefox)
-- Warn users about `allowInsecure: true` in TLS settings
-- Validate REALITY publicKey format (base64)
+    func saveSecret(_ secret: String, forKey key: String) -> Bool {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: serviceName,
+            kSecAttrAccount as String: key,
+            kSecValueData as String: secret.data(using: .utf8)!,
+            kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlock
+        ]
+
+        // Delete existing entry
+        SecItemDelete(query as CFDictionary)
+
+        // Add new entry
+        let status = SecItemAdd(query as CFDictionary, nil)
+        return status == errSecSuccess
+    }
+
+    func getSecret(forKey key: String) -> String? {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: serviceName,
+            kSecAttrAccount as String: key,
+            kSecReturnData as String: true
+        ]
+
+        var result: AnyObject?
+        let status = SecItemCopyMatching(query as CFDictionary, &result)
+
+        guard status == errSecSuccess,
+              let data = result as? Data,
+              let secret = String(data: data, encoding: .utf8) else {
+            return nil
+        }
+
+        return secret
+    }
+}
+```
+
+**Usage**:
+
+```swift
+// Store VLESS UUID in Keychain
+let keychain = KeychainHelper()
+keychain.saveSecret(vlessConfig.userId, forKey: "profile-\(profile.uuid)-userId")
+
+// Store Shadowsocks 2022 key
+keychain.saveSecret(ss2022Config.key, forKey: "profile-\(profile.uuid)-ss2022-key")
+
+// Store Trojan password
+keychain.saveSecret(trojanConfig.password, forKey: "profile-\(profile.uuid)-password")
+```
+
+### 2. Binary Verification (SHA256 + Code Signing)
+
+**Requirement**: All downloaded binaries MUST be verified before use. Build MUST fail if verification fails.
+
+**Implementation** (File: `deps/Makefile`, lines ~316-347, 452-468, 672-689):
+
+```makefile
+# SHA256 checksums (update for each release)
+XRAY_SHA256 = a1b2c3d4e5f6...
+HYSTERIA_SHA256 = f6e5d4c3b2a1...
+SHADOWSOCKS_RUST_SHA256 = 123456789abc...
+
+.PHONY: download-xray
+download-xray:
+	@echo "Downloading xray-core..."
+	curl -L -o dist/xray.zip \
+		"https://github.com/XTLS/Xray-core/releases/download/v1.8.8/Xray-macos-universal.zip"
+
+	# CRITICAL: Verify SHA256 checksum
+	@echo "$(XRAY_SHA256)  dist/xray.zip" | shasum -a 256 -c - || \
+		(echo "ERROR: Xray checksum mismatch! Aborting." && rm dist/xray.zip && exit 1)
+
+	# Verify code signature (macOS binaries should be signed)
+	unzip -o dist/xray.zip -d dist/xray
+	@codesign --verify --deep --strict dist/xray/xray || \
+		echo "WARNING: Xray binary is not code-signed"
+
+	# OPTIONAL: Verify Gatekeeper approval
+	@spctl --assess --type execute dist/xray/xray || \
+		echo "WARNING: Xray binary not approved by Gatekeeper"
+
+	mkdir -p ../ShadowsocksX-NG/xray-core
+	cp dist/xray/xray ../ShadowsocksX-NG/xray-core/
+	chmod +x ../ShadowsocksX-NG/xray-core/xray
+
+.PHONY: verify-all-binaries
+verify-all-binaries:
+	@echo "Verifying all binaries..."
+	@for binary in ss-local/ss-local xray-core/xray hysteria2/hysteria2; do \
+		if [ -f "../ShadowsocksX-NG/$$binary" ]; then \
+			echo "Checking $$binary..."; \
+			codesign --verify --deep ../ShadowsocksX-NG/$$binary 2>/dev/null || \
+				echo "  ⚠️  $$binary is not code-signed"; \
+			file ../ShadowsocksX-NG/$$binary | grep "Mach-O" || \
+				(echo "  ❌ $$binary is not a valid Mach-O binary" && exit 1); \
+		fi; \
+	done
+	@echo "✅ Binary verification complete"
+```
+
+**Checksum Update Procedure**:
+
+1. Download new release manually
+2. Run `shasum -a 256 <binary>` to get checksum
+3. Update Makefile constants
+4. Commit checksum updates with release notes
+
+### 3. Certificate Pinning for TLS/REALITY
+
+**Requirement**: For REALITY connections, implement certificate pinning to prevent MITM attacks.
+
+**Implementation**:
+
+```swift
+// File: ShadowsocksX-NG/CertificatePinner.swift
+
+class CertificatePinner {
+    private var pinnedCertificates: [String: [Data]] = [:]
+
+    func pinCertificate(_ certData: Data, forHost host: String) {
+        if pinnedCertificates[host] == nil {
+            pinnedCertificates[host] = []
+        }
+        pinnedCertificates[host]?.append(certData)
+    }
+
+    func validateCertificate(_ cert: SecCertificate, forHost host: String) -> Bool {
+        guard let pinnedCerts = pinnedCertificates[host], !pinnedCerts.isEmpty else {
+            // No pinning configured for this host
+            return true
+        }
+
+        let certData = SecCertificateCopyData(cert) as Data
+
+        // Check if certificate matches any pinned certificate
+        return pinnedCerts.contains(certData)
+    }
+}
+
+// Configuration in REALITY settings
+struct RealitySettings: Codable {
+    var publicKey: String
+    var shortId: String
+    var serverName: String
+    var fingerprint: String
+    var spiderX: String = "/"
+
+    // NEW: Certificate pinning
+    var pinnedCertificates: [Data]? // Optional pinned certs
+    var failOpen: Bool = false      // Fail-open on pin mismatch?
+}
+```
+
+**Fail-open Policy**:
+- `failOpen: false` (default): Connection FAILS if certificate doesn't match pinned cert
+- `failOpen: true`: Connection proceeds with warning if pin check fails
+
+**Certificate Rotation Procedure**:
+1. Add new certificate to pinned list (keep old cert for grace period)
+2. Wait for all users to update (e.g., 30 days)
+3. Remove old certificate from pinned list
+
+### 4. "allowInsecure: true" Warning
+
+**Requirement**: When user enables `allowInsecure: true`, MUST show prominent warning in UI.
+
+**Trigger Conditions**:
+- User sets `allowInsecure: true` in TLS settings
+- User imports profile with `allowInsecure=true`
+- User edits existing profile to enable insecure mode
+
+**UI Implementation**:
+
+```swift
+// File: ShadowsocksX-NG/PreferencesWindowController.swift
+
+@IBOutlet weak var allowInsecureCheckbox: NSButton!
+@IBOutlet weak var securityWarningLabel: NSTextField!
+
+@IBAction func allowInsecureChanged(_ sender: NSButton) {
+    if sender.state == .on {
+        // Show warning dialog
+        let alert = NSAlert()
+        alert.messageText = "⚠️ Security Warning"
+        alert.informativeText = """
+        Enabling "Allow Insecure" disables TLS certificate verification.
+
+        This makes your connection vulnerable to man-in-the-middle attacks.
+
+        Only enable this for testing or if you understand the security risks.
+
+        Do you want to proceed?
+        """
+        alert.alertStyle = .warning
+        alert.addButton(withTitle: "Enable (Unsafe)")
+        alert.addButton(withTitle: "Cancel")
+
+        let response = alert.runModal()
+        if response == .alertSecondButtonReturn {
+            // User cancelled
+            sender.state = .off
+            return
+        }
+
+        // Show persistent warning label
+        securityWarningLabel.isHidden = false
+        securityWarningLabel.stringValue = "⚠️ Insecure mode enabled - vulnerable to attacks"
+        securityWarningLabel.textColor = .systemRed
+    } else {
+        securityWarningLabel.isHidden = true
+    }
+}
+```
+
+**Warning Message Specification**:
+- **Title**: "⚠️ Security Warning"
+- **Content**: Explain MITM vulnerability
+- **Buttons**: "Enable (Unsafe)" + "Cancel"
+- **Persistent indicator**: Red warning label in UI when enabled
+
+### 5. Build System Security Checklist
+
+**Pre-Build Checklist**:
+- [ ] SHA256 checksums updated for all binaries
+- [ ] Checksums verified against official releases
+- [ ] Code signatures present on downloaded binaries
+- [ ] No suspicious network activity during build
+
+**Post-Build Checklist**:
+- [ ] All binaries are Mach-O format (verified via `file` command)
+- [ ] No world-writable permissions on binaries
+- [ ] Launch Agent plists don't contain absolute paths to user directories
+- [ ] No hardcoded passwords or keys in config files
+
+**Enforcement**:
+
+Add to CI/CD pipeline (.github/workflows/code-quality.yml):
+
+```yaml
+- name: Verify Binary Security
+  run: |
+    make -C deps verify-all-binaries
+    # Check for hardcoded secrets
+    ! grep -r "password.*=.*['\"]" ShadowsocksX-NG/*.swift
+    ! grep -r "BEGIN.*PRIVATE KEY" ShadowsocksX-NG/
+```
 
 ---
 
