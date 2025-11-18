@@ -123,6 +123,17 @@ extension StatusBarIcon {
         let symbolName = visible ? "eye.fill" : "eye.slash.fill"
         return OSVersion.symbol(primary: symbolName)
     }
+
+    /// Get icon for HTTP proxy export command menu item
+    /// - Returns: NSImage with terminal symbol
+    ///
+    /// **Legacy PNG Mapping:**
+    /// - "terminal-logo.png" → terminal.fill (HTTP export command)
+    ///
+    /// Used in the "HTTP Proxy Export Line To Pasteboard" menu item.
+    static func terminalIcon() -> NSImage {
+        return OSVersion.symbol(primary: "terminal.fill")
+    }
 }
 
 // MARK: - SF Symbols Reference
@@ -145,6 +156,11 @@ extension StatusBarIcon {
  |----------------|----------------------|-----------------------------|--------------------------------|
  | visible        | eye.fill             | icons8-Eye Filled-50        | Password is showing            |
  | hidden         | eye.slash.fill       | icons8-Blind Filled-50      | Password is hidden             |
+
+ ## Menu Item Icons
+ | Purpose        | SF Symbol            | Legacy PNG                  | Description                    |
+ |----------------|----------------------|-----------------------------|--------------------------------|
+ | HTTP export    | terminal.fill        | terminal-logo.png           | Export command to clipboard    |
 
  All symbols are available on macOS 11.0 (Big Sur)+
  No fallback needed as minimum deployment target is 11.0

@@ -258,11 +258,19 @@ Before merging, please verify:
    - Replaced CALayer background with native vibrancy
    - Maintains rounded corners and fade animations
 
+### Phase 2 Continuation (Completed - Session 3)
+3. **✅ Menu Item Icon Migration:**
+   - `terminal-logo.png` → SF Symbol (`terminal.fill`)
+   - Used in "HTTP Proxy Export Line To Pasteboard" menu item
+   - Added `StatusBarIcon.terminalIcon()` convenience method
+   - Updated MenuBarManager.updateCopyHttpProxyExportMenu() to set SF Symbol icon
+
 ### Phase 2 Future Work
-1. **Other UI Icons Migration:**
-   - `terminal-logo.png` → SF Symbol (`terminal.fill`) - Not currently used in code
-   - `virtual-server-icon-3.png` → SF Symbol (`server.rack`) - Not currently used in code
-   - `http.png` → SF Symbol (`network`) - Not currently used in code
+1. **Unused PNG Assets (Candidates for Removal):**
+   - `virtual-server-icon-3.png` - Not referenced in code (only in project.pbxproj)
+   - `http.png` - Not referenced in code (only in project.pbxproj)
+   - `command-512.png` - Not referenced in code (only in project.pbxproj)
+   - **Note:** Can be removed after confirming SF Symbols work correctly
 
 2. **Component Modernization:**
    - Table views (PreferencesWindowController.swift)
@@ -387,9 +395,9 @@ If issues found:
 
 ---
 
-## Session Summary (2025-11-18)
+## Session Summary (2025-11-18 - Sessions 1-2)
 
-**Completed in this session:**
+**Completed in sessions 1-2:**
 1. ✅ Migrated status bar icons to SF Symbols (StatusBarIcon.swift)
 2. ✅ Migrated UI colors to semantic colors with dark mode support (NSColor+Semantic.swift)
 3. ✅ Migrated password visibility icons to SF Symbols (eye.fill, eye.slash.fill)
@@ -400,7 +408,26 @@ If issues found:
 8. ✅ Fixed server preferences auto-selection issue
 9. ✅ Patched MASShortcut deprecated API warnings
 
-**Total commits:** 14
+**Total commits (sessions 1-2):** 14
 **Files created:** 2 (StatusBarIcon.swift, NSColor+Semantic.swift)
 **Files modified:** 11 (MenuBarManager.swift, ToastWindowController.swift, SWBQRCodeWindowController.m, UserRulesController.xib, AppDelegate.swift, PreferencesWindowController.swift, NSColor+Semantic.swift, StatusBarIcon.swift, and 3 project/docs files)
 **Documentation updated:** 3 files (KNOWN_ISSUES.md, MODERNIZATION_ROADMAP.md, UI_MODERNIZATION_PROGRESS.md)
+
+---
+
+## Session Summary (2025-11-18 - Session 3)
+
+**Completed in session 3:**
+1. ✅ Reorganized documentation into appropriate subdirectories
+   - UI_MODERNIZATION_PROGRESS.md → docs/ui-modernization/PHASE2_PROGRESS.md
+   - KEYCHAIN_*.md → docs/code-quality/
+   - ROADMAP.md → docs/PROJECT_ROADMAP.md
+2. ✅ Migrated terminal-logo.png to SF Symbol (terminal.fill)
+   - Added StatusBarIcon.terminalIcon() convenience method
+   - Updated MenuBarManager to set icon programmatically
+   - HTTP Proxy Export menu item now uses SF Symbol
+3. ✅ Documented unused PNG assets for potential removal
+
+**Files modified:** 3 (StatusBarIcon.swift, MenuBarManager.swift, PHASE2_PROGRESS.md)
+**Lines added:** ~20
+**Code improvements:** All actively used PNG icons now migrated to SF Symbols

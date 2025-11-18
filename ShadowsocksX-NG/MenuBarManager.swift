@@ -150,6 +150,9 @@ class MenuBarManager {
     func updateCopyHttpProxyExportMenu() {
         let isOn = preferences.bool(forKey: "LocalHTTPOn")
         copyHttpProxyExportCmdLineMenuItem.isHidden = !isOn
+
+        // Set SF Symbol icon for menu item (Phase 2 modernization)
+        copyHttpProxyExportCmdLineMenuItem.image = StatusBarIcon.terminalIcon()
     }
 
     func updateServersMenu() {
