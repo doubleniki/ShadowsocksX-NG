@@ -2,6 +2,69 @@
 
 ## Runtime Warnings
 
+### NSKeyedUnarchiveFromData Deprecation Warning (FIXED ✅)
+
+**Issue:**
+```
+'NSKeyedUnarchiveFromData' should not be used for un-archiving and will be removed in a future release
+```
+
+**Appears:** Xcode console during runtime (keyboard shortcut operations)
+
+**Root Cause:**
+The MASShortcut library (v2.4.0) is **archived** (March 5, 2023) and no longer maintained. It uses the deprecated `NSKeyedUnarchiveFromDataTransformerName` API for keyboard shortcut serialization.
+
+**Impact:**
+- ⚠️ Warning only - keyboard shortcuts still work
+- May break in future macOS versions when API is removed
+- No workaround available without patching the library
+
+**Solution: ✅ FIXED**
+
+A post-install hook in `Podfile` automatically patches MASShortcut after each `pod install`:
+
+1. **Automatic Patch (Recommended):**
+   - Already configured in `Podfile` (lines 54-88)
+   - Runs automatically on `pod install`
+   - Replaces `NSKeyedUnarchiveFromDataTransformerName` → `NSSecureUnarchiveFromDataTransformerName`
+   - Patches 2 files:
+     - `MASShortcutBinder.m` (line 19)
+     - `MASShortcutView+Bindings.m` (line 47)
+
+2. **Manual Patch (if needed):**
+   ```bash
+   pod install  # Applies patch automatically
+   ```
+
+**Files Patched:**
+- `Pods/MASShortcut/Framework/User Defaults Storage/MASShortcutBinder.m`
+- `Pods/MASShortcut/Framework/UI/MASShortcutView+Bindings.m`
+
+**Technical Details:**
+
+Changed from deprecated API:
+```objc
+NSKeyedUnarchiveFromDataTransformerName  // Deprecated
+```
+
+To modern secure API:
+```objc
+NSSecureUnarchiveFromDataTransformerName  // macOS 10.13+
+```
+
+**Why This Works:**
+- `NSSecureUnarchiveFromDataTransformerName` is backward compatible with `NSKeyedUnarchiveFromData`
+- Adds security benefits (prevents arbitrary object deserialization)
+- Available since macOS 10.13 (our minimum is 11.0)
+- No functional changes - shortcuts work identically
+
+**Future Considerations:**
+- MASShortcut is archived, consider migrating to maintained alternative
+- Potential replacements: [KeyboardShortcuts](https://github.com/sindresorhus/KeyboardShortcuts), custom implementation
+- Current solution stable for macOS 11.0 - 15.0+
+
+---
+
 ### NSToolbarItem.minSize/maxSize Deprecation Warning
 
 **Issue:**
