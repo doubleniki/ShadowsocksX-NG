@@ -80,20 +80,12 @@ jobs:
           restore-keys: |
             pods-
 
-      # Кеширование Bundler gems
-      - name: Cache Bundler gems
-        uses: actions/cache@v4
-        with:
-          path: vendor/bundle
-          key: gems-${{ runner.os }}-${{ hashFiles('Gemfile.lock') }}
-          restore-keys: |
-            gems-${{ runner.os }}-
-
       - name: Install Bundler and dependencies
         run: |
           # Install Bundler
           gem install bundler
-          bundle install --path vendor/bundle
+          bundle config set --local path 'vendor/bundle'
+          bundle install
           # Setup CocoaPods to skip trunk repo cloning
           mkdir -p ~/.cocoapods/repos
           # Use CDN-only mode by removing any existing trunk repo

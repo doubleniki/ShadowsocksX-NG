@@ -82,18 +82,11 @@ jobs:
       - name: Show Xcode version
         run: xcodebuild -version
 
-      - name: Cache Bundler gems
-        uses: actions/cache@v4
-        with:
-          path: vendor/bundle
-          key: gems-${{ runner.os }}-${{ hashFiles('Gemfile.lock') }}
-          restore-keys: |
-            gems-${{ runner.os }}-
-
-      - name: Install Bundler
+      - name: Install Bundler and dependencies
         run: |
           gem install bundler
-          bundle install --path vendor/bundle
+          bundle config set --local path 'vendor/bundle'
+          bundle install
 
       - name: Install dependencies
         run: |
