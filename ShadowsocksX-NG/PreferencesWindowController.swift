@@ -65,6 +65,12 @@ class PreferencesWindowController: NSWindowController, NSTableViewDataSource, NS
         // Populate encryption methods from enum
         methodTextField.addItems(withObjectValues: EncryptionMethod.allCases.map { $0.rawValue })
 
+        // Configure modern table view style (macOS 11.0+)
+        configureModernTableView()
+
+        // Configure text field placeholders
+        configureTextFieldPlaceholders()
+
         profilesTableView.reloadData()
         updateProfileBoxVisible()
 
@@ -83,6 +89,30 @@ class PreferencesWindowController: NSWindowController, NSTableViewDataSource, NS
         ])
         profilesTableView.allowsMultipleSelection = true
     }
+
+    // MARK: - Table View Configuration
+
+    private func configureModernTableView() {
+        // Modern fullWidth style (macOS 11.0+)
+        profilesTableView.style = .fullWidth
+        profilesTableView.floatsGroupRows = false
+        profilesTableView.rowSizeStyle = .default
+        profilesTableView.intercellSpacing = NSSize(width: 0, height: 2)
+        profilesTableView.selectionHighlightStyle = .regular
+        profilesTableView.usesAutomaticRowHeights = true
+    }
+
+    private func configureTextFieldPlaceholders() {
+        hostTextField.placeholderString = NSLocalizedString("Server IP or domain", comment: "")
+        portTextField.placeholderString = NSLocalizedString("Port (e.g., 8388)", comment: "")
+        passwordTextField.placeholderString = NSLocalizedString("Password", comment: "")
+        passwordSecureTextField.placeholderString = NSLocalizedString("Password", comment: "")
+        pluginTextField.placeholderString = NSLocalizedString("Plugin (optional)", comment: "")
+        pluginOptionsTextField.placeholderString = NSLocalizedString("Plugin options (optional)", comment: "")
+        remarkTextField.placeholderString = NSLocalizedString("Description (optional)", comment: "")
+    }
+
+    // MARK: - Actions
 
     @IBAction func addProfile(_ sender: NSButton) {
         if let profile = editingProfile, !profile.isValid() {

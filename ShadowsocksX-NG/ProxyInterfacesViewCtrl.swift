@@ -28,8 +28,25 @@ class ProxyInterfacesViewCtrl: NSViewController, NSTableViewDataSource, NSTableV
             selectedNetworkServices = NSMutableSet()
         }
 
+        // Configure modern table view style (macOS 11.0+)
+        configureModernTableView()
+
         networkServices = ProxyConfTool.networkServicesList() as NSArray?
         tableView?.reloadData()
+    }
+
+    // MARK: - Table View Configuration
+
+    private func configureModernTableView() {
+        guard let tableView = tableView else { return }
+
+        // Modern fullWidth style (macOS 11.0+)
+        tableView.style = .fullWidth
+        tableView.floatsGroupRows = false
+        tableView.rowSizeStyle = .default
+        tableView.intercellSpacing = NSSize(width: 0, height: 2)
+        tableView.selectionHighlightStyle = .regular
+        tableView.usesAutomaticRowHeights = true
     }
 
     //--------------------------------------------------
