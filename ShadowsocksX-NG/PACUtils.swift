@@ -334,53 +334,63 @@ func updatePACFromGFWList() {
 
 /// Updates PAC file from GFW List (async version)
 /// - Returns: True if update and generation succeeded
-/// - Throws: PACError or FileSystemError on failure
+/// - Throws: Error if the download or file write fails
 func updatePACFromGFWListAsync() async throws -> Bool {
-    // Create directory if needed
-    if !FileManager.default.fileExists(atPath: PACRulesDirPath) {
-        try FileManager.default.createDirectory(
-            atPath: PACRulesDirPath,
-            withIntermediateDirectories: true,
-            attributes: nil
-        )
-    }
-
-    let urlString = AppPreferences.gfwListURL
-
-    // Download GFW List using continuation to bridge callback-based API
-    let data = try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<String, Error>) in
-        AF.request(urlString)
-            .validate()
-            .responseString { response in
-                switch response.result {
-                case .success(let value):
-                    continuation.resume(returning: value)
-                case .failure(let error):
-                    continuation.resume(throwing: error)
-                }
-            }
-    }
-
-    // Write to file on background thread
-    try await Task.detached {
-        try data.write(
-            toFile: GFWListFilePath,
-            atomically: true,
-            encoding: String.Encoding.utf8
-        )
-    }.value
-
-    // Generate PAC file asynchronously
-    let success = await generatePACFileAsync()
-
-    // Send notification on main thread
-    await MainActor.run {
-        if success {
-            NotificationService.shared.send(
-                title: "PAC has been updated by latest GFW List.".localized
+    do {
+        // Create directory if needed
+        if !FileManager.default.fileExists(atPath: PACRulesDirPath) {
+            try FileManager.default.createDirectory(
+                atPath: PACRulesDirPath,
+                withIntermediateDirectories: true,
+                attributes: nil
             )
         }
-    }
 
-    return success
+        let urlString = AppPreferences.gfwListURL
+
+        // Download GFW List using continuation to bridge callback-based API
+        let data = try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<String, Error>) in
+            AF.request(urlString)
+                .validate()
+                .responseString { response in
+                    switch response.result {
+                    case .success(let value):
+                        continuation.resume(returning: value)
+                    case .failure(let error):
+                        continuation.resume(throwing: error)
+                    }
+                }
+        }
+
+        // Write to file on background thread
+        try await Task.detached {
+            try data.write(
+                toFile: GFWListFilePath,
+                atomically: true,
+                encoding: String.Encoding.utf8
+            )
+        }.value
+
+        // Generate PAC file asynchronously
+        let success = await generatePACFileAsync()
+
+        // Send notification on main thread
+        await MainActor.run {
+            if success {
+                NotificationService.shared.send(
+                    title: "PAC has been updated by latest GFW List.".localized
+                )
+            }
+        }
+
+        return success
+    } catch {
+        // Send failure notification on main thread before rethrowing
+        await MainActor.run {
+            NotificationService.shared.send(
+                title: "Failed to download latest GFW List.".localized
+            )
+        }
+        throw error
+    }
 }

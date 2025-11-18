@@ -13,7 +13,7 @@ class ServerProfile: NSObject, NSCopying, Codable {
     @objc var uuid: String
 
     @objc var serverHost: String = ""
-    @objc var serverPort: uint16 = 8379
+    @objc var serverPort: UInt16 = 8379
     @objc var method: String = "aes-128-gcm"
 
     // Password is now stored securely in Keychain
@@ -325,9 +325,14 @@ class ServerProfile: NSObject, NSCopying, Codable {
             "method": method as AnyObject,
         ]
 
-        conf["local_port"] = NSNumber(value: UInt16(AppPreferences.socksPort) as UInt16)
+        // Validate and clamp port to valid range (1...65535)
+        let localPort = max(1, min(65535, AppPreferences.socksPort))
+        conf["local_port"] = NSNumber(value: UInt16(localPort))
         conf["local_address"] = AppPreferences.socksAddress as AnyObject?
-        conf["timeout"] = NSNumber(value: UInt32(AppPreferences.timeout) as UInt32)
+
+        // Validate and clamp timeout to valid range
+        let timeout = max(0, min(Int(UInt32.max), AppPreferences.timeout))
+        conf["timeout"] = NSNumber(value: UInt32(timeout))
         conf["server"] = serverHost as AnyObject
         conf["server_port"] = NSNumber(value: serverPort as UInt16)
 

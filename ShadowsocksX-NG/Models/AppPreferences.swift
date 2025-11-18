@@ -86,16 +86,13 @@ enum AppPreferences {
     @UserDefault(wrappedValue: "https://raw.githubusercontent.com/gfwlist/gfwlist/master/gfwlist.txt", Constants.UserDefaults.gfwListURL)
     static var gfwListURL: String
 
-    @UserDefault(wrappedValue: false, "VerboseMode")
-    static var verboseMode: Bool
-
     @UserDefault(wrappedValue: true, Constants.UserDefaults.autoCheckUpdates)
     static var autoCheckUpdates: Bool
 
-    @UserDefault(wrappedValue: "", "PACUserRules")
+    @UserDefault(wrappedValue: "", Constants.UserDefaults.pacUserRules)
     static var pacUserRules: String
 
-    @UserDefaultOptional("ExternalPACURL")
+    @UserDefaultOptional(Constants.UserDefaults.externalPACURL)
     static var externalPACURL: String?
 }
 

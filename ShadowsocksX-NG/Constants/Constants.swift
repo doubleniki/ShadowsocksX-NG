@@ -36,6 +36,8 @@ enum Constants {
 
         static let gfwListURL = "GFWListURL"
         static let autoCheckUpdates = "AutoCheckUpdates"
+        static let pacUserRules = "PACUserRules"
+        static let externalPACURL = "ExternalPACURL"
     }
 
     // MARK: - Notification Names

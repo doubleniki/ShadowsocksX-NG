@@ -12,6 +12,8 @@ import Foundation
 
 /// Property wrapper for type-safe UserDefaults access
 ///
+/// Supports UserDefaults-compatible types: String, Int, Double, Bool, Data, Date, URL, Array, Dictionary
+///
 /// Usage:
 /// ```swift
 /// @UserDefault(wrappedValue: false, "LaunchAtLogin")
@@ -70,8 +72,18 @@ struct UserDefaultCodable<T: Codable> {
         }
         nonmutating set {
             let encoder = JSONEncoder()
-            let data = try? encoder.encode(newValue)
-            defaults.set(data, forKey: key)
+            do {
+                let data = try encoder.encode(newValue)
+                defaults.set(data, forKey: key)
+            } catch {
+                // Log encoding failure but don't crash
+                ErrorHandler.shared.warning(
+                    "Failed to encode \(T.self) for key '\(key)': \(error.localizedDescription)",
+                    context: "UserDefaultCodable"
+                )
+                // Optionally could remove the key instead of leaving stale data
+                // defaults.removeObject(forKey: key)
+            }
         }
     }
 }
