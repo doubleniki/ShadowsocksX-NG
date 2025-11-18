@@ -20,14 +20,14 @@ let GFWListFilePath = PACRulesDirPath + "gfwlist.txt"
 func syncPac() {
     var needGenerate = false
 
-    let nowSocks5Address = UserDefaults.standard.string(forKey: "LocalSocks5.ListenAddress")
+    let nowSocks5Address = AppPreferences.socksAddress
     let oldSocks5Address = UserDefaults.standard.string(forKey: "LocalSocks5.ListenAddress.Old")
     if nowSocks5Address != oldSocks5Address {
         needGenerate = true
         UserDefaults.standard.set(nowSocks5Address, forKey: "LocalSocks5.ListenAddress.Old")
     }
 
-    let nowSocks5Port = UserDefaults.standard.integer(forKey: "LocalSocks5.ListenPort")
+    let nowSocks5Port = AppPreferences.socksPort
     let oldSocks5Port = UserDefaults.standard.integer(forKey: "LocalSocks5.ListenPort.Old")
     if nowSocks5Port != oldSocks5Port {
         needGenerate = true
@@ -126,17 +126,8 @@ func generatePACFile() -> Bool {
         }
     }
 
-    guard let socks5Address = UserDefaults.standard.string(forKey: "LocalSocks5.ListenAddress")
-    else {
-        ErrorHandler.shared.handle(
-            PACError.invalidFormat(reason: "LocalSocks5.ListenAddress not configured"),
-            context: "Generate PAC File",
-            showAlert: true,
-            critical: true
-        )
-        return false
-    }
-    let socks5Port = UserDefaults.standard.integer(forKey: "LocalSocks5.ListenPort")
+    let socks5Address = AppPreferences.socksAddress
+    let socks5Port = AppPreferences.socksPort
 
     do {
         let gfwlist = try String(contentsOfFile: GFWListFilePath, encoding: String.Encoding.utf8)
@@ -287,6 +278,14 @@ func generatePACFile() -> Bool {
 }
 // swiftlint:enable function_body_length cyclomatic_complexity
 
+/// Generates PAC file asynchronously on background thread
+/// - Returns: True if generation succeeded
+func generatePACFileAsync() async -> Bool {
+    await Task.detached {
+        generatePACFile()
+    }.value
+}
+
 func updatePACFromGFWList() {
     // Make the dir if rulesDirPath is not exesited.
     if !FileManager.default.fileExists(atPath: PACRulesDirPath) {
@@ -303,14 +302,7 @@ func updatePACFromGFWList() {
         }
     }
 
-    guard let url = UserDefaults.standard.string(forKey: "GFWListURL") else {
-        ErrorHandler.shared.handle(
-            PACError.invalidFormat(reason: "GFWListURL not configured"),
-            context: "Update PAC from GFW List",
-            showAlert: false
-        )
-        return
-    }
+    let url = AppPreferences.gfwListURL
     AF.request(url)
         .validate()
         .responseString {
@@ -336,4 +328,69 @@ func updatePACFromGFWList() {
                 NotificationService.shared.send(title: "Failed to download latest GFW List.".localized)
             }
         }
+}
+
+// MARK: - Async/Await Version
+
+/// Updates PAC file from GFW List (async version)
+/// - Returns: True if update and generation succeeded
+/// - Throws: Error if the download or file write fails
+func updatePACFromGFWListAsync() async throws -> Bool {
+    do {
+        // Create directory if needed
+        if !FileManager.default.fileExists(atPath: PACRulesDirPath) {
+            try FileManager.default.createDirectory(
+                atPath: PACRulesDirPath,
+                withIntermediateDirectories: true,
+                attributes: nil
+            )
+        }
+
+        let urlString = AppPreferences.gfwListURL
+
+        // Download GFW List using continuation to bridge callback-based API
+        let data = try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<String, Error>) in
+            AF.request(urlString)
+                .validate()
+                .responseString { response in
+                    switch response.result {
+                    case .success(let value):
+                        continuation.resume(returning: value)
+                    case .failure(let error):
+                        continuation.resume(throwing: error)
+                    }
+                }
+        }
+
+        // Write to file on background thread
+        try await Task.detached {
+            try data.write(
+                toFile: GFWListFilePath,
+                atomically: true,
+                encoding: String.Encoding.utf8
+            )
+        }.value
+
+        // Generate PAC file asynchronously
+        let success = await generatePACFileAsync()
+
+        // Send notification on main thread
+        await MainActor.run {
+            if success {
+                NotificationService.shared.send(
+                    title: "PAC has been updated by latest GFW List.".localized
+                )
+            }
+        }
+
+        return success
+    } catch {
+        // Send failure notification on main thread before rethrowing
+        await MainActor.run {
+            NotificationService.shared.send(
+                title: "Failed to download latest GFW List.".localized
+            )
+        }
+        throw error
+    }
 }

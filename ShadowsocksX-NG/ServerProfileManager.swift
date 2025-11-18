@@ -16,10 +16,31 @@ class ServerProfileManager: NSObject {
     var activeProfileId: String?
 
     fileprivate override init() {
+        super.init()
+
         let defaults = UserDefaults.standard
+
+        // Try loading with JSON decoder (new format)
+        if let data = defaults.data(forKey: Constants.UserDefaults.serverProfiles) {
+            let decoder = JSONDecoder()
+            do {
+                profiles = try decoder.decode([ServerProfile].self, from: data)
+            } catch {
+                ErrorHandler.shared.warning("Failed to decode server profiles with JSON: \(error)")
+                // Fall back to legacy format
+                loadLegacyProfiles(from: defaults)
+            }
+        } else {
+            // Try legacy dictionary format
+            loadLegacyProfiles(from: defaults)
+        }
+
+        activeProfileId = defaults.string(forKey: Constants.UserDefaults.activeServerProfileId)
+    }
+
+    private func loadLegacyProfiles(from defaults: UserDefaults) {
         if let _profiles = defaults.array(forKey: Constants.UserDefaults.serverProfiles) {
             for _profile in _profiles {
-                // Safe cast and unwrap
                 guard let profileDict = _profile as? [String: Any],
                     let profile = ServerProfile.fromDictionary(profileDict)
                 else {
@@ -28,8 +49,9 @@ class ServerProfileManager: NSObject {
                 }
                 profiles.append(profile)
             }
+            // Migrate to new format
+            save()
         }
-        activeProfileId = defaults.string(forKey: Constants.UserDefaults.activeServerProfileId)
     }
 
     func setActiveProfileId(_ id: String) {
@@ -40,14 +62,20 @@ class ServerProfileManager: NSObject {
 
     func save() {
         let defaults = UserDefaults.standard
-        var _profiles = [AnyObject]()
-        for profile in profiles {
-            if profile.isValid() {
-                let _profile = profile.toDictionary()
-                _profiles.append(_profile as AnyObject)
-            }
+
+        // Filter valid profiles
+        let validProfiles = profiles.filter { $0.isValid() }
+
+        // Encode profiles with JSON encoder
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = .prettyPrinted
+
+        do {
+            let data = try encoder.encode(validProfiles)
+            defaults.set(data, forKey: Constants.UserDefaults.serverProfiles)
+        } catch {
+            ErrorHandler.shared.warning("Failed to encode server profiles: \(error)", context: "ServerProfileManager")
         }
-        defaults.set(_profiles, forKey: Constants.UserDefaults.serverProfiles)
 
         if getActiveProfile() == nil {
             activeProfileId = nil
@@ -58,18 +86,22 @@ class ServerProfileManager: NSObject {
         profiles.removeAll()
 
         let defaults = UserDefaults.standard
-        if let _profiles = defaults.array(forKey: Constants.UserDefaults.serverProfiles) {
-            for _profile in _profiles {
-                // Safe cast and unwrap
-                guard let profileDict = _profile as? [String: Any],
-                    let profile = ServerProfile.fromDictionary(profileDict)
-                else {
-                    ErrorHandler.shared.warning("Failed to load server profile from dictionary")
-                    continue
-                }
-                profiles.append(profile)
+
+        // Try loading with JSON decoder (new format)
+        if let data = defaults.data(forKey: Constants.UserDefaults.serverProfiles) {
+            let decoder = JSONDecoder()
+            do {
+                profiles = try decoder.decode([ServerProfile].self, from: data)
+            } catch {
+                ErrorHandler.shared.warning("Failed to decode server profiles with JSON: \(error)")
+                // Fall back to legacy format
+                loadLegacyProfiles(from: defaults)
             }
+        } else {
+            // Try legacy dictionary format
+            loadLegacyProfiles(from: defaults)
         }
+
         activeProfileId = defaults.string(forKey: Constants.UserDefaults.activeServerProfileId)
     }
 

@@ -8,12 +8,12 @@
 
 import Cocoa
 
-class ServerProfile: NSObject, NSCopying {
+class ServerProfile: NSObject, NSCopying, Codable {
 
     @objc var uuid: String
 
     @objc var serverHost: String = ""
-    @objc var serverPort: uint16 = 8379
+    @objc var serverPort: UInt16 = 8379
     @objc var method: String = "aes-128-gcm"
 
     // Password is now stored securely in Keychain
@@ -183,6 +183,51 @@ class ServerProfile: NSObject, NSCopying {
         }
     }
 
+    // MARK: - Codable
+
+    enum CodingKeys: String, CodingKey {
+        case uuid = "Id"
+        case serverHost = "ServerHost"
+        case serverPort = "ServerPort"
+        case method = "Method"
+        case remark = "Remark"
+        case plugin = "Plugin"
+        case pluginOptions = "PluginOptions"
+        // Note: password is NOT included - it's stored in Keychain
+    }
+
+    required init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+
+        uuid = try container.decode(String.self, forKey: .uuid)
+        serverHost = try container.decode(String.self, forKey: .serverHost)
+        serverPort = try container.decode(UInt16.self, forKey: .serverPort)
+        method = try container.decode(String.self, forKey: .method)
+        remark = try container.decodeIfPresent(String.self, forKey: .remark) ?? ""
+        plugin = try container.decodeIfPresent(String.self, forKey: .plugin) ?? ""
+        pluginOptions = try container.decodeIfPresent(String.self, forKey: .pluginOptions) ?? ""
+
+        super.init()
+
+        // Password will be loaded from Keychain on first access via the computed property
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+
+        try container.encode(uuid, forKey: .uuid)
+        try container.encode(serverHost, forKey: .serverHost)
+        try container.encode(serverPort, forKey: .serverPort)
+        try container.encode(method, forKey: .method)
+        try container.encode(remark, forKey: .remark)
+        try container.encode(plugin, forKey: .plugin)
+        try container.encode(pluginOptions, forKey: .pluginOptions)
+
+        // Note: password is NOT encoded - it's stored in Keychain
+    }
+
+    // MARK: - NSCopying
+
     public func copy(with zone: NSZone? = nil) -> Any {
         let copy = ServerProfile()
         copy.serverHost = self.serverHost
@@ -198,6 +243,7 @@ class ServerProfile: NSObject, NSCopying {
         return copy
     }
 
+    @available(*, deprecated, message: "Use Codable (JSONDecoder) instead")
     static func fromDictionary(_ data: [String: Any?]) -> ServerProfile? {
         let cp = {
             (profile: ServerProfile) -> Bool in
@@ -257,6 +303,7 @@ class ServerProfile: NSObject, NSCopying {
         }
     }
 
+    @available(*, deprecated, message: "Use Codable (JSONEncoder) instead")
     func toDictionary() -> [String: AnyObject] {
         var d = [String: AnyObject]()
         d["Id"] = uuid as AnyObject?
@@ -278,12 +325,14 @@ class ServerProfile: NSObject, NSCopying {
             "method": method as AnyObject,
         ]
 
-        let defaults = UserDefaults.standard
-        conf["local_port"] = NSNumber(
-            value: UInt16(defaults.integer(forKey: "LocalSocks5.ListenPort")) as UInt16)
-        conf["local_address"] = defaults.string(forKey: "LocalSocks5.ListenAddress") as AnyObject?
-        conf["timeout"] = NSNumber(
-            value: UInt32(defaults.integer(forKey: "LocalSocks5.Timeout")) as UInt32)
+        // Validate and clamp port to valid range (1...65535)
+        let localPort = max(1, min(65535, AppPreferences.socksPort))
+        conf["local_port"] = NSNumber(value: UInt16(localPort))
+        conf["local_address"] = AppPreferences.socksAddress as AnyObject?
+
+        // Validate and clamp timeout to valid range
+        let timeout = max(0, min(Int(UInt32.max), AppPreferences.timeout))
+        conf["timeout"] = NSNumber(value: UInt32(timeout))
         conf["server"] = serverHost as AnyObject
         conf["server_port"] = NSNumber(value: serverPort as UInt16)
 
