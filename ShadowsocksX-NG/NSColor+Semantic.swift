@@ -31,7 +31,7 @@ extension NSColor {
     /// - Dark mode: Lighter gray with transparency
     ///
     /// This replaces hardcoded `CGColor(red: 0.05, green: 0.05, blue: 0.05, alpha: 0.75)`
-    static var toastBackground: NSColor {
+    @objc class var toastBackground: NSColor {
         if #available(macOS 10.14, *) {
             // Modern semantic color with vibrancy support
             return NSColor(name: nil) { appearance in
@@ -52,7 +52,7 @@ extension NSColor {
     /// Foreground (text) color for toast/HUD windows.
     ///
     /// Automatically adapts for high contrast against toast background.
-    static var toastForeground: NSColor {
+    @objc class var toastForeground: NSColor {
         return .labelColor  // System-provided semantic color
     }
 
@@ -64,7 +64,7 @@ extension NSColor {
     /// Adapts to system appearance for better visibility.
     ///
     /// This replaces hardcoded `NSColor(red: 28/255.0, green: 155/255.0, blue: 71/255.0, alpha: 1)`
-    static var qrCodeOverlayText: NSColor {
+    @objc class var qrCodeOverlayText: NSColor {
         if #available(macOS 10.14, *) {
             return NSColor(name: nil) { appearance in
                 if appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua {
@@ -86,7 +86,7 @@ extension NSColor {
     /// Uses system background color for automatic dark mode support.
     ///
     /// This replaces hardcoded `NSColor.white`
-    static var qrCodeOverlayBackground: NSColor {
+    @objc class var qrCodeOverlayBackground: NSColor {
         if #available(macOS 10.14, *) {
             return .windowBackgroundColor  // Adapts to dark mode
         } else {
@@ -103,7 +103,7 @@ extension NSColor {
     /// for maximum compatibility with CALayer.
     ///
     /// - Returns: CGColor representation of this color
-    func toCGColor() -> CGColor {
+    @objc func toCGColor() -> CGColor {
         // Convert to RGB color space for CALayer compatibility
         // Some NSColors use calibrated or device-specific color spaces
         if let rgbColor = self.usingColorSpace(.deviceRGB) {
