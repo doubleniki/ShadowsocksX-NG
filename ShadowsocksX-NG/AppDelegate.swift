@@ -236,7 +236,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
 
     private func setupMenuIcons() {
         // Set SF Symbol icons for menu items (Phase 2 UI modernization)
-        // Using menu item search by title to avoid adding @IBOutlets for every item
+        // Locale-independent matching by action selector instead of title
 
         // Toggle power icon for on/off
         toggleRunningMenuItem.image = StatusBarIcon.togglePowerIcon()
@@ -250,41 +250,39 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
         // Servers submenu icon
         serversMenuItem.image = StatusBarIcon.serversIcon()
 
-        // Find and set icons for items we don't have outlets for
+        // Use existing outlet for Scan QR Code
+        scanQRCodeMenuItem.image = StatusBarIcon.scanQRCodeIcon()
+
+        // Find and set icons for items by action selector (locale-independent)
         if let menu = statusMenu {
+            // Map action selectors to icons
+            let iconsByAction: [(Selector, NSImage?)] = [
+                (#selector(showImportWindow(_:)), StatusBarIcon.importServersIcon()),
+                (#selector(showAllInOnePreferences(_:)), StatusBarIcon.preferencesIcon()),
+                (#selector(updateGFWList(_:)), StatusBarIcon.updatePACIcon()),
+                (#selector(editUserRulesForPAC(_:)), StatusBarIcon.editRulesIcon()),
+                (#selector(showLogs(_:)), StatusBarIcon.showLogsIcon()),
+                (#selector(exportDiagnosis(_:)), StatusBarIcon.exportDiagnosisIcon()),
+                (#selector(checkForUpdates(_:)), StatusBarIcon.checkUpdatesIcon()),
+                (#selector(feedback(_:)), StatusBarIcon.helpIcon()),
+                (#selector(showAbout(_:)), StatusBarIcon.aboutIcon()),
+                (#selector(NSApplication.terminate(_:)), StatusBarIcon.quitIcon())
+            ]
+
             for item in menu.items {
-                switch item.title {
-                case "Scan QR Code From Screen":
-                    item.image = StatusBarIcon.scanQRCodeIcon()
-                case "Import Server URLs...":
-                    item.image = StatusBarIcon.importServersIcon()
-                case "Preferences...":
-                    item.image = StatusBarIcon.preferencesIcon()
-                case "Update PAC from GFW List":
-                    item.image = StatusBarIcon.updatePACIcon()
-                case "Edit User Rules For PAC...":
-                    item.image = StatusBarIcon.editRulesIcon()
-                case "Show Logs...":
-                    item.image = StatusBarIcon.showLogsIcon()
-                case "Export Diagnosis...":
-                    item.image = StatusBarIcon.exportDiagnosisIcon()
-                case "Check for Updates...":
-                    item.image = StatusBarIcon.checkUpdatesIcon()
-                case "Help":
-                    item.image = StatusBarIcon.helpIcon()
-                case "About":
-                    item.image = StatusBarIcon.aboutIcon()
-                case "Quit":
-                    item.image = StatusBarIcon.quitIcon()
-                default:
-                    break
+                guard let action = item.action else { continue }
+                for (selector, icon) in iconsByAction {
+                    if action == selector {
+                        item.image = icon
+                        break
+                    }
                 }
             }
 
-            // Set icon for Server Preferences in submenu
+            // Set icon for Server Preferences in submenu (also by action)
             if let serversSubmenu = serversMenuItem.submenu {
                 for item in serversSubmenu.items {
-                    if item.title == "Server Preferences..." {
+                    if item.action == #selector(editServerPreferences(_:)) {
                         item.image = StatusBarIcon.serverPreferencesIcon()
                         break
                     }
