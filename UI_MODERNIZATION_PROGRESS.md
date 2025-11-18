@@ -168,6 +168,8 @@ This report documents the progress made on Phase 2 of the UI modernization roadm
 
 ### Commits Summary
 ```
+e4eef15 feat(ui): add vibrancy effect to toast notifications
+7221469 docs: add password visibility icon migration to progress report
 fab4987 feat(ui): migrate password visibility icons to SF Symbols
 4b84069 docs: update documentation with Phase 2 completion summary
 75a8057 fix: update help and releases URLs to fork repository
@@ -248,6 +250,14 @@ Before merging, please verify:
    - Used in PreferencesWindowController for password show/hide toggle
    - Added `StatusBarIcon.passwordVisibility()` convenience method
 
+### Phase 2 Continuation (Completed - Session 2)
+2. **✅ Vibrancy Effects - Toast Window:**
+   - Added NSVisualEffectView for modern blur effect
+   - Uses .hudWindow material for authentic HUD appearance
+   - Automatic light/dark mode blur adaptation
+   - Replaced CALayer background with native vibrancy
+   - Maintains rounded corners and fade animations
+
 ### Phase 2 Future Work
 1. **Other UI Icons Migration:**
    - `terminal-logo.png` → SF Symbol (`terminal.fill`) - Not currently used in code
@@ -258,9 +268,9 @@ Before merging, please verify:
    - Table views (PreferencesWindowController.swift)
    - Buttons and controls
    - Form inputs with placeholders
+   - XIB file updates (requires Xcode on macOS)
 
-3. **Vibrancy Effects:**
-   - Toast window
+3. **Vibrancy Effects (Future):**
    - Preferences window
    - Dialog windows
 
@@ -383,13 +393,14 @@ If issues found:
 1. ✅ Migrated status bar icons to SF Symbols (StatusBarIcon.swift)
 2. ✅ Migrated UI colors to semantic colors with dark mode support (NSColor+Semantic.swift)
 3. ✅ Migrated password visibility icons to SF Symbols (eye.fill, eye.slash.fill)
-4. ✅ Fixed 3 compilation errors (@objc, toCGColor, XIB outlet)
-5. ✅ Updated fork repository URLs (help, plugin help, releases)
-6. ✅ Documented all console warnings in KNOWN_ISSUES.md
-7. ✅ Fixed server preferences auto-selection issue
-8. ✅ Patched MASShortcut deprecated API warnings
+4. ✅ Added vibrancy effects to toast notifications (NSVisualEffectView)
+5. ✅ Fixed 3 compilation errors (@objc, toCGColor, XIB outlet)
+6. ✅ Updated fork repository URLs (help, plugin help, releases)
+7. ✅ Documented all console warnings in KNOWN_ISSUES.md
+8. ✅ Fixed server preferences auto-selection issue
+9. ✅ Patched MASShortcut deprecated API warnings
 
-**Total commits:** 12
+**Total commits:** 14
 **Files created:** 2 (StatusBarIcon.swift, NSColor+Semantic.swift)
-**Files modified:** 10 (MenuBarManager.swift, ToastWindowController.swift, SWBQRCodeWindowController.m, UserRulesController.xib, AppDelegate.swift, PreferencesWindowController.swift, NSColor+Semantic.swift, StatusBarIcon.swift, and 2 project files)
+**Files modified:** 11 (MenuBarManager.swift, ToastWindowController.swift, SWBQRCodeWindowController.m, UserRulesController.xib, AppDelegate.swift, PreferencesWindowController.swift, NSColor+Semantic.swift, StatusBarIcon.swift, and 3 project/docs files)
 **Documentation updated:** 3 files (KNOWN_ISSUES.md, MODERNIZATION_ROADMAP.md, UI_MODERNIZATION_PROGRESS.md)
