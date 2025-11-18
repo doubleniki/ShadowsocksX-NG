@@ -223,10 +223,12 @@ class PreferencesWindowController: NSWindowController, NSTableViewDataSource, NS
 
         if identifier == "secure" {
             passwordTabView.selectTabViewItem(withIdentifier: "insecure")
-            togglePasswordVisibleButton.image = NSImage(named: "icons8-Eye Filled-50")
+            // Password is now visible, show eye.fill icon
+            togglePasswordVisibleButton.image = StatusBarIcon.passwordVisibility(visible: true)
         } else {
             passwordTabView.selectTabViewItem(withIdentifier: "secure")
-            togglePasswordVisibleButton.image = NSImage(named: "icons8-Blind Filled-50")
+            // Password is now hidden, show eye.slash.fill icon
+            togglePasswordVisibleButton.image = StatusBarIcon.passwordVisibility(visible: false)
         }
     }
 

@@ -108,6 +108,21 @@ extension StatusBarIcon {
             return icon(for: .enabled)
         }
     }
+
+    /// Get icon for password visibility toggle button
+    /// - Parameter visible: Whether password is currently visible (true = showing, false = hidden)
+    /// - Returns: NSImage for password visibility toggle
+    ///
+    /// **Legacy PNG Mapping:**
+    /// - `visible: true` → "icons8-Eye Filled-50" → eye.fill (password is showing, click to hide)
+    /// - `visible: false` → "icons8-Blind Filled-50" → eye.slash.fill (password is hidden, click to show)
+    ///
+    /// **Note:** The icon shows the *current* state, not the action.
+    /// When password is visible (true), show eye.fill. When hidden (false), show eye.slash.fill.
+    static func passwordVisibility(visible: Bool) -> NSImage {
+        let symbolName = visible ? "eye.fill" : "eye.slash.fill"
+        return OSVersion.symbol(primary: symbolName)
+    }
 }
 
 // MARK: - SF Symbols Reference
@@ -115,6 +130,7 @@ extension StatusBarIcon {
 /*
  SF Symbols Mapping Documentation:
 
+ ## Status Bar Icons
  | Icon Type      | SF Symbol            | Big Sur+ | Monterey+ | Description                    |
  |----------------|----------------------|----------|-----------|--------------------------------|
  | enabled        | paperplane.fill      | ✅       | ✅        | Default active state           |
@@ -123,6 +139,12 @@ extension StatusBarIcon {
  | global         | globe                | ✅       | ✅        | Global proxy mode              |
  | manual         | gearshape.fill       | ✅       | ✅        | Manual configuration           |
  | externalPAC    | link.circle.fill     | ✅       | ✅        | External PAC URL               |
+
+ ## Password Visibility Icons
+ | State          | SF Symbol            | Legacy PNG                  | Description                    |
+ |----------------|----------------------|-----------------------------|--------------------------------|
+ | visible        | eye.fill             | icons8-Eye Filled-50        | Password is showing            |
+ | hidden         | eye.slash.fill       | icons8-Blind Filled-50      | Password is hidden             |
 
  All symbols are available on macOS 11.0 (Big Sur)+
  No fallback needed as minimum deployment target is 11.0
@@ -133,4 +155,5 @@ extension StatusBarIcon {
  - ✅ Smaller app bundle size (~200KB savings)
  - ✅ Better accessibility (vector-based, crisp at any size)
  - ✅ Easier to maintain (no separate @2x files)
+ - ✅ Consistent with macOS Human Interface Guidelines
  */
