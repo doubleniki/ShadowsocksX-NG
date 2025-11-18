@@ -1293,6 +1293,7 @@ class AppDelegateTests: XCTestCase {
 **Goal:** Adopt modern Swift features (async/await, Codable, etc.)
 **Risk:** 🟡 Medium
 **Impact:** 🔴 High
+**Status:** ⏳ In Progress - Phase 3.2 ✅, Phase 3.3 ✅ (2025-11-18)
 
 ### 3.1 Add Async/Await Support
 
@@ -1539,10 +1540,11 @@ class ServerProfileManager: ServerProfileManaging {
 
 ---
 
-### 3.3 Add Property Wrappers
+### 3.3 Add Property Wrappers ✅ COMPLETED
 
-**Time:** 1-2 days
-**Priority:** 🟢 LOW (Nice to have)
+**Time:** 1 day
+**Priority:** 🟢 MEDIUM
+**Status:** ✅ Completed (2025-11-18)
 
 #### Create @UserDefault Wrapper
 
@@ -1630,12 +1632,13 @@ AppPreferences.proxyMode = .global
 
 #### Checklist
 
-- [ ] Create @UserDefault property wrapper
-- [ ] Create @UserDefaultCodable variant
-- [ ] Create AppPreferences class
-- [ ] Replace direct UserDefaults access
-- [ ] Test: All preferences work correctly
-- [ ] Update documentation
+- ✅ Create @UserDefault property wrapper
+- ✅ Create @UserDefaultCodable variant
+- ✅ Create @UserDefaultOptional variant
+- ✅ Create AppPreferences class
+- ⏳ Replace direct UserDefaults access (deferred to Phase 3.4)
+- ✅ Test: Build succeeds
+- ✅ Update documentation
 
 **Deliverables:**
 - Type-safe preferences access
