@@ -66,7 +66,7 @@ class PreferencesWindowController: NSWindowController, NSTableViewDataSource, NS
         methodTextField.addItems(withObjectValues: EncryptionMethod.allCases.map { $0.rawValue })
 
         // Configure modern table view style (macOS 11.0+)
-        configureModernTableView()
+        profilesTableView.applyModernStyle()
 
         // Configure text field placeholders
         configureTextFieldPlaceholders()
@@ -92,15 +92,7 @@ class PreferencesWindowController: NSWindowController, NSTableViewDataSource, NS
 
     // MARK: - Table View Configuration
 
-    private func configureModernTableView() {
-        // Modern fullWidth style (macOS 11.0+)
-        profilesTableView.style = .fullWidth
-        profilesTableView.floatsGroupRows = false
-        profilesTableView.rowSizeStyle = .default
-        profilesTableView.intercellSpacing = NSSize(width: 0, height: 2)
-        profilesTableView.selectionHighlightStyle = .regular
-        profilesTableView.usesAutomaticRowHeights = true
-    }
+
 
     private func configureTextFieldPlaceholders() {
         hostTextField.placeholderString = NSLocalizedString("Server IP or domain", comment: "")
@@ -521,5 +513,19 @@ class PreferencesWindowController: NSWindowController, NSTableViewDataSource, NS
         if let windowFrame = window?.frame {
             window?.animator().setFrameOrigin(windowFrame.origin)
         }
+    }
+}
+
+// MARK: - NSTableView Extension
+
+extension NSTableView {
+    /// Applies modern macOS 11.0+ table view styling
+    func applyModernStyle() {
+        self.style = .fullWidth
+        self.floatsGroupRows = false
+        self.rowSizeStyle = .default
+        self.intercellSpacing = NSSize(width: 0, height: 2)
+        self.selectionHighlightStyle = .regular
+        self.usesAutomaticRowHeights = true
     }
 }

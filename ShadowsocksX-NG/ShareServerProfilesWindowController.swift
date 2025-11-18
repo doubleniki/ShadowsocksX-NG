@@ -50,7 +50,7 @@ class ShareServerProfilesWindowController: NSWindowController, NSTableViewDataSo
         }
 
         // Configure modern table view style (macOS 11.0+)
-        configureModernTableView()
+        profilesTableView.applyModernStyle()
 
         profilesTableView.reloadData()
 
@@ -66,17 +66,7 @@ class ShareServerProfilesWindowController: NSWindowController, NSTableViewDataSo
         }
     }
 
-    // MARK: - Table View Configuration
 
-    private func configureModernTableView() {
-        // Modern fullWidth style (macOS 11.0+)
-        profilesTableView.style = .fullWidth
-        profilesTableView.floatsGroupRows = false
-        profilesTableView.rowSizeStyle = .default
-        profilesTableView.intercellSpacing = NSSize(width: 0, height: 2)
-        profilesTableView.selectionHighlightStyle = .regular
-        profilesTableView.usesAutomaticRowHeights = true
-    }
 
     // MARK: - Actions
 
