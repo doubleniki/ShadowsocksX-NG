@@ -86,8 +86,15 @@ This report documents the progress made on Phase 2 of the UI modernization roadm
 - Added automatic dark mode support for all UI elements
 - Improved accessibility with semantic color names
 - Better code maintainability
+- Added `@objc` attributes for Objective-C interoperability
+- Proper RGB color space conversion in `toCGColor()` method
 
 **Note:** `UserRulesController.swift` already uses semantic colors (`.secondaryLabelColor`, `.systemGreen`) - no migration needed.
+
+**Compilation Fixes Applied:**
+1. Added `@objc` attributes to all color properties for Objective-C visibility
+2. Fixed `toCGColor()` implementation to use `usingColorSpace(.deviceRGB)` (returns optional)
+3. Added Swift bridging header import to `SWBQRCodeWindowController.m`
 
 ### 3. ✅ MenuBarManager Migration
 
@@ -109,7 +116,25 @@ This report documents the progress made on Phase 2 of the UI modernization roadm
 - Eliminated error-prone PNG name string literals
 - Cleaner, more maintainable codebase
 
-### 5. ✅ Xcode Project Integration
+### 5. ✅ Bug Fixes
+
+**Fixed Issues:**
+
+1. **XIB Outlet Connection Error (UserRulesController.xib):**
+   - Error: `Failed to connect (didCancel) outlet from (UserRulesController) to (NSButton)`
+   - Cause: `didCancel` is an `@IBAction` method, not an `@IBOutlet` property
+   - Fix: Removed incorrect outlet connection from XIB file
+   - File: `ShadowsocksX-NG/Base.lproj/UserRulesController.xib:11`
+
+2. **Fork Repository URLs:**
+   - Updated all GitHub links from `shadowsocks/ShadowsocksX-NG` to `doubleniki/ShadowsocksX-NG`
+   - Files updated:
+     - `AppDelegate.swift:421` - Help menu wiki link
+     - `AppDelegate.swift:408` - Check for updates releases link
+     - `PreferencesWindowController.swift:236` - Plugin help wiki link
+   - Ensures users access correct wiki and releases for this fork
+
+### 6. ✅ Xcode Project Integration
 
 **Action Taken:**
 - Added `StatusBarIcon.swift` to `ShadowsocksX-NG.xcodeproj` using xcodeproj gem
@@ -123,20 +148,38 @@ This report documents the progress made on Phase 2 of the UI modernization roadm
 
 ### Files Modified
 1. `docs/ui-modernization/MODERNIZATION_ROADMAP.md` - Updated Phase 2 status
-2. `docs/KNOWN_ISSUES.md` - Documented console warnings
+2. `docs/KNOWN_ISSUES.md` - Documented console warnings and fixes
 3. `ShadowsocksX-NG/StatusBarIcon.swift` - NEW file (144 lines)
 4. `ShadowsocksX-NG/NSColor+Semantic.swift` - NEW file (118 lines)
 5. `ShadowsocksX-NG/MenuBarManager.swift` - Migrated to SF Symbols (reduced code)
 6. `ShadowsocksX-NG/ToastWindowController.swift` - Migrated to semantic colors
-7. `ShadowsocksX-NG/SWBQRCodeWindowController.m` - Migrated to semantic colors
-8. `ShadowsocksX-NG.xcodeproj/project.pbxproj` - Added new files to project
+7. `ShadowsocksX-NG/SWBQRCodeWindowController.m` - Migrated to semantic colors, added Swift bridging header
+8. `ShadowsocksX-NG/Base.lproj/UserRulesController.xib` - Fixed incorrect outlet connection
+9. `ShadowsocksX-NG/AppDelegate.swift` - Updated help and releases URLs to fork repository
+10. `ShadowsocksX-NG/PreferencesWindowController.swift` - Updated plugin help URL to fork repository
+11. `ShadowsocksX-NG.xcodeproj/project.pbxproj` - Added new files to project
 
 ### Code Metrics
 - **Lines added:** ~262 (StatusBarIcon.swift + NSColor+Semantic.swift)
-- **Lines removed:** ~30 (MenuBarManager.swift boilerplate)
-- **Lines modified:** ~6 (ToastWindowController.swift + SWBQRCodeWindowController.m)
-- **Net change:** +238 lines
-- **Code quality:** Improved (removed hardcoded colors, added type safety, dark mode support)
+- **Lines removed:** ~31 (MenuBarManager.swift boilerplate + 1 XIB outlet line)
+- **Lines modified:** ~10 (ToastWindowController.swift, SWBQRCodeWindowController.m, AppDelegate.swift, PreferencesWindowController.swift)
+- **Net change:** +241 lines
+- **Code quality:** Improved (removed hardcoded colors, added type safety, dark mode support, fixed URLs)
+
+### Commits Summary
+```
+75a8057 fix: update help and releases URLs to fork repository
+d375ec4 fix: remove incorrect didCancel outlet from UserRulesController XIB
+8598fbe fix: add @objc attributes for Objective-C compatibility
+11e6805 fix: correct toCGColor() implementation in NSColor+Semantic
+14e5718 feat(ui): migrate to semantic colors for dark mode support
+89a7b73 chore: apply MASShortcut deprecation patch to Pods
+7328e9d fix: patch MASShortcut NSKeyedUnarchiveFromData deprecation
+d213e64 fix: auto-select first server in preferences window
+ee680f8 docs: update progress report with NSToolbarItem issue
+cdbb72e docs: add NSToolbarItem deprecation warning documentation
+da86308 feat(ui): migrate status bar icons to SF Symbols
+```
 
 ---
 
@@ -253,6 +296,19 @@ See `docs/KNOWN_ISSUES.md` for detailed solutions.
 
 All warnings are harmless and do not affect functionality.
 
+### 3. XIB Outlet Connection Error (Fixed ✅)
+
+**Issue:** Runtime error in console:
+```
+Failed to connect (didCancel) outlet from (ShadowsocksX_NG.UserRulesController) to (NSButton): missing setter or instance variable
+```
+
+**Root Cause:** XIB file had incorrect outlet connection for `didCancel`, which is an `@IBAction` method, not an `@IBOutlet` property.
+
+**Fix Applied:** Removed incorrect outlet connection from `UserRulesController.xib:11`
+
+**Status:** ✅ Fixed and committed
+
 ---
 
 ## Notes for Reviewers
@@ -309,3 +365,21 @@ If issues found:
 **Prepared by:** Claude Code (AI Assistant)
 **Review Status:** ⏳ Pending human review and testing
 **Target Branch:** `claude/review-ui-modernization-01QY4zr7y3UEdzN5bFzP2MgQ`
+
+---
+
+## Session Summary (2025-11-18)
+
+**Completed in this session:**
+1. ✅ Migrated status bar icons to SF Symbols (StatusBarIcon.swift)
+2. ✅ Migrated UI colors to semantic colors with dark mode support (NSColor+Semantic.swift)
+3. ✅ Fixed 3 compilation errors (@objc, toCGColor, XIB outlet)
+4. ✅ Updated fork repository URLs (help, plugin help, releases)
+5. ✅ Documented all console warnings in KNOWN_ISSUES.md
+6. ✅ Fixed server preferences auto-selection issue
+7. ✅ Patched MASShortcut deprecated API warnings
+
+**Total commits:** 11
+**Files created:** 2 (StatusBarIcon.swift, NSColor+Semantic.swift)
+**Files modified:** 9
+**Documentation updated:** 3 files (KNOWN_ISSUES.md, MODERNIZATION_ROADMAP.md, UI_MODERNIZATION_PROGRESS.md)
