@@ -343,19 +343,28 @@ extension NSFont {
 **Dependencies:** Phase 1 complete ✅
 **Minimum macOS:** 11.0 (Big Sur) - No version bump
 **Target Completion:** Q1 2025
+**Last Updated:** 2025-11-18
 
 ### Objectives
 
 Migrate visual assets to SF Symbols and update UI controls to modern macOS standards.
 
-### Status
+### Current Status (2025-11-18)
+
+**Completed:**
+- ✅ OSVersion utility fully implemented and tested (303 lines + 297 test lines)
+- ✅ OSVersion integrated in AppDelegate for version validation
+- ✅ Comprehensive test suite with 100% coverage of OSVersion features
 
 **In Progress:**
+- 🚧 SF Symbols migration - MenuBarManager.swift identified as primary target
+  - Current: Uses PNG assets (menu_icon, menu_p_icon, menu_g_icon, menu_m_icon, menu_e_icon)
+  - Next: Migrate to SF Symbols using OSVersion.symbol() helper
 
-- ✅ OSVersion utility integrated
-- 🚧 SF Symbols migration ongoing
-- 📋 Semantic colors planned
-- 📋 Component modernization planned
+**Pending:**
+- 📋 Semantic colors migration - ToastWindowController, SWBQRCodeWindowController
+- 📋 Component modernization - Table views, buttons, forms
+- 📋 Vibrancy effects - Window materials
 
 ### Tasks
 
@@ -2389,7 +2398,8 @@ For questions or suggestions about this roadmap:
 
 - v1.0 (2025-11-02): Initial roadmap created
 - v2.0 (2025-11-07): **Major update** - Reflected current state (macOS 11.0+ baseline, Phase 1 complete, OSVersion utility implemented)
-- v2.1 (TBD): Updates after Phase 2 completion
+- v2.1 (2025-11-18): **Progress update** - Phase 2 status updated, identified MenuBarManager.swift as primary SF Symbols migration target, documented current implementation state
+- v2.2 (TBD): Updates after Phase 2 completion
 - v3.0 (TBD): Major revision after Phase 3 lessons learned
 
 ---

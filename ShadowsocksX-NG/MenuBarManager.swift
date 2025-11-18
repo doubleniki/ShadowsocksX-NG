@@ -82,11 +82,8 @@ class MenuBarManager {
     // MARK: - Setup
 
     private func setupStatusItem() {
-        guard let image = NSImage(named: "menu_icon") else {
-            ErrorHandler.shared.warning("menu_icon image not found")
-            return
-        }
-        image.isTemplate = true
+        // Use SF Symbols via StatusBarIcon (Phase 2 modernization)
+        let image = StatusBarIcon.icon(for: .enabled)
         statusItem.button?.image = image
         statusItem.menu = statusMenu
     }
@@ -128,45 +125,10 @@ class MenuBarManager {
         let mode = preferences.string(forKey: "ShadowsocksRunningMode")
         let isOn = preferences.bool(forKey: Constants.UserDefaults.shadowsocksOn)
 
-        if isOn {
-            if let currentMode = mode {
-                let iconName: String
-                switch currentMode {
-                case "auto":
-                    iconName = "menu_p_icon"
-                case "global":
-                    iconName = "menu_g_icon"
-                case "manual":
-                    iconName = "menu_m_icon"
-                case "externalPAC":
-                    iconName = "menu_e_icon"
-                default:
-                    iconName = "menu_icon"
-                }
-
-                if let image = loadIconWithFallback(named: iconName) {
-                    statusItem.button?.image = image
-                    statusItem.button?.image?.isTemplate = true
-                }
-            }
-        } else {
-            if let image = loadIconWithFallback(named: "menu_icon_disabled") {
-                statusItem.button?.image = image
-                statusItem.button?.image?.isTemplate = true
-            }
-        }
-    }
-
-    private func loadIconWithFallback(named name: String, fallback: String = "menu_icon_disabled") -> NSImage? {
-        if let image = NSImage(named: name) {
-            return image
-        } else {
-            ErrorHandler.shared.warning(
-                "Missing status bar icon asset: \(name), using fallback: \(fallback)",
-                context: "MenuBarManager"
-            )
-            return NSImage(named: fallback)
-        }
+        // Use SF Symbols via StatusBarIcon (Phase 2 modernization)
+        // Replaces PNG assets with vector-based SF Symbols for better scaling
+        let image = StatusBarIcon.icon(forMode: mode, isEnabled: isOn)
+        statusItem.button?.image = image
     }
 
     func updateMainMenu() {
