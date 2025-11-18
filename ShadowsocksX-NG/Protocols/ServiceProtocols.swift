@@ -11,7 +11,7 @@ import Foundation
 // MARK: - Server Profile Management
 
 /// Protocol for managing server profiles
-protocol ServerProfileManaging {
+protocol ServerProfileManaging: AnyObject {
     var profiles: [ServerProfile] { get set }
     var activeProfileId: String? { get set }
 
@@ -25,7 +25,7 @@ protocol ServerProfileManaging {
 // MARK: - Preferences Management
 
 /// Protocol for managing user preferences
-protocol PreferencesManaging {
+protocol PreferencesManaging: AnyObject {
     func bool(forKey key: String) -> Bool
     func integer(forKey key: String) -> Int
     func string(forKey key: String) -> String?
@@ -44,7 +44,7 @@ protocol PreferencesManaging {
 // MARK: - Keychain Management
 
 /// Protocol for managing Keychain operations
-protocol KeychainManaging {
+protocol KeychainManaging: AnyObject {
     func getPassword(forAccount account: String) -> String?
     func savePassword(_ password: String, forAccount account: String) -> Bool
     func deletePassword(forAccount account: String) -> Bool
@@ -53,7 +53,7 @@ protocol KeychainManaging {
 // MARK: - Launch Agent Management
 
 /// Protocol for managing Launch Agent services
-protocol LaunchAgentManaging {
+protocol LaunchAgentManaging: AnyObject {
     func generateSSLocalLaunchAgentPlist() -> Bool
     func generatePrivoxyLaunchAgentPlist() -> Bool
     func generateKcptunLaunchAgentPlist() -> Bool
@@ -69,7 +69,7 @@ protocol LaunchAgentManaging {
 // MARK: - File System Management
 
 /// Protocol for file system operations
-protocol FileSystemManaging {
+protocol FileSystemManaging: AnyObject {
     func fileExists(atPath path: String) -> Bool
     func createDirectory(
         atPath path: String,
