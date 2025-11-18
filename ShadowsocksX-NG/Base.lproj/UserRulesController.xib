@@ -8,7 +8,6 @@
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="UserRulesController" customModule="ShadowsocksX_NG" customModuleProvider="target">
             <connections>
-                <outlet property="didCancel" destination="2bi-hW-nd9" id="wKx-Nb-7Kt"/>
                 <outlet property="userRulesView" destination="4yV-hS-knY" id="HF3-TH-oBY"/>
                 <outlet property="window" destination="F0z-JX-Cv5" id="gIp-Ho-8D9"/>
             </connections>
