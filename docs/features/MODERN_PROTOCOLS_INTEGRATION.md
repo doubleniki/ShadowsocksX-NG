@@ -192,68 +192,228 @@ struct WebSocketSettings: Codable {
 }
 ```
 
-#### 1.2 ServerProfile Extensions
+#### 1.2 Protocol-Specific Configuration Types
+
+**File**: `ShadowsocksX-NG/ProtocolConfigs.swift` (new file)
+
+Use typed configuration pattern instead of nullable fields:
+
+```swift
+// MARK: - Protocol Configuration (Type-Safe Approach)
+
+/// Sealed enum containing protocol-specific configuration
+enum ProtocolConfig: Codable {
+    case shadowsocks(ShadowsocksConfig)
+    case shadowsocks2022(Shadowsocks2022Config)
+    case vless(VLESSConfig)
+    case vmess(VMessConfig)
+    case trojan(TrojanConfig)
+    case hysteria2(Hysteria2Config)
+
+    var protocolType: ProtocolType {
+        switch self {
+        case .shadowsocks: return .shadowsocks
+        case .shadowsocks2022: return .shadowsocks2022
+        case .vless: return .vless
+        case .vmess: return .vmess
+        case .trojan: return .trojan
+        case .hysteria2: return .hysteria2
+        }
+    }
+}
+
+// MARK: - Shadowsocks Configs
+
+struct ShadowsocksConfig: Codable {
+    var method: String
+    var password: String
+    var plugin: String?
+    var pluginOptions: String?
+
+    func isValid() -> Bool {
+        return !method.isEmpty && !password.isEmpty
+    }
+}
+
+struct Shadowsocks2022Config: Codable {
+    var method: String              // 2022-blake3-aes-256-gcm
+    var key: String                 // Base64 key (not password)
+    var plugin: String?
+    var pluginOptions: String?
+
+    func isValid() -> Bool {
+        return method.hasPrefix("2022-") && !key.isEmpty
+    }
+}
+
+// MARK: - VLESS Config
+
+struct VLESSConfig: Codable {
+    var userId: String
+    var flow: String                // "", "xtls-rprx-vision"
+    var transport: TransportSettings
+    var security: SecuritySettings
+
+    func isValid() -> Bool {
+        return !userId.isEmpty && transport.isValid() && security.isValid()
+    }
+}
+
+// MARK: - VMess Config
+
+struct VMessConfig: Codable {
+    var userId: String
+    var alterId: Int
+    var encryption: String          // "auto", "aes-128-gcm", etc.
+    var transport: TransportSettings
+    var security: SecuritySettings
+
+    func isValid() -> Bool {
+        return !userId.isEmpty && !encryption.isEmpty &&
+               transport.isValid() && security.isValid()
+    }
+}
+
+// MARK: - Trojan Config
+
+struct TrojanConfig: Codable {
+    var password: String
+    var transport: TransportSettings
+    var security: SecuritySettings
+
+    func isValid() -> Bool {
+        return !password.isEmpty && transport.isValid() && security.isValid()
+    }
+}
+
+// MARK: - Hysteria2 Config
+
+struct Hysteria2Config: Codable {
+    var password: String
+    var obfuscation: String?
+    var upBandwidth: Int            // Mbps
+    var downBandwidth: Int          // Mbps
+
+    func isValid() -> Bool {
+        return !password.isEmpty && upBandwidth > 0 && downBandwidth > 0
+    }
+}
+
+// MARK: - Transport & Security Settings
+
+struct TransportSettings: Codable {
+    var network: TransportType
+    var wsSettings: WebSocketSettings?
+    var h2Settings: HTTP2Settings?
+    var grpcSettings: GRPCSettings?
+
+    func isValid() -> Bool {
+        switch network {
+        case .tcp: return true
+        case .ws: return wsSettings != nil
+        case .h2: return h2Settings != nil
+        case .grpc: return grpcSettings != nil
+        }
+    }
+}
+
+struct HTTP2Settings: Codable {
+    var path: String = "/"
+    var host: [String] = []
+}
+
+struct GRPCSettings: Codable {
+    var serviceName: String
+}
+
+struct SecuritySettings: Codable {
+    var type: SecurityType
+    var tlsSettings: TLSSettings?
+    var realitySettings: RealitySettings?
+
+    func isValid() -> Bool {
+        switch type {
+        case .none: return true
+        case .tls: return tlsSettings != nil
+        case .reality: return realitySettings != nil
+        }
+    }
+}
+```
 
 **File**: `ShadowsocksX-NG/ServerProfile.swift`
 
-Add new properties:
+Replace nullable fields with single typed config:
 
 ```swift
 class ServerProfile: NSObject, NSCoding {
-    // Existing properties
+    // Common properties
     var uuid: String
     var serverHost: String
     var serverPort: UInt16
     var remark: String
 
-    // NEW: Protocol type selection
-    var protocolType: ProtocolType = .shadowsocks
+    // Single typed config field (replaces all nullable fields)
+    var config: ProtocolConfig
 
-    // Shadowsocks-specific (nullable for other protocols)
-    var method: String? // Encryption method
-    var password: String? // Also used by Trojan
-    var plugin: String?
-    var pluginOptions: String?
+    // Convenience computed property
+    var protocolType: ProtocolType {
+        return config.protocolType
+    }
 
-    // VLESS/VMess-specific
-    var userId: String? // UUID for VLESS/VMess
-    var alterId: Int? // VMess only (legacy)
-    var encryption: String? // VMess: "auto", "aes-128-gcm", "chacha20-poly1305", "none"
-    var flow: String? // VLESS: "", "xtls-rprx-vision"
+    // Type-safe initializers
+    init(host: String, port: UInt16, config: ProtocolConfig) {
+        self.uuid = UUID().uuidString
+        self.serverHost = host
+        self.serverPort = port
+        self.remark = ""
+        self.config = config
+        super.init()
+    }
 
-    // Transport settings (VLESS/VMess/Trojan)
-    var network: TransportType = .tcp
-    var security: SecurityType = .none
-    var tlsSettings: TLSSettings?
-    var realitySettings: RealitySettings?
-    var wsSettings: WebSocketSettings?
+    // Legacy convenience initializer (backward compatibility)
+    convenience init(host: String, port: UInt16, method: String, password: String) {
+        let config = ProtocolConfig.shadowsocks(
+            ShadowsocksConfig(method: method, password: password)
+        )
+        self.init(host: host, port: port, config: config)
+    }
 
-    // Hysteria2-specific
-    var obfuscation: String? // Salamander password
-    var upBandwidth: Int? // Mbps
-    var downBandwidth: Int? // Mbps
-
-    // ... existing methods ...
-
-    // NEW: Protocol-specific validation
+    // Type-safe validation
     func isValid() -> Bool {
         guard !serverHost.isEmpty && serverPort > 0 else { return false }
 
-        switch protocolType {
-        case .shadowsocks, .shadowsocks2022:
-            return method != nil && password != nil
-        case .vless:
-            return userId != nil
-        case .vmess:
-            return userId != nil
-        case .trojan:
-            return password != nil
-        case .hysteria2:
-            return password != nil
+        switch config {
+        case .shadowsocks(let ss): return ss.isValid()
+        case .shadowsocks2022(let ss): return ss.isValid()
+        case .vless(let vless): return vless.isValid()
+        case .vmess(let vmess): return vmess.isValid()
+        case .trojan(let trojan): return trojan.isValid()
+        case .hysteria2(let hy2): return hy2.isValid()
+        }
+    }
+
+    // Config generation
+    func generateConfig() -> [String: Any] {
+        switch config {
+        case .shadowsocks(let ss): return toShadowsocksConfig(ss)
+        case .shadowsocks2022(let ss): return toShadowsocks2022Config(ss)
+        case .vless(let vless): return toXrayVLESSConfig(vless)
+        case .vmess(let vmess): return toXrayVMessConfig(vmess)
+        case .trojan(let trojan): return toXrayTrojanConfig(trojan)
+        case .hysteria2(let hy2): return toHysteria2Config(hy2)
         }
     }
 }
 ```
+
+**Benefits of Typed Config Pattern:**
+- ✅ Type safety: Impossible to mix protocol-specific fields
+- ✅ Null safety: No nullable fields, only valid configs exist
+- ✅ Scalability: Adding protocols doesn't pollute ServerProfile
+- ✅ Clear API: `config.vless.userId` vs ambiguous `userId?`
+- ✅ Validation: Protocol-specific validation logic encapsulated
+- ✅ Pattern matching: Exhaustive switch statements catch errors
 
 #### 1.3 URL Parsing Extensions
 
