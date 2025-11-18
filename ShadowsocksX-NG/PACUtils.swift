@@ -278,6 +278,14 @@ func generatePACFile() -> Bool {
 }
 // swiftlint:enable function_body_length cyclomatic_complexity
 
+/// Generates PAC file asynchronously on background thread
+/// - Returns: True if generation succeeded
+func generatePACFileAsync() async -> Bool {
+    await Task.detached {
+        generatePACFile()
+    }.value
+}
+
 func updatePACFromGFWList() {
     // Make the dir if rulesDirPath is not exesited.
     if !FileManager.default.fileExists(atPath: PACRulesDirPath) {
@@ -320,4 +328,59 @@ func updatePACFromGFWList() {
                 NotificationService.shared.send(title: "Failed to download latest GFW List.".localized)
             }
         }
+}
+
+// MARK: - Async/Await Version
+
+/// Updates PAC file from GFW List (async version)
+/// - Returns: True if update and generation succeeded
+/// - Throws: PACError or FileSystemError on failure
+func updatePACFromGFWListAsync() async throws -> Bool {
+    // Create directory if needed
+    if !FileManager.default.fileExists(atPath: PACRulesDirPath) {
+        try FileManager.default.createDirectory(
+            atPath: PACRulesDirPath,
+            withIntermediateDirectories: true,
+            attributes: nil
+        )
+    }
+
+    let urlString = AppPreferences.gfwListURL
+
+    // Download GFW List using continuation to bridge callback-based API
+    let data = try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<String, Error>) in
+        AF.request(urlString)
+            .validate()
+            .responseString { response in
+                switch response.result {
+                case .success(let value):
+                    continuation.resume(returning: value)
+                case .failure(let error):
+                    continuation.resume(throwing: error)
+                }
+            }
+    }
+
+    // Write to file on background thread
+    try await Task.detached {
+        try data.write(
+            toFile: GFWListFilePath,
+            atomically: true,
+            encoding: String.Encoding.utf8
+        )
+    }.value
+
+    // Generate PAC file asynchronously
+    let success = await generatePACFileAsync()
+
+    // Send notification on main thread
+    await MainActor.run {
+        if success {
+            NotificationService.shared.send(
+                title: "PAC has been updated by latest GFW List.".localized
+            )
+        }
+    }
+
+    return success
 }
