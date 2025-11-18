@@ -99,18 +99,18 @@ extension NSColor {
     /// Convert NSColor to CGColor for use with CALayer.
     ///
     /// This is a convenience method for converting semantic NSColors to CGColors
-    /// when working with Core Animation layers.
+    /// when working with Core Animation layers. Ensures the color is in RGB color space
+    /// for maximum compatibility with CALayer.
     ///
     /// - Returns: CGColor representation of this color
     func toCGColor() -> CGColor {
-        guard let cgColor = self.cgColor else {
-            // Fallback: Convert through color space if direct conversion fails
-            let components = self.cgColor.components ?? [0, 0, 0, 1]
-            return CGColor(
-                colorSpace: CGColorSpaceCreateDeviceRGB(),
-                components: components
-            )!
+        // Convert to RGB color space for CALayer compatibility
+        // Some NSColors use calibrated or device-specific color spaces
+        if let rgbColor = self.usingColorSpace(.deviceRGB) {
+            return rgbColor.cgColor
         }
-        return cgColor
+
+        // Fallback: return color as-is if RGB conversion fails
+        return self.cgColor
     }
 }
