@@ -80,8 +80,20 @@ jobs:
           restore-keys: |
             pods-
 
-      - name: Install CocoaPods dependencies
+      # Кеширование Bundler gems
+      - name: Cache Bundler gems
+        uses: actions/cache@v4
+        with:
+          path: vendor/bundle
+          key: gems-${{ runner.os }}-${{ hashFiles('Gemfile.lock') }}
+          restore-keys: |
+            gems-${{ runner.os }}-
+
+      - name: Install Bundler and dependencies
         run: |
+          # Install Bundler
+          gem install bundler
+          bundle install --path vendor/bundle
           # Setup CocoaPods to skip trunk repo cloning
           mkdir -p ~/.cocoapods/repos
           # Use CDN-only mode by removing any existing trunk repo
@@ -89,7 +101,7 @@ jobs:
           # Retry pod install up to 3 times with 10 second delay
           for i in 1 2 3; do
             echo "Attempt $i: Running pod install..."
-            pod install && break || {
+            bundle exec pod install && break || {
               echo "pod install failed on attempt $i"
               if [ $i -lt 3 ]; then
                 echo "Waiting 10 seconds before retry..."
