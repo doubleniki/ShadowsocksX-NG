@@ -107,9 +107,8 @@ func generateSSLocalLaunchAgentPlist() -> Bool {
 
     let oldSha1Sum = getFileSHA1Sum(plistFilepath)
 
-    let defaults = UserDefaults.standard
-    let enableUdpRelay = defaults.bool(forKey: "LocalSocks5.EnableUDPRelay")
-    let enableVerboseMode = defaults.bool(forKey: "LocalSocks5.EnableVerboseMode")
+    let enableUdpRelay = AppPreferences.enableUDPRelay
+    let enableVerboseMode = AppPreferences.enableVerboseMode
 
     var arguments = [sslocalPath, "-c", "ss-local-config.json"]
     if enableUdpRelay {
@@ -335,7 +334,7 @@ func syncSSLocal() {
             changed = changed || writeSSLocalConfFile((profile.toJsonConfig()))
         }
 
-        let on = UserDefaults.standard.bool(forKey: Constants.UserDefaults.shadowsocksOn)
+        let on = AppPreferences.shadowsocksOn
         if on {
             if changed {
                 stopSSLocal()
@@ -657,9 +656,8 @@ func generateKcptunLaunchAgentPlist() -> Bool {
         }
     }
 
-    let defaults = UserDefaults.standard
-    let localHost = defaults.string(forKey: "LocalSocks5.ListenAddress") ?? "127.0.0.1"
-    let localPort = defaults.integer(forKey: "LocalSocks5.ListenPort")
+    let localHost = AppPreferences.socksAddress
+    let localPort = AppPreferences.socksPort
 
     var environment: [String: String] = [
         "SS_REMOTE_HOST": profile.serverHost,
@@ -847,7 +845,6 @@ func installPrivoxy() {
 
 func writePrivoxyConfFile() -> Bool {
     do {
-        let defaults = UserDefaults.standard
         let bundle = Bundle.main
         guard let templatePath = bundle.path(forResource: "privoxy.template.config", ofType: nil)
         else {
@@ -862,19 +859,10 @@ func writePrivoxyConfFile() -> Bool {
         // Read template file
         var template = try String(contentsOfFile: templatePath, encoding: .utf8)
 
-        guard let httpAddress = defaults.string(forKey: "LocalHTTP.ListenAddress"),
-            let socks5Address = defaults.string(forKey: "LocalSocks5.ListenAddress")
-        else {
-            ErrorHandler.shared.handle(
-                PACError.invalidFormat(reason: "Proxy addresses not configured in defaults"),
-                context: "Write Privoxy Config",
-                showAlert: true
-            )
-            return false
-        }
-
-        let httpPort = defaults.integer(forKey: "LocalHTTP.ListenPort")
-        let socks5Port = defaults.integer(forKey: "LocalSocks5.ListenPort")
+        let httpAddress = AppPreferences.httpListenAddress
+        let socks5Address = AppPreferences.socksAddress
+        let httpPort = AppPreferences.httpPort
+        let socks5Port = AppPreferences.socksPort
 
         template = template.replacingOccurrences(of: "{http}", with: "\(httpAddress):\(httpPort)")
         template = template.replacingOccurrences(
@@ -929,7 +917,7 @@ func syncPrivoxy() {
     if mgr.activeProfileId != nil {
         changed = changed || writePrivoxyConfFile()
 
-        let on = UserDefaults.standard.bool(forKey: "LocalHTTPOn")
+        let on = AppPreferences.httpProxyEnabled
         if on {
             if changed {
                 stopPrivoxy()

@@ -71,10 +71,25 @@ enum AppPreferences {
 
     // MARK: - Advanced Settings
 
+    @UserDefault(wrappedValue: false, Constants.UserDefaults.enableUDPRelay)
+    static var enableUDPRelay: Bool
+
+    @UserDefault(wrappedValue: false, Constants.UserDefaults.enableVerboseMode)
+    static var enableVerboseMode: Bool
+
+    @UserDefault(wrappedValue: "127.0.0.1", Constants.UserDefaults.httpListenAddress)
+    static var httpListenAddress: String
+
+    @UserDefault(wrappedValue: true, Constants.UserDefaults.pacServerBindToLocalhost)
+    static var pacServerBindToLocalhost: Bool
+
+    @UserDefault(wrappedValue: "https://raw.githubusercontent.com/gfwlist/gfwlist/master/gfwlist.txt", Constants.UserDefaults.gfwListURL)
+    static var gfwListURL: String
+
     @UserDefault(wrappedValue: false, "VerboseMode")
     static var verboseMode: Bool
 
-    @UserDefault(wrappedValue: true, "AutoCheckUpdates")
+    @UserDefault(wrappedValue: true, Constants.UserDefaults.autoCheckUpdates)
     static var autoCheckUpdates: Bool
 
     @UserDefault(wrappedValue: "", "PACUserRules")

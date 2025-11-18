@@ -20,14 +20,14 @@ let GFWListFilePath = PACRulesDirPath + "gfwlist.txt"
 func syncPac() {
     var needGenerate = false
 
-    let nowSocks5Address = UserDefaults.standard.string(forKey: "LocalSocks5.ListenAddress")
+    let nowSocks5Address = AppPreferences.socksAddress
     let oldSocks5Address = UserDefaults.standard.string(forKey: "LocalSocks5.ListenAddress.Old")
     if nowSocks5Address != oldSocks5Address {
         needGenerate = true
         UserDefaults.standard.set(nowSocks5Address, forKey: "LocalSocks5.ListenAddress.Old")
     }
 
-    let nowSocks5Port = UserDefaults.standard.integer(forKey: "LocalSocks5.ListenPort")
+    let nowSocks5Port = AppPreferences.socksPort
     let oldSocks5Port = UserDefaults.standard.integer(forKey: "LocalSocks5.ListenPort.Old")
     if nowSocks5Port != oldSocks5Port {
         needGenerate = true
@@ -126,17 +126,8 @@ func generatePACFile() -> Bool {
         }
     }
 
-    guard let socks5Address = UserDefaults.standard.string(forKey: "LocalSocks5.ListenAddress")
-    else {
-        ErrorHandler.shared.handle(
-            PACError.invalidFormat(reason: "LocalSocks5.ListenAddress not configured"),
-            context: "Generate PAC File",
-            showAlert: true,
-            critical: true
-        )
-        return false
-    }
-    let socks5Port = UserDefaults.standard.integer(forKey: "LocalSocks5.ListenPort")
+    let socks5Address = AppPreferences.socksAddress
+    let socks5Port = AppPreferences.socksPort
 
     do {
         let gfwlist = try String(contentsOfFile: GFWListFilePath, encoding: String.Encoding.utf8)
@@ -303,14 +294,7 @@ func updatePACFromGFWList() {
         }
     }
 
-    guard let url = UserDefaults.standard.string(forKey: "GFWListURL") else {
-        ErrorHandler.shared.handle(
-            PACError.invalidFormat(reason: "GFWListURL not configured"),
-            context: "Update PAC from GFW List",
-            showAlert: false
-        )
-        return
-    }
+    let url = AppPreferences.gfwListURL
     AF.request(url)
         .validate()
         .responseString {
