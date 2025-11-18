@@ -526,6 +526,6 @@ extension NSTableView {
         self.rowSizeStyle = .default
         self.intercellSpacing = NSSize(width: 0, height: 2)
         self.selectionHighlightStyle = .regular
-        self.usesAutomaticRowHeights = true
+        // Note: usesAutomaticRowHeights removed - requires proper Auto Layout constraints in XIB
     }
 }
