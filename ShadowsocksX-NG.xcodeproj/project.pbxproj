@@ -94,6 +94,7 @@
 		A249331B2EBE590D00F0C1E6 /* OSVersion.swift in Sources */ = {isa = PBXBuildFile; fileRef = A249331A2EBE590D00F0C1E6 /* OSVersion.swift */; };
 		A249331E2EBE594200F0C1E6 /* OSVersionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A249331D2EBE594200F0C1E6 /* OSVersionTests.swift */; };
 		A28467682EC21FE1000A6372 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = A28467662EC21FE1000A6372 /* Constants.swift */; };
+		AD47DDD629539395E6F2B0DA /* NSColor+Semantic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AFF51E6055923E29AE8E9F8 /* NSColor+Semantic.swift */; };
 		B5A2AB04221A72EC003F77B7 /* install_v2ray_plugin.sh in Resources */ = {isa = PBXBuildFile; fileRef = B5A2AB02221A72EC003F77B7 /* install_v2ray_plugin.sh */; };
 		BF7031FBFD924E2B87DBAB09 /* ErrorHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88EDAF36017C4A4D8838BA44 /* ErrorHandler.swift */; };
 		C6D429931DA75988002A5711 /* install_privoxy.sh in Resources */ = {isa = PBXBuildFile; fileRef = C6D4298E1DA75988002A5711 /* install_privoxy.sh */; };
@@ -171,6 +172,7 @@
 		33590EDD35D8C3520FCC8A19 /* NotificationService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
 		388120F062D7EB7DD0D8DDCA /* Pods_ShadowsocksX_NGTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_ShadowsocksX_NGTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		3AC7CD9886196A997D6FC78D /* Pods-ShadowsocksX-NGTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ShadowsocksX-NGTests.release.xcconfig"; path = "Pods/Target Support Files/Pods-ShadowsocksX-NGTests/Pods-ShadowsocksX-NGTests.release.xcconfig"; sourceTree = "<group>"; };
+		3AFF51E6055923E29AE8E9F8 /* NSColor+Semantic.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "NSColor+Semantic.swift"; sourceTree = "<group>"; };
 		4CF8494CFCBB4AC77D5CD88A /* ProxyCoordinator.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ProxyCoordinator.swift; sourceTree = "<group>"; };
 		5B6203C1228FCD3D365814AC /* Pods-ShadowsocksX-NGTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ShadowsocksX-NGTests.debug.xcconfig"; path = "Pods/Target Support Files/Pods-ShadowsocksX-NGTests/Pods-ShadowsocksX-NGTests.debug.xcconfig"; sourceTree = "<group>"; };
 		5CEA8F9AE3FEEA2087325A98 /* StatusBarIcon.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StatusBarIcon.swift; sourceTree = "<group>"; };
@@ -458,6 +460,7 @@
 				B8BFB7CC57BCDC57A4E617D3 /* PropertyWrappers */,
 				B89E43895ACD1C08A75DEBFC /* Models */,
 				5CEA8F9AE3FEEA2087325A98 /* StatusBarIcon.swift */,
+				3AFF51E6055923E29AE8E9F8 /* NSColor+Semantic.swift */,
 			);
 			path = "ShadowsocksX-NG";
 			sourceTree = "<group>";
@@ -981,6 +984,7 @@
 				3FB0BC9243A170D47766A1E7 /* UserDefault.swift in Sources */,
 				84B41BCBFA7C4CC8AFE34122 /* AppPreferences.swift in Sources */,
 				EB3CB8F2698A81B17A3AA34F /* StatusBarIcon.swift in Sources */,
+				AD47DDD629539395E6F2B0DA /* NSColor+Semantic.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

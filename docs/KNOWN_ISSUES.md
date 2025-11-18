@@ -191,6 +191,67 @@ This approach gives you full control and avoids XIB-related issues entirely.
 
 ---
 
+## System Warnings
+
+### Task Name Port Warning (Harmless)
+
+**Issue:**
+```
+Unable to obtain a task name port right for pid XXX: (os/kern) failure (0x5)
+```
+
+**Appears:** Xcode console during runtime
+
+**Root Cause:**
+Sandboxed macOS apps have restricted access to task ports for security reasons. This is expected behavior when the system attempts to obtain privileged port access.
+
+**Impact:**
+- ℹ️ Informational only - no functional impact
+- Does not affect app functionality
+- Standard behavior for sandboxed apps
+
+**Solution:**
+No action required. This is normal and expected.
+
+---
+
+### Layout Recursion Warning (Harmless)
+
+**Issue:**
+```
+It's not legal to call -layoutSubtreeIfNeeded on a view which is already being laid out.
+If you are implementing the view's -layout method, you can call -[super layout] instead.
+Break on void _NSDetectedLayoutRecursion(void) to debug. This will be logged only once.
+This may break in the future.
+```
+
+**Appears:** Xcode console during runtime (table view operations)
+
+**Root Cause:**
+RxCocoa 6.2.0 dependency calls `layoutIfNeeded()` on views during delegate proxy operations. This happens in `Pods/RxCocoa/RxCocoa/Common/DelegateProxyType.swift` (lines 330, 365).
+
+**Impact:**
+- ⚠️ Warning only - logs once then suppressed
+- Does not affect app functionality
+- Known issue in RxCocoa framework
+- May be addressed in future RxCocoa versions
+
+**Solution:**
+
+**Option 1: Ignore (Recommended)**
+The warning is harmless and only appears once. No action needed.
+
+**Option 2: Update RxCocoa**
+If a newer version addresses this issue:
+```bash
+pod update RxCocoa
+```
+
+**Option 3: Report to RxSwift Project**
+If this persists in newer versions, consider reporting at: https://github.com/ReactiveX/RxSwift/issues
+
+---
+
 **Last Updated:** 2025-11-18
 **Status:** 🟡 Known issue with documented workarounds
 **Priority:** Low (warning only, no functional impact)

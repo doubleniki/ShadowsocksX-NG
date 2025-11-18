@@ -7,6 +7,7 @@
 //
 
 #import "SWBQRCodeWindowController.h"
+#import "ShadowsocksX_NG-Swift.h"  // Import Swift bridging header for NSColor+Semantic
 @import CoreImage;
 
 @interface SWBQRCodeWindowController ()
@@ -26,10 +27,10 @@
     NSImage *image = [self createQRImageForString:qrCode size:NSMakeSize(250, 250)];
     
     if (text) {
-        // Draw overlay text
+        // Draw overlay text with semantic colors for dark mode support
         NSDictionary* attrs = @{
-                                NSForegroundColorAttributeName: [NSColor colorWithRed:28/255.0 green:155/255.0 blue:71/255.0 alpha:1],
-                                NSBackgroundColorAttributeName: [NSColor whiteColor],
+                                NSForegroundColorAttributeName: NSColor.qrCodeOverlayText,
+                                NSBackgroundColorAttributeName: NSColor.qrCodeOverlayBackground,
                                 NSFontAttributeName: [NSFont fontWithName:@"Helvetica" size:(CGFloat)16],
                                 };
         NSMutableAttributedString* attrsText = [[NSMutableAttributedString alloc] initWithString: text

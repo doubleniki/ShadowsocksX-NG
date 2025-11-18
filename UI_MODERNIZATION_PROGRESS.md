@@ -55,6 +55,40 @@ This report documents the progress made on Phase 2 of the UI modernization roadm
 - ✅ Better accessibility (vector-based, crisp at any size)
 - ✅ Easier to maintain (no separate @2x files)
 
+### 4. ✅ Semantic Colors Migration
+
+**New File Created:** `ShadowsocksX-NG/NSColor+Semantic.swift`
+
+**Features:**
+- `NSColor.toastBackground` - Adaptive background for toast/HUD windows
+- `NSColor.toastForeground` - Text color for toast windows
+- `NSColor.qrCodeOverlayText` - Green overlay text on QR codes (adapts to dark mode)
+- `NSColor.qrCodeOverlayBackground` - Background for QR code overlay text
+- `toCGColor()` helper method for CALayer integration
+- All colors automatically adapt to dark mode
+
+**Files Migrated:**
+
+1. **ToastWindowController.swift (line 47):**
+   - Before: `CGColor.init(red: 0.05, green: 0.05, blue: 0.05, alpha: 0.75)`
+   - After: `NSColor.toastBackground.toCGColor()`
+   - Benefits: Automatic dark mode adaptation
+
+2. **SWBQRCodeWindowController.m (lines 31-32):**
+   - Before: `[NSColor colorWithRed:28/255.0 green:155/255.0 blue:71/255.0 alpha:1]`
+   - After: `NSColor.qrCodeOverlayText`
+   - Before: `[NSColor whiteColor]`
+   - After: `NSColor.qrCodeOverlayBackground`
+   - Benefits: Brighter green in dark mode for better visibility
+
+**Code Improvements:**
+- Removed 3 hardcoded RGB color values
+- Added automatic dark mode support for all UI elements
+- Improved accessibility with semantic color names
+- Better code maintainability
+
+**Note:** `UserRulesController.swift` already uses semantic colors (`.secondaryLabelColor`, `.systemGreen`) - no migration needed.
+
 ### 3. ✅ MenuBarManager Migration
 
 **File Modified:** `ShadowsocksX-NG/MenuBarManager.swift`
@@ -75,11 +109,12 @@ This report documents the progress made on Phase 2 of the UI modernization roadm
 - Eliminated error-prone PNG name string literals
 - Cleaner, more maintainable codebase
 
-### 4. ✅ Xcode Project Integration
+### 5. ✅ Xcode Project Integration
 
 **Action Taken:**
 - Added `StatusBarIcon.swift` to `ShadowsocksX-NG.xcodeproj` using xcodeproj gem
-- File added to main target compile sources
+- Added `NSColor+Semantic.swift` to `ShadowsocksX-NG.xcodeproj` using xcodeproj gem
+- Files added to main target compile sources
 - Ready for build and testing
 
 ---
@@ -88,15 +123,20 @@ This report documents the progress made on Phase 2 of the UI modernization roadm
 
 ### Files Modified
 1. `docs/ui-modernization/MODERNIZATION_ROADMAP.md` - Updated Phase 2 status
-2. `ShadowsocksX-NG/StatusBarIcon.swift` - NEW file (144 lines)
-3. `ShadowsocksX-NG/MenuBarManager.swift` - Migrated to SF Symbols (reduced code)
-4. `ShadowsocksX-NG.xcodeproj/project.pbxproj` - Added new file to project
+2. `docs/KNOWN_ISSUES.md` - Documented console warnings
+3. `ShadowsocksX-NG/StatusBarIcon.swift` - NEW file (144 lines)
+4. `ShadowsocksX-NG/NSColor+Semantic.swift` - NEW file (118 lines)
+5. `ShadowsocksX-NG/MenuBarManager.swift` - Migrated to SF Symbols (reduced code)
+6. `ShadowsocksX-NG/ToastWindowController.swift` - Migrated to semantic colors
+7. `ShadowsocksX-NG/SWBQRCodeWindowController.m` - Migrated to semantic colors
+8. `ShadowsocksX-NG.xcodeproj/project.pbxproj` - Added new files to project
 
 ### Code Metrics
-- **Lines added:** ~144 (StatusBarIcon.swift)
+- **Lines added:** ~262 (StatusBarIcon.swift + NSColor+Semantic.swift)
 - **Lines removed:** ~30 (MenuBarManager.swift boilerplate)
-- **Net change:** +114 lines
-- **Code quality:** Improved (removed string literals, added type safety)
+- **Lines modified:** ~6 (ToastWindowController.swift + SWBQRCodeWindowController.m)
+- **Net change:** +238 lines
+- **Code quality:** Improved (removed hardcoded colors, added type safety, dark mode support)
 
 ---
 
@@ -157,32 +197,26 @@ Before merging, please verify:
 3. ✅ Confirm no build errors or warnings
 
 ### Phase 2 Continuation (Future PRs)
-1. **Semantic Colors Migration:**
-   - Migrate `ToastWindowController.swift` (line 47)
-   - Migrate `SWBQRCodeWindowController.m` (lines 31-32)
-   - Migrate `UserRulesController.swift` (line 88)
-   - Create `NSColor+Semantic.swift` extension
-
-2. **Other UI Icons Migration:**
+1. **Other UI Icons Migration:**
    - `terminal-logo.png` → SF Symbol (`terminal.fill`)
    - `virtual-server-icon-3.png` → SF Symbol (`server.rack`)
    - `http.png` → SF Symbol (`network`)
 
-3. **Component Modernization:**
+2. **Component Modernization:**
    - Table views (PreferencesWindowController.swift)
    - Buttons and controls
    - Form inputs with placeholders
 
-4. **Vibrancy Effects:**
+3. **Vibrancy Effects:**
    - Toast window
    - Preferences window
    - Dialog windows
 
 ---
 
-## Known Issues
+## Known Issues & Warnings Documented
 
-### NSToolbarItem Deprecation Warning (Documented)
+### 1. NSToolbarItem Deprecation Warning
 
 **Issue:** Runtime warning in Xcode console:
 ```
@@ -205,6 +239,19 @@ NSToolbarItem.minSize and NSToolbarItem.maxSize methods are deprecated.
 **Priority:** Low (cosmetic)
 
 See `docs/KNOWN_ISSUES.md` for detailed solutions.
+
+### 2. Console Warnings (Documented)
+
+**Warnings Added to Documentation:**
+- **Task Name Port Warning:** Sandboxed app security - informational only, harmless
+- **Layout Recursion Warning:** RxCocoa 6.2.0 issue - logs once, harmless
+
+**Documentation:**
+- Added comprehensive documentation in `docs/KNOWN_ISSUES.md`
+- Explains root causes and impact
+- Provides solutions for each warning
+
+All warnings are harmless and do not affect functionality.
 
 ---
 

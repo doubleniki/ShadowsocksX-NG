@@ -44,7 +44,7 @@ class ToastWindowController: NSWindowController {
         }
 
         let viewLayer: CALayer = CALayer()
-        viewLayer.backgroundColor = CGColor.init(red: 0.05, green: 0.05, blue: 0.05, alpha: kHudAlphaValue)
+        viewLayer.backgroundColor = NSColor.toastBackground.toCGColor()
         viewLayer.cornerRadius = kHudCornerRadius
         panelView.wantsLayer = true
         panelView.layer = viewLayer
