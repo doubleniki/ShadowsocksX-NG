@@ -115,6 +115,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
 
         registerDefaultSettings()
         setupCoordinators()
+        setupMenuIcons()
         setupNotificationObservers()
 
         // Handle ss url scheme
@@ -231,6 +232,65 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
                 self.handleFoundSSURL(notification)
             })
             .disposed(by: disposeBag)
+    }
+
+    private func setupMenuIcons() {
+        // Set SF Symbol icons for menu items (Phase 2 UI modernization)
+        // Using menu item search by title to avoid adding @IBOutlets for every item
+
+        // Toggle power icon for on/off
+        toggleRunningMenuItem.image = StatusBarIcon.togglePowerIcon()
+
+        // Proxy mode icons (use same icons as status bar for consistency)
+        autoModeMenuItem.image = StatusBarIcon.icon(for: .auto)
+        globalModeMenuItem.image = StatusBarIcon.icon(for: .global)
+        manualModeMenuItem.image = StatusBarIcon.icon(for: .manual)
+        externalPACModeMenuItem.image = StatusBarIcon.icon(for: .externalPAC)
+
+        // Servers submenu icon
+        serversMenuItem.image = StatusBarIcon.serversIcon()
+
+        // Find and set icons for items we don't have outlets for
+        if let menu = statusMenu {
+            for item in menu.items {
+                switch item.title {
+                case "Scan QR Code From Screen":
+                    item.image = StatusBarIcon.scanQRCodeIcon()
+                case "Import Server URLs...":
+                    item.image = StatusBarIcon.importServersIcon()
+                case "Preferences...":
+                    item.image = StatusBarIcon.preferencesIcon()
+                case "Update PAC from GFW List":
+                    item.image = StatusBarIcon.updatePACIcon()
+                case "Edit User Rules For PAC...":
+                    item.image = StatusBarIcon.editRulesIcon()
+                case "Show Logs...":
+                    item.image = StatusBarIcon.showLogsIcon()
+                case "Export Diagnosis...":
+                    item.image = StatusBarIcon.exportDiagnosisIcon()
+                case "Check for Updates...":
+                    item.image = StatusBarIcon.checkUpdatesIcon()
+                case "Help":
+                    item.image = StatusBarIcon.helpIcon()
+                case "About":
+                    item.image = StatusBarIcon.aboutIcon()
+                case "Quit":
+                    item.image = StatusBarIcon.quitIcon()
+                default:
+                    break
+                }
+            }
+
+            // Set icon for Server Preferences in submenu
+            if let serversSubmenu = serversMenuItem.submenu {
+                for item in serversSubmenu.items {
+                    if item.title == "Server Preferences..." {
+                        item.image = StatusBarIcon.serverPreferencesIcon()
+                        break
+                    }
+                }
+            }
+        }
     }
 
     private func handleSwitchProxyModeShortcut() {

@@ -259,11 +259,26 @@ Before merging, please verify:
    - Maintains rounded corners and fade animations
 
 ### Phase 2 Continuation (Completed - Session 3)
-3. **✅ Menu Item Icon Migration:**
-   - `terminal-logo.png` → SF Symbol (`terminal.fill`)
-   - Used in "HTTP Proxy Export Line To Pasteboard" menu item
-   - Added `StatusBarIcon.terminalIcon()` convenience method
-   - Updated MenuBarManager.updateCopyHttpProxyExportMenu() to set SF Symbol icon
+3. **✅ Menu Item Icons Migration:**
+   - Migrated 15+ menu items to SF Symbols
+   - Created `setupMenuIcons()` method in AppDelegate for centralized icon setup
+   - Added 14 new convenience methods in StatusBarIcon.swift:
+     - `togglePowerIcon()` - power (Turn Shadowsocks On/Off)
+     - `serversIcon()` - server.rack (Servers submenu)
+     - `serverPreferencesIcon()` - slider.horizontal.3 (Edit servers)
+     - `scanQRCodeIcon()` - qrcode.viewfinder (Scan QR code)
+     - `importServersIcon()` - square.and.arrow.down (Import URLs)
+     - `preferencesIcon()` - gearshape (Preferences)
+     - `updatePACIcon()` - arrow.clockwise (Update GFW list)
+     - `editRulesIcon()` - doc.text (Edit user rules)
+     - `showLogsIcon()` - doc.text.magnifyingglass (Show logs)
+     - `exportDiagnosisIcon()` - square.and.arrow.up.on.square (Export diagnosis)
+     - `checkUpdatesIcon()` - arrow.down.circle (Check updates)
+     - `helpIcon()` - questionmark.circle (Help)
+     - `aboutIcon()` - info.circle (About)
+     - `quitIcon()` - power (Quit)
+   - Proxy mode menu items now use same icons as status bar for consistency
+   - All menu icons automatically adapt to dark mode and display densities
 
 ### Phase 2 Future Work
 1. **Unused PNG Assets (Candidates for Removal):**
@@ -422,12 +437,14 @@ If issues found:
    - UI_MODERNIZATION_PROGRESS.md → docs/ui-modernization/PHASE2_PROGRESS.md
    - KEYCHAIN_*.md → docs/code-quality/
    - ROADMAP.md → docs/PROJECT_ROADMAP.md
-2. ✅ Migrated terminal-logo.png to SF Symbol (terminal.fill)
-   - Added StatusBarIcon.terminalIcon() convenience method
-   - Updated MenuBarManager to set icon programmatically
-   - HTTP Proxy Export menu item now uses SF Symbol
+2. ✅ Migrated 15+ menu items to SF Symbols
+   - Added 14 new icon methods to StatusBarIcon.swift
+   - Created setupMenuIcons() in AppDelegate for centralized icon management
+   - All menu items now have contextual SF Symbol icons
+   - Proxy mode items use consistent icons with status bar
 3. ✅ Documented unused PNG assets for potential removal
 
-**Files modified:** 3 (StatusBarIcon.swift, MenuBarManager.swift, PHASE2_PROGRESS.md)
-**Lines added:** ~20
-**Code improvements:** All actively used PNG icons now migrated to SF Symbols
+**Files modified:** 3 (StatusBarIcon.swift, AppDelegate.swift, PHASE2_PROGRESS.md)
+**Lines added:** ~150 (14 icon methods + setupMenuIcons + documentation)
+**Code improvements:** Comprehensive menu icon system with 15+ SF Symbols
+**User experience:** Significantly improved menu visual consistency and modern appearance

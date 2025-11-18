@@ -134,6 +134,92 @@ extension StatusBarIcon {
     static func terminalIcon() -> NSImage {
         return OSVersion.symbol(primary: "terminal.fill")
     }
+
+    // MARK: - Main Menu Icons
+
+    /// Get icon for toggle shadowsocks on/off menu item
+    /// - Returns: NSImage with power symbol
+    static func togglePowerIcon() -> NSImage {
+        return OSVersion.symbol(primary: "power")
+    }
+
+    /// Get icon for servers submenu
+    /// - Returns: NSImage with server rack symbol
+    static func serversIcon() -> NSImage {
+        return OSVersion.symbol(primary: "server.rack")
+    }
+
+    /// Get icon for server preferences menu item
+    /// - Returns: NSImage with sliders symbol
+    static func serverPreferencesIcon() -> NSImage {
+        return OSVersion.symbol(primary: "slider.horizontal.3")
+    }
+
+    /// Get icon for scan QR code menu item
+    /// - Returns: NSImage with QR code viewfinder symbol
+    static func scanQRCodeIcon() -> NSImage {
+        return OSVersion.symbol(primary: "qrcode.viewfinder")
+    }
+
+    /// Get icon for import server URLs menu item
+    /// - Returns: NSImage with download symbol
+    static func importServersIcon() -> NSImage {
+        return OSVersion.symbol(primary: "square.and.arrow.down")
+    }
+
+    /// Get icon for preferences menu item
+    /// - Returns: NSImage with gear symbol
+    static func preferencesIcon() -> NSImage {
+        return OSVersion.symbol(primary: "gearshape")
+    }
+
+    /// Get icon for update PAC from GFW list menu item
+    /// - Returns: NSImage with refresh symbol
+    static func updatePACIcon() -> NSImage {
+        return OSVersion.symbol(primary: "arrow.clockwise")
+    }
+
+    /// Get icon for edit user rules menu item
+    /// - Returns: NSImage with document symbol
+    static func editRulesIcon() -> NSImage {
+        return OSVersion.symbol(primary: "doc.text")
+    }
+
+    /// Get icon for show logs menu item
+    /// - Returns: NSImage with document magnifying glass symbol
+    static func showLogsIcon() -> NSImage {
+        return OSVersion.symbol(primary: "doc.text.magnifyingglass")
+    }
+
+    /// Get icon for export diagnosis menu item
+    /// - Returns: NSImage with upload symbol
+    static func exportDiagnosisIcon() -> NSImage {
+        return OSVersion.symbol(primary: "square.and.arrow.up.on.square")
+    }
+
+    /// Get icon for check for updates menu item
+    /// - Returns: NSImage with download circle symbol
+    static func checkUpdatesIcon() -> NSImage {
+        return OSVersion.symbol(primary: "arrow.down.circle")
+    }
+
+    /// Get icon for help menu item
+    /// - Returns: NSImage with question mark symbol
+    static func helpIcon() -> NSImage {
+        return OSVersion.symbol(primary: "questionmark.circle")
+    }
+
+    /// Get icon for about menu item
+    /// - Returns: NSImage with info symbol
+    static func aboutIcon() -> NSImage {
+        return OSVersion.symbol(primary: "info.circle")
+    }
+
+    /// Get icon for quit menu item
+    /// - Returns: NSImage with power symbol
+    static func quitIcon() -> NSImage {
+        return OSVersion.symbol(primary: "power")
+    }
 }
 
 // MARK: - SF Symbols Reference
@@ -158,9 +244,23 @@ extension StatusBarIcon {
  | hidden         | eye.slash.fill       | icons8-Blind Filled-50      | Password is hidden             |
 
  ## Menu Item Icons
- | Purpose        | SF Symbol            | Legacy PNG                  | Description                    |
- |----------------|----------------------|-----------------------------|--------------------------------|
- | HTTP export    | terminal.fill        | terminal-logo.png           | Export command to clipboard    |
+ | Purpose              | SF Symbol                         | Legacy PNG         | Description                          |
+ |----------------------|-----------------------------------|--------------------|--------------------------------------|
+ | HTTP export          | terminal.fill                     | terminal-logo.png  | Export command to clipboard          |
+ | Toggle power         | power                             | -                  | Turn Shadowsocks on/off              |
+ | Servers submenu      | server.rack                       | -                  | Servers configuration submenu        |
+ | Server preferences   | slider.horizontal.3               | -                  | Edit server preferences              |
+ | Scan QR code         | qrcode.viewfinder                 | -                  | Scan QR code from screen             |
+ | Import servers       | square.and.arrow.down             | -                  | Import server URLs                   |
+ | Preferences          | gearshape                         | -                  | Open preferences window              |
+ | Update PAC           | arrow.clockwise                   | -                  | Update PAC from GFW list             |
+ | Edit rules           | doc.text                          | -                  | Edit user rules for PAC              |
+ | Show logs            | doc.text.magnifyingglass          | -                  | Show application logs                |
+ | Export diagnosis     | square.and.arrow.up.on.square     | -                  | Export diagnostic information        |
+ | Check updates        | arrow.down.circle                 | -                  | Check for application updates        |
+ | Help                 | questionmark.circle               | -                  | Open help documentation              |
+ | About                | info.circle                       | -                  | Show about window                    |
+ | Quit                 | power                             | -                  | Quit application                     |
 
  All symbols are available on macOS 11.0 (Big Sur)+
  No fallback needed as minimum deployment target is 11.0
