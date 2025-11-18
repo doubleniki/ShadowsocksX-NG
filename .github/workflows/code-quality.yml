@@ -88,7 +88,7 @@ jobs:
           # Placeholder binaries created in next step are sufficient for compilation
           echo "Skipping CocoaPods installation - using placeholder binaries"
 
-- name: Restore dependencies cache
+      - name: Restore dependencies cache
         id: deps-cache
         uses: actions/cache/restore@v4
         with:
