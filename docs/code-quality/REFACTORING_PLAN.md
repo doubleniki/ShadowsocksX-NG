@@ -1471,12 +1471,13 @@ class ServerProfileManager: ServerProfileManaging {
 
 #### Checklist
 
-- [ ] Convert ServerProfile to struct with Codable
-- [ ] Remove old toDictionary/fromDictionary methods
-- [ ] Use JSONEncoder/Decoder in ServerProfileManager
-- [ ] Test: Profiles save and load correctly
-- [ ] Migration: Convert old format to new (if needed)
-- [ ] Verify backward compatibility
+- ✅ Add Codable conformance to ServerProfile (kept as class, not struct)
+- ✅ Implement custom encode/decode methods (password excluded)
+- ⚠️ Deprecate old toDictionary/fromDictionary methods (not removed for backward compatibility)
+- ✅ Use JSONEncoder/Decoder in ServerProfileManager
+- ✅ Test: Profiles save and load correctly
+- ✅ Migration: Automatic migration from legacy format
+- ✅ Verify backward compatibility
 
 **Deliverables:**
 - Simplified serialization
