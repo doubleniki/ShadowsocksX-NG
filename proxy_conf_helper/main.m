@@ -155,6 +155,7 @@ int main(int argc, const char * argv[])
                     
                     [proxies setObject:pacURL forKey:(NSString *)kCFNetworkProxiesProxyAutoConfigURLString];
                     [proxies setObject:[NSNumber numberWithInt:1] forKey:(NSString *)kCFNetworkProxiesProxyAutoConfigEnable];
+                    [proxies setObject:[proxyExceptions allObjects] forKey:(NSString *)kCFNetworkProxiesExceptionsList];
                     
                     SCPreferencesPathSetValue(prefRef, (__bridge CFStringRef)prefPath
                                               , (__bridge CFDictionaryRef)proxies);
