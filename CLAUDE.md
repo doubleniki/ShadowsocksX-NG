@@ -2,9 +2,25 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## File Operations
+
+**CRITICAL**: ALWAYS use Serena MCP server tools for ALL file operations instead of standard Read/Edit/Write tools:
+
+- `mcp__serena__read_file` - Instead of Read tool
+- `mcp__serena__replace_regex` - Instead of Edit tool (for pattern-based edits)
+- `mcp__serena__replace_symbol_body` - For replacing entire code symbols (functions, methods, classes)
+- `mcp__serena__create_text_file` - Instead of Write tool
+- `mcp__serena__find_symbol` - For searching code symbols
+- `mcp__serena__search_for_pattern` - For searching code patterns
+- `mcp__serena__get_symbols_overview` - For understanding file structure
+- `mcp__serena__list_dir` - For listing directory contents
+- `mcp__serena__find_file` - For finding files by pattern
+
+**Why Serena MCP?** It provides semantic code understanding, type-aware operations, and better context management.
+
 ## Working with Subagents
 
-**IMPORTANT**: Claude Code has access to specialized subagents that should be used for their respective domains:
+**CRITICAL**: Claude Code MUST use specialized subagents for their respective domains:
 
 - **macos-swift-expert**: Use for macOS-specific development tasks, Swift code, AppKit frameworks, Cocoa APIs, Launch Agents, Keychain integration, and macOS system integration
 - **typescript-senior-dev**: Use for TypeScript code tasks (not applicable to this Swift project)
@@ -12,17 +28,26 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Explore**: Use for codebase exploration, finding files by patterns, searching for keywords, and answering questions about code structure
 - **Plan**: Use for planning complex multi-step implementations
 
-**Delegation Guidelines:**
+**Delegation Guidelines (MANDATORY):**
 
-1. **Always use the Explore agent** when you need to understand codebase structure, find files, or search for specific code patterns
-2. **Delegate to macos-swift-expert** for:
+1. **ALWAYS use the Explore agent** (Task tool with subagent_type=Explore) when:
+   - Understanding codebase structure
+   - Finding files by patterns
+   - Searching for specific code patterns
+   - Answering questions about code architecture
+   - **DO NOT use Glob/Grep directly for exploration - use Explore agent**
+
+2. **ALWAYS delegate to macos-swift-expert** (Task tool with subagent_type=macos-swift-expert) for:
    - Swift code reviews and improvements
    - macOS-specific feature implementations
    - Launch Agent and system integration tasks
    - Keychain and security-related work
    - AppKit/Cocoa framework usage
-3. **Use the Plan agent** before implementing complex features that require multiple steps
-4. **Do NOT attempt** complex Swift refactoring or macOS system integration directly - delegate to the appropriate expert agent
+   - **DO NOT attempt complex Swift/macOS work directly - use macos-swift-expert**
+
+3. **ALWAYS use the Plan agent** (Task tool with subagent_type=Plan) before implementing complex features that require multiple steps
+
+4. **NEVER attempt** complex Swift refactoring or macOS system integration directly - ALWAYS delegate to the appropriate expert agent
 
 ## Documentation
 
@@ -228,17 +253,19 @@ Test target: `ShadowsocksX-NGTests`
 - Follow GitFlow branching model
 - Create pull requests against `develop` branch
 
-**IMPORTANT for Claude Code:**
+**CRITICAL RULES for Claude Code:**
 
-- ALWAYS create a new feature branch before implementing any changes
-- NEVER commit directly to `develop` or `main`
-- NEVER mention yourself in commit messages
+- **ALWAYS** create a new feature branch before implementing any changes
+- **NEVER** commit directly to `develop` or `main`
+- **NEVER** mention AI, Claude, automation, or code generation in commit messages
+- **NEVER** add phrases like "Generated with Claude Code", "AI-assisted", or similar
+- Write commit messages as if written by a human developer
 - Branch naming convention: `feature/<description>`, `fix/<description>`, or `docs/<description>`
 - Workflow:
   1. Ensure you're on `develop`: `git checkout develop`
   2. Pull latest changes: `git pull origin develop`
   3. Create new branch: `git checkout -b feature/your-feature-name`
-  4. Make changes and commit, don't mention yourself
+  4. Make changes and commit (follow commit message rules above)
   5. Push branch: `git push origin feature/your-feature-name`
   6. Create pull request to merge into `develop`
 

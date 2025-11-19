@@ -13,6 +13,7 @@ This document outlines planned features and enhancements for future releases of 
 ## Recently Completed (Version 0.3.0)
 
 ### Code Quality & Architecture
+
 - [x] **Phase 1 Refactoring** - Foundation & safety improvements
   - Eliminated all force unwrapping in test files
   - Centralized error handling through ErrorHandler singleton
@@ -27,12 +28,14 @@ This document outlines planned features and enhancements for future releases of 
   - MenuBarManager improvements and bug fixes
 
 ### User Rules Enhancement
+
 - [x] **Rule Similarity Detection** - Prevent duplicate rules
   - Compare new rules against existing PAC rules before adding
   - Show warnings when adding similar/duplicate rules
   - Improved user feedback during rule addition
 
 ### Notifications
+
 - [x] **Enhanced Notification System** - Improved user feedback
   - Refactored in-app notification system
   - Updated user notification service
@@ -105,7 +108,7 @@ This document outlines planned features and enhancements for future releases of 
 
 ### Multi-Server Routing
 
-**Status**: Design & feasibility complete ([see detailed specification](docs/features/multi-server-routing.md))
+**Status**: Design & feasibility complete ([see detailed specification](docs/features/MULTI_SERVER_ROUTING.md))
 **Estimated Effort**: 12-17 weeks (full implementation) or 3-4 weeks (simplified MVP)
 **Approach**: Research-first with GO/NO-GO decision point after Phase 0
 
@@ -134,12 +137,14 @@ This document outlines planned features and enhancements for future releases of 
   - Can upgrade to full version in future release
 
 **Key Benefits**:
+
 - Route different domains through different servers simultaneously (Option A)
 - Per-server routing rules with global fallback bucket
 - Preserve all existing functionality and compatibility
 - Built on existing ServerProfile.uuid infrastructure
 
 **Technical Highlights**:
+
 - Multiplexer on single port (127.0.0.1:1086) routing to multiple ss-local upstreams
 - Health monitoring and failover support
 - Migration path from legacy user-rule.txt format

@@ -66,9 +66,26 @@ All features from the original ShadowsocksX-NG:
 
 ## Development Documentation
 
+### Planned Features
+
+We're actively developing next-generation features to make ShadowsocksX-NG more powerful and flexible:
+
+- **[🚀 Modern Protocols Integration](docs/features/MODERN_PROTOCOLS_INTEGRATION.md)** - Comprehensive roadmap for integrating Shadowsocks 2022, VLESS, VMess, Trojan, and Hysteria2 protocols (Phases 2-4, 12-17 weeks)
+
+- **[🔀 Multi-Server Routing](docs/features/MULTI_SERVER_ROUTING.md)** - Enable simultaneous connections to multiple proxy servers with intelligent per-domain routing, connection pooling, and automatic failover
+
+- **[🎯 Clash-Style Routing](docs/architecture/ROUTING_INTEGRATION_ANALYSIS.md)** - Advanced traffic routing with support for GEOIP, process-based rules, and full Clash syntax compatibility (planned for v1.0.0+)
+
+- **[📊 Features Overview](docs/features/README.md)** - Complete feature documentation and roadmap
+
+**Key Milestones:**
+
+- **v0.7.0-v0.9.0**: Modern Protocols (VLESS, VMess, Trojan, Hysteria2)
+- **v1.0.0+**: Advanced Routing (Clash-style rules, GEOIP, multi-server)
+
 ### UI Modernization Roadmap
 
-We're actively modernizing the UI to align with macOS Sequoia design principles while maintaining backward compatibility:
+We're also modernizing the UI to align with macOS Sequoia design principles while maintaining backward compatibility:
 
 - **[📋 UI Modernization Roadmap](docs/ui-modernization/MODERNIZATION_ROADMAP.md)** - Complete phased roadmap for adopting SF Symbols, SwiftUI, semantic colors, and modern macOS features (5 phases, 5-7 months)
 
