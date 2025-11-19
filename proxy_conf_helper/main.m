@@ -16,6 +16,52 @@
 // https://github.com/stephencelis/BRLOptionParser
 #import <BRLOptionParser/BRLOptionParser.h>
 
+/**
+ * Detects if a network interface or service is VPN-related.
+ * VPN interfaces should be excluded from proxy configuration to prevent conflicts.
+ *
+ * @param interfaceString The hardware type (Interface.Hardware) or service name (UserDefinedName)
+ * @return YES if the interface is VPN-related, NO otherwise
+ */
+BOOL isVPNInterface(NSString *interfaceString) {
+    if (!interfaceString || [interfaceString length] == 0) {
+        return NO;
+    }
+
+    // PPP-based VPNs (Cisco AnyConnect, L2TP)
+    if ([interfaceString rangeOfString:@"PPP" options:NSCaseInsensitiveSearch].location != NSNotFound) {
+        return YES;
+    }
+
+    // IPSec/IKEv2 VPNs
+    if ([interfaceString rangeOfString:@"IPSec" options:NSCaseInsensitiveSearch].location != NSNotFound ||
+        [interfaceString rangeOfString:@"IKEv2" options:NSCaseInsensitiveSearch].location != NSNotFound) {
+        return YES;
+    }
+
+    // utun devices (user tunnel, used by many VPNs including Cisco AnyConnect)
+    if ([interfaceString rangeOfString:@"utun" options:NSCaseInsensitiveSearch].location != NSNotFound) {
+        return YES;
+    }
+
+    // VPN in service name or hardware type
+    if ([interfaceString rangeOfString:@"VPN" options:NSCaseInsensitiveSearch].location != NSNotFound) {
+        return YES;
+    }
+
+    // WireGuard interfaces
+    if ([interfaceString rangeOfString:@"wg" options:NSCaseInsensitiveSearch].location != NSNotFound) {
+        return YES;
+    }
+
+    // OpenVPN and other TUN/TAP interfaces
+    if ([interfaceString rangeOfString:@"tun" options:NSCaseInsensitiveSearch].location != NSNotFound ||
+        [interfaceString rangeOfString:@"tap" options:NSCaseInsensitiveSearch].location != NSNotFound) {
+        return YES;
+    }
+
+    return NO;
+}
 
 int main(int argc, const char * argv[])
 {
@@ -25,33 +71,33 @@ int main(int argc, const char * argv[])
     NSString* socks5ListenAddress;
     NSString* privoxyPortString;
     NSString* privoxyListenAddress;
-    
+
     BRLOptionParser *options = [BRLOptionParser new];
     [options setBanner:@"Usage: %s [-v] [-m auto|global|off] [-u <url>] [-p <port>] [-l <socks5-listen-address>] [-r <port>] [-p <privoxy-listen-address>] [-x <exception>]", argv[0]];
-    
+
     // Version
     [options addOption:"version" flag:'v' description:@"Print the version number." block:^{
         printf("%s", [kProxyConfHelperVersion UTF8String]);
         exit(EXIT_SUCCESS);
     }];
-    
+
     // Help
     __weak typeof(options) weakOptions = options;
     [options addOption:"help" flag:'h' description:@"Show this message" block:^{
         printf("%s", [[weakOptions description] UTF8String]);
         exit(EXIT_SUCCESS);
     }];
-    
+
     // Mode
     [options addOption:"mode" flag:'m' description:@"Proxy mode, may be: auto,global,off" argument:&mode];
-    
+
     [options addOption:"pac-url" flag:'u' description:@"PAC file url for auto mode." argument:&pacURL];
     [options addOption:"port" flag:'p' description:@"Listen port for global mode." argument:&portString];
     [options addOption:"socks-listen-address" flag:'l' description:@"Listen socks5 address for global mode." argument:&socks5ListenAddress];
-    
+
     [options addOption:"privoxy-port" flag:'r' description:@"Privoxy Port for global mode." argument:&privoxyPortString];
     [options addOption:"privoxy-listen-address" flag:'s' description:@"Privoxy Listen Address for global mode." argument:&privoxyListenAddress];
-    
+
     NSMutableSet* networkServiceKeys = [NSMutableSet set];
     [options addOption:"network-service" flag:'n' description:@"Manual specify the network profile need to set proxy." blockWithArgument:^(NSString* value){
         [networkServiceKeys addObject:value];
@@ -61,14 +107,14 @@ int main(int argc, const char * argv[])
     [options addOption:"proxy-exception" flag:'x' description:@"Bypass proxy settings for this Host / Domain" blockWithArgument:^(NSString *value) {
         [proxyExceptions addObject:value];
     }];
-    
+
     NSError *error = nil;
     if (![options parseArgc:argc argv:argv error:&error]) {
         const char * message = error.localizedDescription.UTF8String;
         fprintf(stderr, "%s: %s\n", argv[0], message);
         exit(EXIT_FAILURE);
     }
-    
+
     if (mode) {
         if ([@"auto" isEqualToString:mode]) {
             if (!pacURL) {
@@ -85,7 +131,7 @@ int main(int argc, const char * argv[])
         printf("%s", [kProxyConfHelperVersion UTF8String]);
         return 0;
     }
-    
+
     NSInteger port = 0;
     if (portString) {
         port = [portString integerValue];
@@ -93,7 +139,7 @@ int main(int argc, const char * argv[])
             return 1;
         }
     }
-    
+
     NSInteger privoxyPort = 0;
     if (privoxyPortString) {
         privoxyPort = [privoxyPortString integerValue];
@@ -101,7 +147,7 @@ int main(int argc, const char * argv[])
             return 1;
         }
     }
-    
+
     static AuthorizationRef authRef;
     static AuthorizationFlags authFlags;
     authFlags = kAuthorizationFlagDefaults
@@ -118,22 +164,31 @@ int main(int argc, const char * argv[])
             NSLog(@"No authorization has been granted to modify network configuration");
             return 1;
         }
-        
+
         SCPreferencesRef prefRef = SCPreferencesCreateWithAuthorization(nil, CFSTR("Shadowsocks"), nil, authRef);
-        
+
         NSDictionary *sets = (__bridge NSDictionary *)SCPreferencesGetValue(prefRef, kSCPrefNetworkServices);
-        
+
         NSMutableDictionary *proxies = [[NSMutableDictionary alloc] init];
         [proxies setObject:[NSNumber numberWithInt:0] forKey:(NSString *)kCFNetworkProxiesHTTPEnable];
         [proxies setObject:[NSNumber numberWithInt:0] forKey:(NSString *)kCFNetworkProxiesHTTPSEnable];
         [proxies setObject:[NSNumber numberWithInt:0] forKey:(NSString *)kCFNetworkProxiesProxyAutoConfigEnable];
         [proxies setObject:[NSNumber numberWithInt:0] forKey:(NSString *)kCFNetworkProxiesSOCKSEnable];
         [proxies setObject:@[] forKey:(NSString *)kCFNetworkProxiesExceptionsList];
-        
+
         // 遍历系统中的网络设备列表，设置 AirPort 和 Ethernet 的代理
         for (NSString *key in [sets allKeys]) {
             NSMutableDictionary *dict = [sets objectForKey:key];
             NSString *hardware = [dict valueForKeyPath:@"Interface.Hardware"];
+            NSString *serviceName = [dict valueForKey:kSCPropUserDefinedName];
+
+            // Skip VPN interfaces - corporate VPN traffic should not be proxied through Shadowsocks
+            if (isVPNInterface(hardware) || isVPNInterface(serviceName)) {
+                NSLog(@"Skipping VPN interface: %@ (Hardware: %@)",
+                      serviceName ?: @"(unnamed)", hardware ?: @"(no hardware)");
+                continue;
+            }
+
             //        NSLog(@"%@", hardware);
             BOOL modify = NO;
             if ([networkServiceKeys count] > 0) {
@@ -145,23 +200,23 @@ int main(int argc, const char * argv[])
                        || [hardware isEqualToString:@"Ethernet"]) {
                 modify = YES;
             }
-            
+
             if (modify) {
-                
+
                 NSString* prefPath = [NSString stringWithFormat:@"/%@/%@/%@", kSCPrefNetworkServices
                                       , key, kSCEntNetProxies];
-                
+
                 if ([mode isEqualToString:@"auto"]) {
-                    
+
                     [proxies setObject:pacURL forKey:(NSString *)kCFNetworkProxiesProxyAutoConfigURLString];
                     [proxies setObject:[NSNumber numberWithInt:1] forKey:(NSString *)kCFNetworkProxiesProxyAutoConfigEnable];
                     [proxies setObject:[proxyExceptions allObjects] forKey:(NSString *)kCFNetworkProxiesExceptionsList];
-                    
+
                     SCPreferencesPathSetValue(prefRef, (__bridge CFStringRef)prefPath
                                               , (__bridge CFDictionaryRef)proxies);
                 } else if ([mode isEqualToString:@"global"]) {
-                    
-                    
+
+
                     [proxies setObject:socks5ListenAddress forKey:(NSString *)
                      kCFNetworkProxiesSOCKSProxy];
                     [proxies setObject:[NSNumber numberWithInteger:port] forKey:(NSString*)
@@ -169,7 +224,7 @@ int main(int argc, const char * argv[])
                     [proxies setObject:[NSNumber numberWithInt:1] forKey:(NSString*)
                      kCFNetworkProxiesSOCKSEnable];
                     [proxies setObject:[proxyExceptions allObjects] forKey:(NSString *)kCFNetworkProxiesExceptionsList];
-                    
+
                     if (privoxyPort != 0) {
                         [proxies setObject:privoxyListenAddress forKey:(NSString *)
                          kCFNetworkProxiesHTTPProxy];
@@ -177,7 +232,7 @@ int main(int argc, const char * argv[])
                          kCFNetworkProxiesHTTPPort];
                         [proxies setObject:[NSNumber numberWithInt:1] forKey:(NSString*)
                          kCFNetworkProxiesHTTPEnable];
-                        
+
                         [proxies setObject:privoxyListenAddress forKey:(NSString *)
                          kCFNetworkProxiesHTTPSProxy];
                         [proxies setObject:[NSNumber numberWithInteger:privoxyPort] forKey:(NSString*)
@@ -185,7 +240,7 @@ int main(int argc, const char * argv[])
                         [proxies setObject:[NSNumber numberWithInt:1] forKey:(NSString*)
                          kCFNetworkProxiesHTTPSEnable];
                     }
-                    
+
                     SCPreferencesPathSetValue(prefRef, (__bridge CFStringRef)prefPath
                                               , (__bridge CFDictionaryRef)proxies);
                 } else if ([mode isEqualToString:@"off"]) {
@@ -194,7 +249,7 @@ int main(int argc, const char * argv[])
                         NSDictionary* oldProxies
                             = (__bridge NSDictionary*)SCPreferencesPathGetValue(prefRef
                                                                                 , (__bridge CFStringRef)prefPath);
-                        
+
                         if (([oldProxies[(NSString *)kCFNetworkProxiesProxyAutoConfigURLString] isEqualToString:pacURL]
                              &&[oldProxies[(NSString *)kCFNetworkProxiesProxyAutoConfigEnable] isEqual:[NSNumber numberWithInt:1]])
                             ||([oldProxies[(NSString*)kCFNetworkProxiesSOCKSProxy] isEqualToString:socks5ListenAddress]
@@ -211,15 +266,15 @@ int main(int argc, const char * argv[])
                 }
             }
         }
-        
+
         SCPreferencesCommitChanges(prefRef);
         SCPreferencesApplyChanges(prefRef);
         SCPreferencesSynchronize(prefRef);
-        
+
         AuthorizationFree(authRef, kAuthorizationFlagDefaults);
     }
-    
+
     printf("pac proxy set to %s", [mode UTF8String]);
-    
+
     return 0;
 }
