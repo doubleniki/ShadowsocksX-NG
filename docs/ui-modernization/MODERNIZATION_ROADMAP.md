@@ -3,7 +3,7 @@
 ## ShadowsocksX-NG → macOS Sequoia Design
 
 **Document Version:** 2.2
-**Last Updated:** 2025-01-18
+**Last Updated:** 2025-11-18
 **Current Minimum:** macOS 11.0 Big Sur
 **Target macOS:** Sequoia (15.x) and later
 **Current Architecture:** AppKit with XIB files + OSVersion utility
@@ -343,20 +343,22 @@ extension NSFont {
 **Dependencies:** Phase 1 complete ✅
 **Minimum macOS:** 11.0 (Big Sur) - No version bump
 **Target Completion:** Q1 2025
-**Completed:** 2025-01-18
+**Completed:** 2025-11-18
+
+> 📄 **Detailed Report:** See [Phase 2 Completion Report](./completed-sessions/PHASE2_COMPLETION_REPORT.md) for session-by-session progress, testing checklist, and implementation details.
 
 ### Objectives
 
 Migrate visual assets to SF Symbols and update UI controls to modern macOS standards.
 
-### Current Status (2025-01-18)
+### Current Status (2025-11-18)
 
 **Phase 1 Complete:**
 - ✅ OSVersion utility fully implemented and tested (303 lines + 297 test lines)
 - ✅ OSVersion integrated in AppDelegate for version validation
 - ✅ Comprehensive test suite with 100% coverage of OSVersion features
 
-**Phase 2 Complete (2025-01-18):**
+**Phase 2 Complete (2025-11-18):**
 
 **✅ All Tasks Completed:**
 1. **SF Symbols Migration:**

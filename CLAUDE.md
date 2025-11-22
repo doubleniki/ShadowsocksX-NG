@@ -349,7 +349,13 @@ networksetup -getsocksfirewallproxy Wi-Fi
 
 ## Refactoring Progress
 
-### Phase 1: Foundation & Safety (Completed)
+> **Note:** There are two parallel refactoring efforts:
+> 1. **Code Quality Refactoring** - Architecture and modern Swift features (details in `docs/code-quality/REFACTORING_PLAN.md`)
+> 2. **UI Modernization** - Visual updates and modern macOS design (details in `docs/ui-modernization/MODERNIZATION_ROADMAP.md`)
+
+### Code Quality Refactoring
+
+#### Phase 1: Foundation & Safety (Completed)
 
 **Code Quality Improvements:**
 
@@ -378,7 +384,7 @@ networksetup -getsocksfirewallproxy Wi-Fi
 - ✅ Fixed Keychain password synchronization in `ServerProfile` duplication
 - ✅ Password stored securely in Keychain, not in UserDefaults
 - ✅ Proper cleanup of Keychain entries when profiles are deleted
-- ✅ Added `KEYCHAIN_FIX.md` documentation
+- ✅ Added `KEYCHAIN_MIGRATION.md` documentation with implementation details
 
 **Project Configuration:**
 
@@ -416,7 +422,55 @@ networksetup -getsocksfirewallproxy Wi-Fi
 - ✅ Automatic placeholder binary creation for CI builds
 - ✅ Fixed project file references (removed deleted files)
 
-### Phase 2: UI Modernization (Completed 2025-11-18)
+#### Phase 2: Architecture (Completed 2025-11-18)
+
+- ✅ Extracted coordinators from AppDelegate:
+  - `MenuBarManager` - Status bar menu management
+  - `ProxyCoordinator` - Proxy mode switching and configuration
+  - `WindowCoordinator` - Window management
+- ✅ Reduced AppDelegate from 845 to 463 lines (45% reduction)
+- ✅ Implemented protocols for testability
+- ✅ Added dependency injection support
+
+#### Phase 3: Modernization (Completed 2025-11-18)
+
+**Async/Await Support:**
+
+- ✅ Added async wrappers for network operations in `PACUtils.swift`
+- ✅ `updatePACFromGFWListAsync()` - Async GFW list download
+- ✅ `generatePACFileAsync()` - Async PAC file generation
+- ✅ Compatible with Alamofire 5.4.3 callback API
+- ✅ Background file I/O with proper main thread UI updates
+
+**Codable Implementation:**
+
+- ✅ Added Codable conformance to `ServerProfile`
+- ✅ Custom encode/decode methods (password excluded, stored in Keychain)
+- ✅ Used JSONEncoder/Decoder in ServerProfileManager
+- ✅ Automatic migration from legacy format
+- ✅ Simplified serialization, removed ~100 lines of code
+
+**Property Wrappers:**
+
+- ✅ Created `@UserDefault` property wrapper for type-safe preferences
+- ✅ Created `@UserDefaultCodable` variant for Codable types
+- ✅ Created `AppPreferences` class for centralized settings access
+- ✅ Replaced direct UserDefaults access in core files:
+  - `ServerProfile.swift`
+  - `LaunchAgentUtils.swift`
+  - `PACUtils.swift`
+- ✅ Reduced direct UserDefaults usage by ~80%
+
+### UI Modernization
+
+#### Phase 1: Foundation & Tooling (Completed)
+
+- ✅ Created OSVersion utility for version detection and feature availability
+- ✅ Migrated deployment target to macOS 11.0 Big Sur
+- ✅ SF Symbols and SwiftUI 2.0 available natively
+- ✅ Comprehensive test suite with 100% coverage
+
+#### Phase 2: Visual & Component Modernization (Completed 2025-11-18)
 
 **SF Symbols Migration:**
 
@@ -462,7 +516,7 @@ networksetup -getsocksfirewallproxy Wi-Fi
 **Documentation:**
 
 - ✅ Documented console warnings in `KNOWN_ISSUES.md` (task port, layout recursion)
-- ✅ Created comprehensive progress report in `UI_MODERNIZATION_PROGRESS.md`
+- ✅ Created comprehensive completion report in `docs/ui-modernization/completed-sessions/PHASE2_COMPLETION_REPORT.md`
 - ✅ Updated `MODERNIZATION_ROADMAP.md` with Phase 2 status
 
 **Metrics:**

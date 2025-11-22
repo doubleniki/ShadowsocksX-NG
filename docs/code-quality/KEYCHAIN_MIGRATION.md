@@ -107,6 +107,68 @@ KeychainManager.shared.deletePassword(forAccount: uuid)
 profile.removePasswordFromKeychain()
 ```
 
+## 🔧 Implementation Details
+
+### Profile Duplication Fix
+
+During the Keychain migration, a bug was discovered and fixed that caused orphaned Keychain entries when duplicating server profiles:
+
+**Problem:**
+1. Method `copy(with:)` created a new `ServerProfile` with a temporary UUID
+2. When copying password (`copy.password = self.password`), the password was saved to Keychain under this temporary UUID
+3. Method `duplicate()` then called `removePasswordFromKeychain()`, deleting the password under the temporary UUID
+4. Then another new UUID was generated
+5. Password was saved under the third UUID
+6. Result: Original password under first UUID remained, temporary entry under second UUID was deleted, and a new entry was created under third UUID
+
+This led to:
+- Unnecessary Keychain write/delete operations
+- Potential synchronization issues
+- Suboptimal resource usage
+
+**Solution:**
+
+Method `copy(with:)` now copies password **only to cache**, without saving to Keychain:
+
+```swift
+public func copy(with zone: NSZone? = nil) -> Any {
+    let copy = ServerProfile()
+    // ...
+    // Copy password only to cache, without saving to Keychain
+    copy._cachedPassword = self.password
+    // ...
+    return copy
+}
+```
+
+Method `duplicate()` was simplified - removed unnecessary `removePasswordFromKeychain()` call:
+
+```swift
+// Copy profile (password in cache, but not in Keychain)
+guard let duplicateProfile = profile.copy() as? ServerProfile else {
+    return
+}
+
+// Set new UUID
+duplicateProfile.uuid = UUID().uuidString
+
+// Save password from cache to Keychain under new UUID
+let passwordToSave = duplicateProfile.password
+duplicateProfile.password = passwordToSave
+```
+
+**Benefits:**
+- ✅ No orphaned Keychain entries
+- ✅ Fewer write/delete operations
+- ✅ More predictable data flow
+- ✅ Original profile unaffected
+
+**Tests:**
+
+Updated tests in `ServerProfileTests.swift`:
+- `testCopyProfile()` - verifies correct profile duplication
+- `testCopyProfileDoesNotLeaveOrphanedKeychainEntries()` - verifies no Keychain leaks
+
 ## ⚠️ Важные заметки
 
 ### iCloud Keychain

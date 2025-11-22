@@ -1,10 +1,14 @@
 # ShadowsocksX-NG Roadmap
 
-This document outlines planned features and enhancements for future releases of ShadowsocksX-NG.
+This document outlines planned **features** for future releases of ShadowsocksX-NG.
+
+> **Note:** This roadmap focuses on user-facing features and enhancements. For code quality improvements and refactoring progress, see:
+> - **Code Quality Refactoring:** `docs/code-quality/REFACTORING_PLAN.md`
+> - **UI Modernization:** `docs/ui-modernization/MODERNIZATION_ROADMAP.md`
 
 ## Roadmap Highlights
 
-- **v0.3.0** (Current): Phase 1 & 2 refactoring complete, rule similarity detection, enhanced notifications
+- **v0.3.0** (Current): Rule similarity detection, enhanced notifications, improved stability
 - **v0.4.0** (Next): UI/UX improvements, traffic statistics, server latency indicators
 - **v0.5.0**: Advanced PAC features with rule categories and domain testing
 - **v0.6.0**: **Multi-Server Routing** (major feature) - simultaneous connections to multiple servers with intelligent routing
@@ -12,20 +16,22 @@ This document outlines planned features and enhancements for future releases of 
 
 ## Recently Completed (Version 0.3.0)
 
-### Code Quality & Architecture
+### Code Quality & Architecture Improvements
 
-- [x] **Phase 1 Refactoring** - Foundation & safety improvements
-  - Eliminated all force unwrapping in test files
-  - Centralized error handling through ErrorHandler singleton
+> **Details:** See `docs/code-quality/REFACTORING_PLAN.md` and `docs/ui-modernization/MODERNIZATION_ROADMAP.md` for comprehensive refactoring documentation.
+
+- [x] **Code Quality Refactoring (Phases 1-3)** - Foundation, architecture, and modernization
+  - Eliminated force unwrapping, centralized error handling
   - Enhanced Keychain security for server passwords
-  - Updated deployment target to macOS 11.0
-  - SwiftLint integration with documented exceptions
-
-- [x] **Phase 2 Refactoring** - AppDelegate architecture improvements
   - Extracted coordinators from AppDelegate (MenuBarManager, ProxyCoordinator, WindowCoordinator)
-  - Implemented delegate pattern for menu actions
-  - Fixed RxSwift subscription lifecycle issues
-  - MenuBarManager improvements and bug fixes
+  - Modern Swift features (async/await, Codable, property wrappers)
+  - Updated deployment target to macOS 11.0
+
+- [x] **UI Modernization (Phases 1-2)** - Visual updates and modern macOS design
+  - SF Symbols migration for status bar icons
+  - Semantic colors with automatic dark mode adaptation
+  - Vibrancy effects for toast notifications
+  - Modern table view styles and form inputs
 
 ### User Rules Enhancement
 
@@ -322,5 +328,5 @@ Have ideas for new features? Please:
 
 **Note:** This roadmap is subject to change based on community feedback, technical constraints, and development priorities. Features may be moved between versions or postponed as needed.
 
-**Last Updated:** 2025-11-10
+**Last Updated:** 2025-11-18
 **Current Version:** 0.3.0
