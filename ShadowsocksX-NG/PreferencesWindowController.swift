@@ -71,6 +71,9 @@ class PreferencesWindowController: NSWindowController, NSTableViewDataSource, NS
         // Configure text field placeholders
         configureTextFieldPlaceholders()
 
+        // Add vibrancy effect to sidebar (Phase 3 UI modernization)
+        setupSidebarVibrancy()
+
         profilesTableView.reloadData()
         updateProfileBoxVisible()
 
@@ -80,6 +83,37 @@ class PreferencesWindowController: NSWindowController, NSTableViewDataSource, NS
             profilesTableView.selectRowIndexes(firstIndex, byExtendingSelection: false)
             // Manually trigger binding since selection change may not fire during window load
             bindProfile(0)
+        }
+    }
+
+    // MARK: - Vibrancy Effects (Phase 3 UI Modernization)
+
+    /// Setup vibrancy effect for the server list sidebar
+    /// Provides subtle depth and modern appearance similar to macOS System Settings
+    private func setupSidebarVibrancy() {
+        // Create visual effect view for sidebar
+        let visualEffectView = NSVisualEffectView()
+        visualEffectView.translatesAutoresizingMaskIntoConstraints = false
+        visualEffectView.material = .sidebar  // Sidebar material for list views
+        visualEffectView.blendingMode = .withinWindow
+        visualEffectView.state = .active
+
+        // Insert behind table view scroll view
+        if let scrollView = profilesTableView.enclosingScrollView,
+           let superview = scrollView.superview {
+            superview.addSubview(visualEffectView, positioned: .below, relativeTo: scrollView)
+
+            // Pin visual effect view to scroll view bounds
+            NSLayoutConstraint.activate([
+                visualEffectView.topAnchor.constraint(equalTo: scrollView.topAnchor),
+                visualEffectView.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor),
+                visualEffectView.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor),
+                visualEffectView.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor)
+            ])
+
+            // Make scroll view and table view backgrounds transparent
+            scrollView.drawsBackground = false
+            profilesTableView.backgroundColor = .clear
         }
     }
 
