@@ -103,7 +103,7 @@
                         <action selector="showAllInOnePreferences:" target="Voe-Tx-rLC" id="2of-nZ-atc"/>
                     </connections>
                 </menuItem>
-                <menuItem title="HTTP Proxy Export Line To Pasteboard" image="terminal-logo" keyEquivalent="c" id="lg6-To-GZA">
+                <menuItem title="HTTP Proxy Export Line To Pasteboard" keyEquivalent="c" id="lg6-To-GZA">
                     <connections>
                         <action selector="copyExportCommand:" target="Voe-Tx-rLC" id="2U4-3M-sAK"/>
                     </connections>
@@ -164,6 +164,5 @@
     </objects>
     <resources>
         <image name="NSShareTemplate" width="11" height="16"/>
-        <image name="terminal-logo" width="22.695652008056641" height="17.217391967773438"/>
     </resources>
 </document>
