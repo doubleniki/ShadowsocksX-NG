@@ -338,14 +338,17 @@ extension NSFont {
 ## Phase 2: Visual & Component Modernization (Complete ✅)
 
 **Duration:** 3-4 weeks
-**Status:** ✅ Complete
+**Status:** ✅ Complete (Extended with Phase 3 work)
 **Risk Level:** 🟢 Low
 **Dependencies:** Phase 1 complete ✅
 **Minimum macOS:** 11.0 (Big Sur) - No version bump
 **Target Completion:** Q1 2025
-**Completed:** 2025-11-18
+**Initial Completion:** 2025-11-18
+**Extended Completion:** 2025-11-22 (Phase 3 additions)
 
-> 📄 **Detailed Report:** See [Phase 2 Completion Report](./completed-sessions/PHASE2_COMPLETION_REPORT.md) for session-by-session progress, testing checklist, and implementation details.
+> 📄 **Detailed Reports:**
+> - [Phase 2 Completion Report](./completed-sessions/PHASE2_COMPLETION_REPORT.md) - Initial SF Symbols migration and semantic colors
+> - [Phase 3 Completion Report](./completed-sessions/PHASE3_COMPLETION_REPORT.md) - Completed icon migration and vibrancy effects
 
 ### Objectives
 
@@ -399,14 +402,38 @@ Migrate visual assets to SF Symbols and update UI controls to modern macOS stand
    - ✅ Patched MASShortcut deprecated API warnings
    - ✅ Documented all console warnings in KNOWN_ISSUES.md
 
-**Final Metrics:**
-- Files created: 2 (StatusBarIcon.swift, NSColor+Semantic.swift)
-- Files modified: 14 (added 3 more for table view modernization)
-- Lines added: ~380
-- Lines removed: ~40
-- Code quality: Significantly improved
-- Bundle size reduction: ~200KB (PNG assets no longer needed)
-- Modern macOS 11.0+ UI achieved
+**Phase 3 Additions (2025-11-22):**
+
+**✅ Completed SF Symbols Migration:**
+7. **Terminal Icon Migration:**
+   - ✅ Migrated terminal-logo.png to SF Symbol `terminal.fill`
+   - ✅ Added terminal icon to HTTP export menu item in AppDelegate
+   - ✅ Removed PNG references from MainMenu.xib and PreferencesWindowController.xib
+   - ✅ 100% SF Symbols coverage achieved (23 icons total)
+
+8. **Asset Cleanup:**
+   - ✅ Removed 18 obsolete PNG icon files
+   - ✅ Status bar icons (12 files): menu_icon, menu_p/g/m/e_icon (1x and 2x)
+   - ✅ Password icons (2 files): icons8-Eye/Blind Filled-50.png
+   - ✅ Terminal icon (1 file): terminal-logo.png
+   - ✅ Unused icons (3 files): virtual-server-icon-3.png, command-512.png, http.png
+   - ✅ Bundle size reduction: ~125KB
+
+9. **Extended Vibrancy Effects:**
+   - ✅ Added sidebar vibrancy to PreferencesWindowController (.sidebar material)
+   - ✅ Added window vibrancy to PreferencesWinController (.contentBackground material)
+   - ✅ Modern appearance matching macOS System Settings
+   - ✅ Follows pattern from ToastWindowController
+
+**Combined Metrics (Phase 2 + 3):**
+- Files created: 3 (StatusBarIcon.swift, NSColor+Semantic.swift, PHASE3_COMPLETION_REPORT.md)
+- Files modified: 19
+- Files deleted: 18 PNG files
+- Lines added: ~454
+- Lines removed: ~44
+- Bundle size reduction: ~325KB total
+- Code quality: Excellent
+- Modern macOS 11.0+ UI: Fully achieved
 
 ### Tasks
 
