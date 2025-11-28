@@ -37,6 +37,46 @@ class PreferencesWinController: NSWindowController {
                 window.setFrame(frame, display: true)
             }
         }
+
+        // Add vibrancy effect to window (Phase 3 UI modernization)
+        setupWindowVibrancy()
+    }
+
+    // MARK: - Vibrancy Effects (Phase 3 UI Modernization)
+
+    /// Setup vibrancy effect for the entire preferences window
+    /// Provides subtle background depth similar to System Settings
+    private func setupWindowVibrancy() {
+        guard let window = self.window,
+              let contentView = window.contentView else {
+            return
+        }
+
+        // Create visual effect view for content area
+        let visualEffectView = NSVisualEffectView()
+        visualEffectView.translatesAutoresizingMaskIntoConstraints = false
+        visualEffectView.material = .contentBackground  // Content background material
+        visualEffectView.blendingMode = .behindWindow
+        visualEffectView.state = .active
+
+        // Insert behind existing content
+        let existingSubviews = contentView.subviews
+        if let firstSubview = existingSubviews.first {
+            contentView.addSubview(visualEffectView, positioned: .below, relativeTo: firstSubview)
+        } else {
+            contentView.addSubview(visualEffectView)
+        }
+
+        // Pin visual effect view to content view edges
+        NSLayoutConstraint.activate([
+            visualEffectView.topAnchor.constraint(equalTo: contentView.topAnchor),
+            visualEffectView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
+            visualEffectView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+            visualEffectView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor)
+        ])
+
+        // Configure window for vibrancy
+        window.backgroundColor = .clear
     }
 
     @objc func windowWillClose(_ notification: Notification) {

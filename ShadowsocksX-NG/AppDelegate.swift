@@ -253,6 +253,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
         // Use existing outlet for Scan QR Code
         scanQRCodeMenuItem.image = StatusBarIcon.scanQRCodeIcon()
 
+        // HTTP proxy export command (Phase 3 UI modernization)
+        copyHttpProxyExportCmdLineMenuItem.image = StatusBarIcon.terminalIcon()
+
         // Find and set icons for items by action selector (locale-independent)
         if let menu = statusMenu {
             // Map action selectors to icons
