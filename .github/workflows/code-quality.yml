@@ -99,7 +99,7 @@ jobs:
             ShadowsocksX-NG/simple-obfs
             ShadowsocksX-NG/v2ray-plugin
             ShadowsocksX-NG/kcptun
-          key: deps-${{ runner.os }}-${{ hashFiles('deps/Makefile') }}
+          key: deps-${{ runner.os }}-v1
 
       - name: Build native dependencies if not cached
         if: steps.deps-cache.outputs.cache-hit != 'true'
