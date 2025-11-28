@@ -1,12 +1,12 @@
-# ShadowsocksX-NG (Enhanced Fork)
+# ProxyForge
 
 [Download](https://github.com/doubleniki/ShadowsocksX-NG/releases/latest) | [Русская версия](README.ru.md)
 
 [![Actions Status](<https://github.com/doubleniki/ShadowsocksX-NG/workflows/Feature%20Building%20(Optimized)/badge.svg>)](https://github.com/doubleniki/ShadowsocksX-NG/actions)
 
-> **Enhanced fork** of [ShadowsocksX-NG](https://github.com/shadowsocks/ShadowsocksX-NG) with modernized UI, improved user experience, and optimized build pipeline.
+> **ProxyForge** is a modern macOS proxy client, forked from [ShadowsocksX-NG](https://github.com/shadowsocks/ShadowsocksX-NG) with modernized UI, improved UX, and optimized build pipeline.
 
-## What's New in This Fork
+## What's New in ProxyForge
 
 This enhanced version builds upon the original ShadowsocksX-NG with significant improvements focused on user experience and development efficiency.
 
@@ -52,7 +52,7 @@ This enhanced version builds upon the original ShadowsocksX-NG with significant 
 
 ## Core Features
 
-All features from the original ShadowsocksX-NG:
+All features from ShadowsocksX-NG, plus:
 
 - `ss-local` from shadowsocks-libev 3.2.5
 - Support for SIP003 plugins: `kcptun`, `simple-obfs`, and `v2ray-plugin`
@@ -68,7 +68,7 @@ All features from the original ShadowsocksX-NG:
 
 ### Planned Features
 
-We're actively developing next-generation features to make ShadowsocksX-NG more powerful and flexible:
+We're actively developing next-generation features to make ProxyForge more powerful and flexible:
 
 - **[🚀 Modern Protocols Integration](docs/features/MODERN_PROTOCOLS_INTEGRATION.md)** - Comprehensive roadmap for integrating Shadowsocks 2022, VLESS, VMess, Trojan, and Hysteria2 protocols (Phases 2-4, 12-17 weeks)
 
@@ -85,7 +85,7 @@ We're actively developing next-generation features to make ShadowsocksX-NG more 
 
 ### UI Modernization Roadmap
 
-We're also modernizing the UI to align with macOS Sequoia design principles while maintaining backward compatibility:
+We're also modernizing the UI to align with macOS Sequoia design principles:
 
 - **[📋 UI Modernization Roadmap](docs/ui-modernization/MODERNIZATION_ROADMAP.md)** - Complete phased roadmap for adopting SF Symbols, SwiftUI, semantic colors, and modern macOS features (5 phases, 5-7 months)
 
