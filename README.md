@@ -4,6 +4,8 @@
 
 [![Actions Status](<https://github.com/doubleniki/ShadowsocksX-NG/workflows/Feature%20Building%20(Optimized)/badge.svg>)](https://github.com/doubleniki/ShadowsocksX-NG/actions)
 ![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/doubleniki/proxy-forge)
+![GitHub Release Date](https://img.shields.io/github/release-date/doubleniki/proxy-forge)
+![GitHub Release](https://img.shields.io/github/v/release/doubleniki/proxy-forge)
 
 > **ProxyForge** is a modern macOS proxy client, forked from [ShadowsocksX-NG](https://github.com/shadowsocks/ShadowsocksX-NG) with modernized UI, improved UX, and optimized build pipeline.
 
